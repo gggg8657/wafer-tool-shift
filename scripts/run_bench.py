@@ -393,17 +393,36 @@ class Runner:
         recorded, along with the classes each one contains, so a like-for-like
         average over the shared classes can be taken downstream instead of
         being quietly assumed here.
+
+        `n_geometries_train` counts geometries in `self.tr`, the *inner*
+        training split with the domain-disjoint validation set already removed
+        -- what the model actually saw. `scripts/time_proxy_check.py` reports
+        the same quantity for the protocol-level split, before validation is
+        carved out, so its figure is slightly larger. Both are correct for what
+        they measure and the two tables should not be read against each other.
         """
         sid = self.c.size_id
         seen = torch.zeros(int(sid.max()) + 1, dtype=torch.bool)
         seen[torch.unique(sid[self.tr])] = True
         is_seen = seen[sid[self.te]]
+        # The geometry slice the forward-only protocol tests on, evaluated for
+        # every protocol. `lot_time` scores far below `lot`, and its test side
+        # is 19 geometries against 338 in training -- so the obvious competing
+        # explanation for its drop is that a narrow geometry slice is simply
+        # harder, with no temporal component at all. Scoring each protocol's own
+        # test wafers restricted to those same 19 geometries separates the two:
+        # if `lot` restricted to them holds up, narrowness is not the cause.
+        lt_geo = torch.zeros_like(seen)
+        lt_geo[torch.unique(sid[split(self.c, "lot_time", seed=self.a.seed)[1]])] = True
+        in_lt = lt_geo[sid[self.te]]
         out = {"n_test_seen_geometry": int(is_seen.sum()),
                "n_test_unseen_geometry": int((~is_seen).sum()),
+               "n_test_in_lot_time_geometries": int(in_lt.sum()),
                "n_geometries_train": int(torch.unique(sid[self.tr]).numel()),
                "n_geometries_test": int(torch.unique(sid[self.te]).numel())}
         for name, mask in (("test_seen_geometry", is_seen),
-                           ("test_unseen_geometry", ~is_seen)):
+                           ("test_unseen_geometry", ~is_seen),
+                           ("test_in_lot_time_geometries", in_lt)):
             idx = self.te[mask]
             if len(idx) < 64:
                 out[name] = None          # a blank, not a number from 12 wafers

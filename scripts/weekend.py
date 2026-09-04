@@ -275,6 +275,34 @@ def main():
           "at all, whatever their arguments.")
         W("")
 
+    lb = Path(a.runs) / "label_blind.json"
+    if lb.exists():
+        d = json.loads(lb.read_text())
+        W("### 2.7 Closed without a run: the label-aware split guard never fires")
+        W("")
+        W("Both external reviewers flagged that `_stratified_group_split` reads "
+          "candidate groups' labels to decide what may be held out. Dropping "
+          "the guard entirely and comparing the partitions, no model involved:")
+        W("")
+        W(table([[f"`{k}`", f"{v['seeds_where_guard_fired']} / {d['seeds']}",
+                  f"{v['seeds_where_split_differs']} / {d['seeds']}",
+                  f"{v['seeds_where_blind_loses_a_class']} / {d['seeds']}"]
+                 for k, v in d["protocols"].items()],
+                ["protocol", "seeds where the guard fired",
+                 "seeds where the split differed",
+                 "seeds where label-blind lost a class"]))
+        W("")
+        mx = max(v["max_share_in_one_lot"]
+                 for v in d["class_concentration"].values())
+        W("The bias is not small, it is zero: the partitions are identical "
+          "wafer for wafer at every seed. Structurally so — the guard rejects a "
+          "group only if that group holds *all* remaining training examples of "
+          f"some class, and no lot holds more than {mx:.2%} of any class. The "
+          "code path is label-aware; the split is not. This was in last "
+          "revision's decision list on the strength of two reviewers agreeing; "
+          "four minutes of CPU would have settled it first.")
+        W("")
+
     # ---------------------------------------------------------------- decisions
     W("## 3. Three things that need a human decision")
     W("")
@@ -311,16 +339,20 @@ def main():
       "closing it by loosening the split is the one thing the rules here "
       "forbid.*")
     W("")
-    W("**Decision 3 — is the label-aware test split acceptable?** "
-      "`_stratified_group_split` rejects a candidate held-out group when moving "
-      "it would leave a class with no training examples. No label reaches the "
-      "model, but which domains land in test is not independent of the labels. "
-      "It binds almost only on `Near-full` (149 wafers in the whole corpus). "
-      "Options: **(a)** keep it and document it, since without it `Near-full` "
-      "can vanish from one side entirely and macro-F1 becomes undefined; "
-      "**(b)** run a label-blind variant and report both. The magnitude of the "
-      "bias is currently " + NM + ". *Recommendation: (b), and it is cheap — "
-      "one flag and a 20-cell re-run.*")
+    W("**Decision 3 — how should the forward-only result be framed?** It is "
+      "the repo's largest number and it is a compound. `lot_time` tests on a "
+      "narrow geometry slice with a seventh of its wafers of geometries never "
+      "trained on (section 2.5), so \"forward-only *time* costs 20 points\" "
+      "is not what was measured. Options: **(a)** reframe it as *forward-only "
+      "deployment* — you meet new products and new tools going forward, and "
+      "the geometry shift is part of the phenomenon, not a confound to remove; "
+      "**(b)** build a geometry-controlled temporal protocol that holds the "
+      "geometry mix fixed across the time boundary, isolating drift but "
+      "measuring something a fab never actually experiences; **(c)** report "
+      "both. *Recommendation: (a) as the headline with the decomposition "
+      "printed beside it. A fab does not get to hold its product mix fixed, so "
+      "(b) measures a cleaner quantity that matters less. The decomposition "
+      "that makes (a) honest is queued and is the next stage to land.*")
     W("")
 
     # ---------------------------------------------------------------- running

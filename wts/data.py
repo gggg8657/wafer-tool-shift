@@ -143,13 +143,27 @@ def build_corpus(path="data/LSWMD.pkl", min_dim=8, cache=None):
 # --------------------------------------------------------------------------- #
 # protocols
 # --------------------------------------------------------------------------- #
-def _stratified_group_split(groups, y, frac, seed, min_per_class=1):
+def _stratified_group_split(groups, y, frac, seed, min_per_class=1,
+                            label_blind=False, stats=None):
     """Hold out whole groups, trying to keep every class present on both sides.
 
     Groups are shuffled and assigned to the test side until the target fraction
     is reached, but a group is skipped if moving it would leave a class with
     fewer than `min_per_class` training examples. Without that guard the rare
     classes (Near-full lives in 137 lots) can vanish from one side entirely.
+
+    That guard reads the labels of a *candidate held-out group* to decide
+    whether it may be held out, so which domains land in test is not
+    independent of the labels. No label reaches the model, the loss or model
+    selection -- this is not leakage -- but it does bias the composition of the
+    test set, and the direction is knowable: it pushes lots carrying the last
+    examples of a rare class into training, which should make the test side
+    easier on exactly the classes macro-F1 weights most.
+
+    `label_blind=True` drops the guard entirely, so the split is a function of
+    the group ids alone. It is the control for that bias and it is expected to
+    sometimes lose a rare class from one side, which is why the caller is
+    handed `stats` recording what happened rather than being left to assume.
     """
     g = np.asarray(groups); y = np.asarray(y)
     rng = np.random.default_rng(seed)
@@ -158,18 +172,23 @@ def _stratified_group_split(groups, y, frac, seed, min_per_class=1):
     counts = np.bincount(y, minlength=len(CLASSES))
     test_mask = np.zeros(len(g), dtype=bool)
     taken = 0
+    n_rejected_by_guard = 0
     for gid in uniq:
         sel = g == gid
         if taken + sel.sum() > target * 1.15:
             continue
         cand = counts - np.bincount(y[sel], minlength=len(CLASSES))
-        if (cand[counts > 0] < min_per_class).any():
+        if not label_blind and (cand[counts > 0] < min_per_class).any():
+            n_rejected_by_guard += 1
             continue
         test_mask |= sel
         counts = cand
         taken += int(sel.sum())
         if taken >= target:
             break
+    if stats is not None:
+        stats["n_groups_rejected_by_label_guard"] = n_rejected_by_guard
+        stats["label_blind"] = bool(label_blind)
     return ~test_mask, test_mask
 
 
@@ -186,8 +205,14 @@ def lot_numbers(corpus):
     return torch.tensor(num, dtype=torch.long)[corpus.lot]
 
 
-def split(corpus: Corpus, protocol="lot", frac=0.25, seed=0, embargo=0.05):
-    """(train_idx, test_idx) for one protocol. Indices are LongTensors."""
+def split(corpus: Corpus, protocol="lot", frac=0.25, seed=0, embargo=0.05,
+          label_blind=False, stats=None):
+    """(train_idx, test_idx) for one protocol. Indices are LongTensors.
+
+    `label_blind` removes the label-aware guard from the group protocols; see
+    `_stratified_group_split`. It has no effect on `iid` or `lot_time`, neither
+    of which consults a label to build the split.
+    """
     y = corpus.labels.numpy()
     if protocol == "iid":
         rng = np.random.default_rng(seed)
@@ -196,7 +221,8 @@ def split(corpus: Corpus, protocol="lot", frac=0.25, seed=0, embargo=0.05):
         tr, te = perm[:cut], perm[cut:]
         return torch.from_numpy(tr), torch.from_numpy(te)
     if protocol == "lot":
-        tr, te = _stratified_group_split(corpus.lot.numpy(), y, frac, seed)
+        tr, te = _stratified_group_split(corpus.lot.numpy(), y, frac, seed,
+                                         label_blind=label_blind, stats=stats)
     elif protocol == "size":
         # Hold out whole geometries at random. Taking the *rarest* geometries
         # first looked tempting but maximizes an artifact: geometry and defect
@@ -205,7 +231,8 @@ def split(corpus: Corpus, protocol="lot", frac=0.25, seed=0, embargo=0.05):
         # side and the split stopped measuring covariate shift. Random choice
         # keeps the entanglement at its natural level, and `label_shift()`
         # reports whatever remains.
-        tr, te = _stratified_group_split(corpus.size_id.numpy(), y, frac, seed)
+        tr, te = _stratified_group_split(corpus.size_id.numpy(), y, frac, seed,
+                                         label_blind=label_blind, stats=stats)
     elif protocol == "lot_time":
         # Purged, embargoed, forward-only -- the split finance uses to stop a
         # backtest from learning from its own future. Train on the earliest

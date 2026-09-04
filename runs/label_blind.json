@@ -1,0 +1,1127 @@
+{
+  "seeds": 10,
+  "protocols": {
+    "lot": {
+      "seeds_where_guard_fired": 0,
+      "seeds_where_split_differs": 0,
+      "seeds_where_blind_loses_a_class": 0,
+      "per_seed": [
+        {
+          "seed": 0,
+          "groups_rejected_by_guard": 0,
+          "splits_identical": true,
+          "n_test_guarded": 43252,
+          "n_test_blind": 43252,
+          "test_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "test_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "label_shift_tv_guarded": 0.006609712727367878,
+          "label_shift_tv_blind": 0.006609712727367878
+        },
+        {
+          "seed": 1,
+          "groups_rejected_by_guard": 0,
+          "splits_identical": true,
+          "n_test_guarded": 43238,
+          "n_test_blind": 43238,
+          "test_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "test_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "label_shift_tv_guarded": 0.0055226655676960945,
+          "label_shift_tv_blind": 0.0055226655676960945
+        },
+        {
+          "seed": 2,
+          "groups_rejected_by_guard": 0,
+          "splits_identical": true,
+          "n_test_guarded": 43255,
+          "n_test_blind": 43255,
+          "test_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "test_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "label_shift_tv_guarded": 0.00672865891829133,
+          "label_shift_tv_blind": 0.00672865891829133
+        },
+        {
+          "seed": 3,
+          "groups_rejected_by_guard": 0,
+          "splits_identical": true,
+          "n_test_guarded": 43238,
+          "n_test_blind": 43238,
+          "test_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "test_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "label_shift_tv_guarded": 0.005344734527170658,
+          "label_shift_tv_blind": 0.005344734527170658
+        },
+        {
+          "seed": 4,
+          "groups_rejected_by_guard": 0,
+          "splits_identical": true,
+          "n_test_guarded": 43245,
+          "n_test_blind": 43245,
+          "test_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "test_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "label_shift_tv_guarded": 0.006272903643548489,
+          "label_shift_tv_blind": 0.006272903643548489
+        },
+        {
+          "seed": 5,
+          "groups_rejected_by_guard": 0,
+          "splits_identical": true,
+          "n_test_guarded": 43250,
+          "n_test_blind": 43250,
+          "test_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "test_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "label_shift_tv_guarded": 0.011576118879020214,
+          "label_shift_tv_blind": 0.011576118879020214
+        },
+        {
+          "seed": 6,
+          "groups_rejected_by_guard": 0,
+          "splits_identical": true,
+          "n_test_guarded": 43250,
+          "n_test_blind": 43250,
+          "test_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "test_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "label_shift_tv_guarded": 0.00839296542108059,
+          "label_shift_tv_blind": 0.00839296542108059
+        },
+        {
+          "seed": 7,
+          "groups_rejected_by_guard": 0,
+          "splits_identical": true,
+          "n_test_guarded": 43246,
+          "n_test_blind": 43246,
+          "test_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "test_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "label_shift_tv_guarded": 0.010031042620539665,
+          "label_shift_tv_blind": 0.010031042620539665
+        },
+        {
+          "seed": 8,
+          "groups_rejected_by_guard": 0,
+          "splits_identical": true,
+          "n_test_guarded": 43260,
+          "n_test_blind": 43260,
+          "test_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "test_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "label_shift_tv_guarded": 0.006964084692299366,
+          "label_shift_tv_blind": 0.006964084692299366
+        },
+        {
+          "seed": 9,
+          "groups_rejected_by_guard": 0,
+          "splits_identical": true,
+          "n_test_guarded": 43248,
+          "n_test_blind": 43248,
+          "test_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "test_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "label_shift_tv_guarded": 0.009319208562374115,
+          "label_shift_tv_blind": 0.009319208562374115
+        }
+      ]
+    },
+    "size": {
+      "seeds_where_guard_fired": 0,
+      "seeds_where_split_differs": 0,
+      "seeds_where_blind_loses_a_class": 0,
+      "per_seed": [
+        {
+          "seed": 0,
+          "groups_rejected_by_guard": 0,
+          "splits_identical": true,
+          "n_test_guarded": 44908,
+          "n_test_blind": 44908,
+          "test_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "test_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "label_shift_tv_guarded": 0.09138739854097366,
+          "label_shift_tv_blind": 0.09138739854097366
+        },
+        {
+          "seed": 1,
+          "groups_rejected_by_guard": 0,
+          "splits_identical": true,
+          "n_test_guarded": 43261,
+          "n_test_blind": 43261,
+          "test_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "test_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "label_shift_tv_guarded": 0.04344669729471207,
+          "label_shift_tv_blind": 0.04344669729471207
+        },
+        {
+          "seed": 2,
+          "groups_rejected_by_guard": 0,
+          "splits_identical": true,
+          "n_test_guarded": 46990,
+          "n_test_blind": 46990,
+          "test_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "test_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "label_shift_tv_guarded": 0.06449040025472641,
+          "label_shift_tv_blind": 0.06449040025472641
+        },
+        {
+          "seed": 3,
+          "groups_rejected_by_guard": 0,
+          "splits_identical": true,
+          "n_test_guarded": 43721,
+          "n_test_blind": 43721,
+          "test_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "test_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "label_shift_tv_guarded": 0.08686693012714386,
+          "label_shift_tv_blind": 0.08686693012714386
+        },
+        {
+          "seed": 4,
+          "groups_rejected_by_guard": 0,
+          "splits_identical": true,
+          "n_test_guarded": 45465,
+          "n_test_blind": 45465,
+          "test_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "test_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "label_shift_tv_guarded": 0.0884850025177002,
+          "label_shift_tv_blind": 0.0884850025177002
+        },
+        {
+          "seed": 5,
+          "groups_rejected_by_guard": 0,
+          "splits_identical": true,
+          "n_test_guarded": 47594,
+          "n_test_blind": 47594,
+          "test_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "test_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "label_shift_tv_guarded": 0.016755810007452965,
+          "label_shift_tv_blind": 0.016755810007452965
+        },
+        {
+          "seed": 6,
+          "groups_rejected_by_guard": 0,
+          "splits_identical": true,
+          "n_test_guarded": 44634,
+          "n_test_blind": 44634,
+          "test_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "test_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "label_shift_tv_guarded": 0.142650306224823,
+          "label_shift_tv_blind": 0.142650306224823
+        },
+        {
+          "seed": 7,
+          "groups_rejected_by_guard": 0,
+          "splits_identical": true,
+          "n_test_guarded": 43511,
+          "n_test_blind": 43511,
+          "test_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "test_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "label_shift_tv_guarded": 0.08538823574781418,
+          "label_shift_tv_blind": 0.08538823574781418
+        },
+        {
+          "seed": 8,
+          "groups_rejected_by_guard": 0,
+          "splits_identical": true,
+          "n_test_guarded": 43621,
+          "n_test_blind": 43621,
+          "test_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "test_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "label_shift_tv_guarded": 0.04716239124536514,
+          "label_shift_tv_blind": 0.04716239124536514
+        },
+        {
+          "seed": 9,
+          "groups_rejected_by_guard": 0,
+          "splits_identical": true,
+          "n_test_guarded": 43252,
+          "n_test_blind": 43252,
+          "test_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "test_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_guarded": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "train_classes_blind": [
+            "Center",
+            "Donut",
+            "Edge-Loc",
+            "Edge-Ring",
+            "Loc",
+            "Near-full",
+            "Random",
+            "Scratch",
+            "none"
+          ],
+          "label_shift_tv_guarded": 0.07993127405643463,
+          "label_shift_tv_blind": 0.07993127405643463
+        }
+      ]
+    }
+  },
+  "class_concentration": {
+    "none": {
+      "n": 147429,
+      "max_share_in_one_lot": 0.00016957315046564787,
+      "max_share_in_one_geometry": 0.10771964810179815
+    },
+    "Center": {
+      "n": 4294,
+      "max_share_in_one_lot": 0.00535631113181183,
+      "max_share_in_one_geometry": 0.524219841639497
+    },
+    "Donut": {
+      "n": 555,
+      "max_share_in_one_lot": 0.04144144144144144,
+      "max_share_in_one_geometry": 0.42162162162162165
+    },
+    "Edge-Loc": {
+      "n": 5189,
+      "max_share_in_one_lot": 0.0046251686259394876,
+      "max_share_in_one_geometry": 0.09115436500289073
+    },
+    "Edge-Ring": {
+      "n": 9680,
+      "max_share_in_one_lot": 0.0025826446280991736,
+      "max_share_in_one_geometry": 0.21931818181818183
+    },
+    "Loc": {
+      "n": 3593,
+      "max_share_in_one_lot": 0.006957973838018369,
+      "max_share_in_one_geometry": 0.08266072919565823
+    },
+    "Near-full": {
+      "n": 149,
+      "max_share_in_one_lot": 0.026845637583892617,
+      "max_share_in_one_geometry": 0.18791946308724833
+    },
+    "Random": {
+      "n": 866,
+      "max_share_in_one_lot": 0.028868360277136258,
+      "max_share_in_one_geometry": 0.14434180138568128
+    },
+    "Scratch": {
+      "n": 1193,
+      "max_share_in_one_lot": 0.010058675607711651,
+      "max_share_in_one_geometry": 0.06705783738474434
+    }
+  },
+  "conclusion": "The guard never fired in any seed or protocol tested and the splits are identical wafer for wafer, so the label-aware construction has no effect on this corpus at a 25% holdout. No single lot holds more than 0.0414 of any class, so the condition the guard tests for is unreachable. The code path is label-aware; the split is not."
+}

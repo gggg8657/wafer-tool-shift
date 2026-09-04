@@ -182,6 +182,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.03 | ema | 0.8573 | 0.8511 | -0.0062 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.1 | ema | 0.8485 | 0.8441 | -0.0045 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.3 | ema | 0.8352 | 0.8278 | -0.0074 |
+| lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot1.0 | ema | 0.1026 | 0.1026 | +0.0000 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | tent | 0.8671 | 0.8538 | -0.0133 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | ema | 0.8671 | 0.8759 | +0.0087 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm/sslinit | ema | 0.8134 | 0.8053 | -0.0081 |
@@ -270,6 +271,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN on resized 64x64 (BatchNorm) | ot0.03 | 0.8573 | +0.7548 | 0.4898 | +0.2558 |
 | lot | CNN on resized 64x64 (BatchNorm) | ot0.1 | 0.8485 | +0.7460 | 0.4898 | +0.2558 |
 | lot | CNN on resized 64x64 (BatchNorm) | ot0.3 | 0.8352 | +0.7327 | 0.4898 | +0.2558 |
+| lot | CNN on resized 64x64 (BatchNorm) | ot1.0 | 0.1026 | +0.0000 | 0.2340 | +0.0000 |
 | lot | CNN on resized 64x64 (GroupNorm) | + lot-adversarial SSL initialization | 0.8134 | -0.0537 | 0.4898 | -0.0102 |
 | lot | size-invariant descriptors + MLP | + RPCA lot signature as features | 0.8461 | +0.0044 | 0.4898 | +0.0000 |
 | lot | CNN + RPCA lot-signature channel | 4th channel = raw failed-die mask (RPCA control) | 0.8765 | -0.0049 | 0.5000 | +0.0000 |
@@ -360,6 +362,7 @@ Both macro-F1 columns are averaged over **only the classes present in both halve
 |---|---|---|---|---|---|---|---|---|---|
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.1 | 0.8485 | 0.8434 | 0.7310 | +0.1124 | 8 | 43,121 | 131 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.3 | 0.8352 | 0.8240 | 0.7192 | +0.1048 | 8 | 43,121 | 131 |
+| lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot1.0 | 0.1026 | 0.1155 | 0.0618 | +0.0537 | 8 | 43,121 | 131 |
 
 ## The entropic-OT objective: a broken method, or a bad default?
 
@@ -373,12 +376,15 @@ The `sinkhorn` row in the tables above uses the default weight and sits at the m
 | 0.03 | 0.8713 | 0.8573 | 0.1354 | 0.1689 |
 | 0.1 | 0.8701 | 0.8485 | 0.1343 | 0.1713 |
 | 0.3 | 0.8571 | 0.8352 | 0.1316 | 0.1550 |
+| 1.0 | 0.1018 | 0.1026 | 0.2771 | 0.0010 |
 
 Selecting the weight on the **domain-disjoint validation split** -- never on test -- picks 0.003, whose test macro-F1 is 0.8591 against 0.8587 for plain ERM at the same encoder, protocol and seed: a difference of +0.0004.
 
-And at that selected weight the penalty ends at 0.1699 against 0.1691 when it is not penalized at all -- it has not been reduced. The objective is not being traded off against accuracy at its best setting; it is doing nothing. The penalty only moves at the largest weight that still trains, and there it costs accuracy; one step beyond, the embedding collapses and the classifier emits the class prior.
+And at that selected weight the penalty ends at 0.1699 against 0.1691 when it is not penalized at all -- it has not been reduced. The objective is not being traded off against accuracy at its best setting; it is doing nothing.
 
-**Verdict: not a strawman and not a tuning failure.** Across three orders of magnitude there is no weight at which the penalty falls and accuracy holds. Reported as a negative result about entropic OT on this benchmark, with the default-weight row left in the tables above so that the collapse is visible rather than filtered.
+The penalty column also shows *why* the largest weight destroys the model, which is the part that was previously inferred rather than seen. At `--ot-lambda 1.0` the penalty falls 0.2771 -> 0.0010, essentially to zero, while validation macro-F1 is pinned at the majority-class floor from the first epoch and the training loss converges to the entropy of the class prior. The optimizer is *succeeding completely* at the OT objective: the divergence between two domain clouds is minimized exactly when the embedding is a single point, and at this weight that collapse is the global optimum of the combined loss. The penalty is minimizable; it is just not minimizable while the representation still carries the label.
+
+**Verdict: not a strawman and not a tuning failure.** Across three orders of magnitude the penalty is either untouched (and accuracy is ERM's) or driven toward zero (and the representation is gone). There is no weight at which it falls and accuracy holds. Reported as a negative result about entropic OT on this benchmark, with the default-weight row left in the tables above so that the collapse is visible rather than filtered.
 
 ## Which lots to pay to measure
 

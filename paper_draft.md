@@ -24,7 +24,7 @@ Model selection for every cell uses a validation split carved from the *training
 | representation | `iid` | `lot` | `size` | `lot_time` | iid − lot |
 |---|---|---|---|---|---|
 | descriptors + MLP | 0.8532 | 0.8417 | 0.7986 | 0.6496 | +0.0115 |
-| CNN (BatchNorm) | 0.8594 | 0.8587 | 0.7682 | 0.6440 | +0.0007 |
+| CNN (BatchNorm) | 0.8594 | 0.8522 ±0.0069 (n=3) | 0.7682 | 0.6440 | +0.0072 |
 | CNN (GroupNorm) | 0.8855 | 0.8647 ±0.0044 (n=3) | 0.8467 ±0.0346 (n=3) | 0.6985 ±0.0045 (n=3) | +0.0208 |
 | spectral operator | 0.8573 | 0.8538 | 0.7197 | 0.6796 | +0.0035 |
 | die-graph GNN | [not measured] | 0.7557 | 0.6833 | 0.5501 | [not measured] |
@@ -61,15 +61,15 @@ The forward-only test side holds 19 geometries against 338 in training, and 14.1
 
 | representation | objective | macro-F1 | vs ERM |
 |---|---|---|---|
-| CNN (BatchNorm) | `anchor` | 0.8637 | +0.0050 |
-| CNN (BatchNorm) | `coral` | 0.8553 | -0.0034 |
-| CNN (BatchNorm) | `dann` | 0.8596 | +0.0009 |
-| CNN (BatchNorm) | `group_dro` | 0.8615 | +0.0028 |
-| CNN (BatchNorm) | `hsic` | 0.8628 | +0.0041 |
-| CNN (BatchNorm) | `irm` | 0.8536 | -0.0051 |
-| CNN (BatchNorm) | `logit_adjust` | 0.8170 | -0.0417 |
-| CNN (BatchNorm) | `mixup_domain` | 0.8541 | -0.0047 |
-| CNN (BatchNorm) | `sinkhorn` | 0.1026 | -0.7562 |
+| CNN (BatchNorm) | `anchor` | 0.8637 | +0.0115 |
+| CNN (BatchNorm) | `coral` | 0.8553 | +0.0031 |
+| CNN (BatchNorm) | `dann` | 0.8596 | +0.0075 |
+| CNN (BatchNorm) | `group_dro` | 0.8615 | +0.0093 |
+| CNN (BatchNorm) | `hsic` | 0.8628 | +0.0106 |
+| CNN (BatchNorm) | `irm` | 0.8536 | +0.0014 |
+| CNN (BatchNorm) | `logit_adjust` | 0.8170 | -0.0352 |
+| CNN (BatchNorm) | `mixup_domain` | 0.8541 | +0.0019 |
+| CNN (BatchNorm) | `sinkhorn` | 0.1026 | -0.7496 |
 | descriptors + MLP | `anchor` | 0.8395 | -0.0022 |
 | descriptors + MLP | `coral` | 0.8413 | -0.0004 |
 | descriptors + MLP | `dann` | 0.8443 | +0.0026 |
@@ -157,6 +157,7 @@ Budgets spent in whole lots out of 8116 available, seeded with 20 random lots, 3
 
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range |
 |---|---|---|---|---|---|---|
+| `lot` | CNN (BatchNorm) | `erm` | — | 3 | 0.8522 | ±0.0069 |
 | `lot` | CNN (GroupNorm) | `erm` | — | 3 | 0.8647 | ±0.0044 |
 | `lot` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.8143 | ±0.0091 |
 | `lot` | CNN + 4th channel | `erm` | — | 3 | 0.8696 | ±0.0096 |

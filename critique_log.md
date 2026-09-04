@@ -744,3 +744,89 @@ given domains that differ.
 The row stays in the tables with the collapse visible and the sweep beside it.
 A table that quietly drops its embarrassments is worse than one that explains
 them.
+
+### 11. Decision 3 is closed without a GPU run: the label-aware guard never fires
+
+Both external critics flagged `_stratified_group_split` reading candidate
+groups' labels. I logged it in §4 and §7 as real, mis-named as leakage, and
+needing a measurement, and put it to the owner in `WEEKEND.md` as a decision
+with a "cheap, one flag and a 20-cell re-run" recommendation. The re-run turns
+out not to be needed, because the cheaper question settles it.
+
+`scripts/label_blind_check.py` adds `label_blind=True` to `split()` — dropping
+the guard entirely — and compares the two splits directly, no model involved:
+
+| protocol | seeds where the guard fired | seeds where the split differed | seeds where blind lost a class |
+|---|---|---|---|
+| `lot` | **0 / 10** | **0 / 10** | 0 / 10 |
+| `size` | **0 / 10** | **0 / 10** | 0 / 10 |
+
+The guard never rejects a single group, and the label-aware and label-blind
+partitions are identical wafer for wafer at every seed tested. The magnitude of
+the bias is not small; it is **zero** on this corpus at a 25% holdout.
+
+**And the reason is structural, not luck**, which matters because "it did not
+happen in ten seeds" is a weak claim on its own. The guard rejects a group only
+when that single group holds *all* the remaining training examples of some
+class. Measured concentration:
+
+| class | n | max share in one lot | max share in one geometry |
+|---|---|---|---|
+| none | 147,429 | 0.0002 | 0.1077 |
+| Center | 4,294 | 0.0054 | 0.5242 |
+| Donut | 555 | 0.0414 | 0.4216 |
+| Edge-Loc | 5,189 | 0.0046 | 0.0912 |
+| Edge-Ring | 9,680 | 0.0026 | 0.2193 |
+| Loc | 3,593 | 0.0070 | 0.0827 |
+| Near-full | 149 | 0.0268 | 0.1879 |
+| Random | 866 | 0.0289 | 0.1443 |
+| Scratch | 1,193 | 0.0101 | 0.0671 |
+
+No lot holds more than 4.1% of any class; even the rarest class, `Near-full` at
+149 wafers, is spread over 137 lots and 30 geometries. The condition the guard
+tests for is unreachable. It is dead code with respect to this corpus.
+
+**The honest statement**, which is narrower than either "the critics were wrong"
+or "we fixed it": the code path *is* label-aware and a reviewer is right to
+object to it on principle, because on a corpus where some class sat mostly in
+one lot it would bias the split and the bias would flatter macro-F1. On WM-811K
+it does nothing. The flag stays so the claim is checkable rather than asserted,
+`WEEKEND.md` drops this from the decisions list, and the 20 cells it would have
+cost go to the queue instead.
+
+Worth noting what this cost to find out: about four minutes of CPU. I had
+written it into the Monday hand-off as a decision needing a human, on the
+strength of two reviewers agreeing it mattered. Two reviewers agreeing is not
+evidence, and the cheap check should have come before the hand-off entry.
+
+### 12. The next question the forward-only confound raises, and the control for it
+
+§8 established that `lot_time` tests on 19 geometries against 338 in training,
+with 14.15% of its test wafers of a geometry never trained on. The queued
+seen/unseen decomposition splits its drop by that boundary. But there is a
+second, competing explanation it does not address:
+
+> **H12:** the forward-only drop is not about time or about *unseen* geometry
+> at all — a *narrow* geometry slice is simply a harder test set, and any
+> protocol restricted to those 19 geometries would score near 0.70 even with
+> every one of them seen in training and no temporal ordering whatsoever.
+
+The control is nearly free and needs no new training: take the `lot`-protocol
+model, whose training set covers those geometries and whose split has no
+temporal structure, and score it on the subset of *its own* test set falling in
+those 19 geometries. Measured feasibility, at three seeds: 11,908 / 11,789 /
+11,474 wafers, 26.5–27.5% of each `lot` test set, with all 9 classes present, so
+the comparison is not confounded by a missing class.
+
+Reading, fixed in advance so the result cannot be reinterpreted afterwards:
+
+* `lot` restricted to those geometries lands near the full `lot` figure →
+  narrowness is not the cause, and the forward-only drop belongs to time plus
+  unseen geometry;
+* it lands near the `lot_time` figure → the geometry slice explains the drop on
+  its own, and "forward-only time costs 20 points" is close to wholly wrong;
+* in between → the drop is a compound and this measures the geometry share.
+
+`run_bench.py` now scores `test_in_lot_time_geometries` on every cell, so the
+answer arrives with the backfill already queued rather than needing a stage of
+its own.

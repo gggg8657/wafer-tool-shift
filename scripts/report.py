@@ -488,14 +488,33 @@ def main():
                       f"{f(bt[-1])} against {f(zt[-1])} when it is not "
                       "penalized at all -- it has not been reduced. The "
                       "objective is not being traded off against accuracy at "
-                      "its best setting; it is doing nothing. The penalty only "
-                      "moves at the largest weight that still trains, and there "
-                      "it costs accuracy; one step beyond, the embedding "
-                      "collapses and the classifier emits the class prior.", "",
-                      "**Verdict: not a strawman and not a tuning failure.** "
-                      "Across three orders of magnitude there is no weight at "
-                      "which the penalty falls and accuracy holds. Reported as "
-                      "a negative result about entropic OT on this benchmark, "
+                      "its best setting; it is doing nothing.", ""]
+                top = max(sk.values(), key=lambda r: r.get("ot_lambda", 0.0))
+                th = [h.get("ot") for h in top["history"]
+                      if h.get("ot") is not None]
+                if th:
+                    L += ["The penalty column also shows *why* the largest "
+                          "weight destroys the model, which is the part that "
+                          "was previously inferred rather than seen. At "
+                          f"`--ot-lambda {top.get('ot_lambda')}` the penalty "
+                          f"falls {f(th[0])} -> {f(th[-1])}, essentially to "
+                          "zero, while validation macro-F1 is pinned at the "
+                          "majority-class floor from the first epoch and the "
+                          "training loss converges to the entropy of the class "
+                          "prior. The optimizer is *succeeding completely* at "
+                          "the OT objective: the divergence between two domain "
+                          "clouds is minimized exactly when the embedding is a "
+                          "single point, and at this weight that collapse is "
+                          "the global optimum of the combined loss. The "
+                          "penalty is minimizable; it is just not minimizable "
+                          "while the representation still carries the label.",
+                          ""]
+                L += ["**Verdict: not a strawman and not a tuning failure.** "
+                      "Across three orders of magnitude the penalty is either "
+                      "untouched (and accuracy is ERM's) or driven toward zero "
+                      "(and the representation is gone). There is no weight at "
+                      "which it falls and accuracy holds. Reported as a "
+                      "negative result about entropic OT on this benchmark, "
                       "with the default-weight row left in the tables above so "
                       "that the collapse is visible rather than filtered.", ""]
 
