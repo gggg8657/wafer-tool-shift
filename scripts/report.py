@@ -612,6 +612,95 @@ def main():
               "Whatever `lot_time` measures, it measures this first and the "
               "passage of time second.", ""]
 
+    # ---- the forward-only drop, decomposed
+    dec_rows = []
+    for e in encs:
+        ii = SEEDS.get(("iid", e, "erm", "sess2"))
+        lt = SEEDS.get(("lot_time", e, "erm", "sess2"))
+        if not ii or not lt:
+            continue
+
+        def matched_pair(rs, key):
+            fs, ss = [], []
+            for r in rs.values():
+                sub = r.get(key)
+                if not sub:
+                    return None, None
+                sh = sub.get("classes_present") or []
+                full = r["test"]["per_class_f1"]
+                if not sh or not all(c in full for c in sh):
+                    return None, None
+                fs.append(sum(full[c] for c in sh) / len(sh))
+                ss.append(sum(sub["per_class_f1"][c] for c in sh) / len(sh))
+            return sum(fs) / len(fs), sum(ss) / len(ss)
+
+        iif = sum(r["test"]["macro_f1"] for r in ii.values()) / len(ii)
+        _, iig = matched_pair(ii, "test_in_lot_time_geometries")
+        ltf = sum(r["test"]["macro_f1"] for r in lt.values()) / len(lt)
+        if iig is None:
+            continue
+        total = ltf - iif
+        slice_cost = iig - iif
+        dec_rows.append([ENC_LABEL.get(e, e), f(iif), f(iig), f(ltf),
+                         f"{slice_cost:+.4f}", f"{ltf - iig:+.4f}",
+                         f"{total:+.4f}",
+                         f"{100 * slice_cost / total:.0f}%" if total else "-"])
+    if dec_rows:
+        L += ["## The forward-only drop, decomposed", "",
+              "`lot_time` is the largest number here and it has been read as a "
+              "measurement of temporal drift. It is not one. Its test side is "
+              "19 geometries against 338 in training, so part of its difficulty "
+              "is that the slice is narrow rather than that it is late. Scoring "
+              "the **`iid`** models -- random split, all those geometries seen "
+              "in training, no temporal structure -- on their own test wafers "
+              "restricted to that same slice separates the two. Every cell "
+              "below is from the single-session grid at three seeds, and the "
+              "restricted column is averaged over only the classes the "
+              "restricted subset contains.", "",
+              table(dec_rows, ["representation", "`iid`, all geometries",
+                               "`iid`, restricted to the slice", "`lot_time`",
+                               "cost of the slice", "cost of everything else",
+                               "total", "slice share"]), ""]
+
+    # ---- and is the *unseen* part of that slice the hard part?
+    su_rows = []
+    for e in encs:
+        lt = SEEDS.get(("lot_time", e, "erm", "sess2"))
+        if not lt:
+            continue
+        ss, uu, sh_n = [], [], None
+        for r in lt.values():
+            sg, ug = r.get("test_seen_geometry"), r.get("test_unseen_geometry")
+            if not sg or not ug:
+                continue
+            shared = sorted(set(sg["classes_present"]) & set(ug["classes_present"]))
+            if not shared:
+                continue
+            sh_n = len(shared)
+            ss.append(sum(sg["per_class_f1"][c] for c in shared) / len(shared))
+            uu.append(sum(ug["per_class_f1"][c] for c in shared) / len(shared))
+        if ss:
+            su_rows.append([ENC_LABEL.get(e, e), len(ss),
+                            f(sum(ss) / len(ss)), f(sum(uu) / len(uu)),
+                            f"{sum(uu) / len(uu) - sum(ss) / len(ss):+.4f}",
+                            f"{sh_n}/{len(CLASSES)}"])
+    if su_rows:
+        L += ["### Is the *unseen* geometry the hard part? No.", "",
+              "14.15% of the forward-only test set is of a geometry never "
+              "trained on, and this document previously described the drop as "
+              "part drift and part unseen geometry. Splitting the `lot_time` "
+              "test set on that boundary, with both halves averaged over only "
+              "the classes **both** contain:", "",
+              table(su_rows, ["representation", "seeds", "seen geometry",
+                              "unseen geometry", "unseen - seen",
+                              "shared classes"]), "",
+              "The unseen half is **not** harder; on the two CNNs it is easier. "
+              "So the unseen-geometry component does not contribute to the drop "
+              "in the direction assumed, and the decomposition is: a narrow "
+              "slice, plus whatever is left, which is drift and label shift. "
+              "The earlier framing overstated the confound in one direction "
+              "while understating it in the other.", ""]
+
     # ---- seen / unseen geometry, wherever a cell carries it
     def matched_macro(sgy, ugy):
         """macro-F1 of each half over the classes *both* halves contain.

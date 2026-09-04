@@ -287,6 +287,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot_time | size-invariant descriptors + MLP | erm/rpcafeat | ema | 0.6394 | 0.6467 | +0.0073 |
 | lot_time | size-invariant descriptors + MLP | erm/sess2 | ema | 0.6496 | 0.6502 | +0.0006 |
 | lot_time | die-graph GNN (wafer-only subgraph) | erm | ema | 0.5501 | 0.5656 | +0.0155 |
+| lot_time | die-graph GNN (wafer-only subgraph) | erm/sess2 | ema | 0.5501 | 0.5656 | +0.0155 |
 | lot_time | CNN + RPCA lot-signature channel | erm | ema | 0.7020 | 0.6887 | -0.0132 |
 | lot_time | CNN + RPCA lot-signature channel | erm/failmask | ema | 0.6905 | 0.6797 | -0.0109 |
 | lot_time | CNN + RPCA lot-signature channel | erm/zerochan | ema | 0.6991 | 0.7033 | +0.0042 |
@@ -382,6 +383,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot_time | CNN on resized 64x64 (GroupNorm) | + lot-adversarial SSL initialization | 0.6120 | -0.0816 | 0.4898 | +0.0000 |
 | lot_time | size-invariant descriptors + MLP | + RPCA lot signature as features | 0.6394 | -0.0101 | 0.4898 | +0.0000 |
 | lot_time | size-invariant descriptors + MLP | sess2 | 0.6496 | +0.0000 | 0.4898 | +0.0000 |
+| lot_time | die-graph GNN (wafer-only subgraph) | sess2 | 0.5501 | +0.0000 | 0.4894 | +0.0000 |
 | lot_time | CNN + RPCA lot-signature channel | 4th channel = raw failed-die mask (RPCA control) | 0.6905 | -0.0114 | 0.4898 | +0.0000 |
 | lot_time | CNN + RPCA lot-signature channel | 4th channel = zeros (RPCA control) | 0.6991 | -0.0028 | 0.4898 | +0.0000 |
 | size | CNN on resized 64x64 (BatchNorm) | + Fourier amplitude swap augmentation | 0.7572 | -0.0110 | 0.5605 | +0.0006 |
@@ -522,8 +524,32 @@ Both columns are averaged over only the classes present in the restricted subset
 | `lot_time` | CNN on resized 64x64 (BatchNorm) | sess2 | 0.6458 | 0.6458 | 0.6458 | +0.0000 | 9/9 | 43,237 |
 | `lot_time` | CNN on resized 64x64 (GroupNorm) | sess2 | 0.6997 | 0.6997 | 0.6997 | +0.0000 | 9/9 | 43,237 |
 | `lot_time` | size-invariant descriptors + MLP | sess2 | 0.6496 | 0.6496 | 0.6496 | +0.0000 | 9/9 | 43,237 |
+| `lot_time` | die-graph GNN (wafer-only subgraph) | sess2 | 0.5501 | 0.5501 | 0.5501 | +0.0000 | 9/9 | 43,237 |
 
 **A large part of the forward-only drop is not temporal.** On a random split, with every one of those geometries seen in training, restricting the test set to them costs several points on its own -- many times the 0.0054 reproducibility floor. Whatever `lot_time` measures, it measures this first and the passage of time second.
+
+## The forward-only drop, decomposed
+
+`lot_time` is the largest number here and it has been read as a measurement of temporal drift. It is not one. Its test side is 19 geometries against 338 in training, so part of its difficulty is that the slice is narrow rather than that it is late. Scoring the **`iid`** models -- random split, all those geometries seen in training, no temporal structure -- on their own test wafers restricted to that same slice separates the two. Every cell below is from the single-session grid at three seeds, and the restricted column is averaged over only the classes the restricted subset contains.
+
+| representation | `iid`, all geometries | `iid`, restricted to the slice | `lot_time` | cost of the slice | cost of everything else | total | slice share |
+|---|---|---|---|---|---|---|---|
+| size-invariant descriptors + MLP | 0.8443 | 0.7617 | 0.6511 | -0.0826 | -0.1106 | -0.1931 | 43% |
+| CNN on resized 64x64 (BatchNorm) | 0.8625 | 0.7903 | 0.6438 | -0.0721 | -0.1465 | -0.2186 | 33% |
+| CNN on resized 64x64 (GroupNorm) | 0.8837 | 0.8245 | 0.7002 | -0.0591 | -0.1244 | -0.1835 | 32% |
+
+### Is the *unseen* geometry the hard part? No.
+
+14.15% of the forward-only test set is of a geometry never trained on, and this document previously described the drop as part drift and part unseen geometry. Splitting the `lot_time` test set on that boundary, with both halves averaged over only the classes **both** contain:
+
+| representation | seeds | seen geometry | unseen geometry | unseen - seen | shared classes |
+|---|---|---|---|---|---|
+| size-invariant descriptors + MLP | 3 | 0.6416 | 0.6387 | -0.0029 | 8/9 |
+| CNN on resized 64x64 (BatchNorm) | 3 | 0.6560 | 0.6696 | +0.0136 | 8/9 |
+| CNN on resized 64x64 (GroupNorm) | 3 | 0.7032 | 0.7281 | +0.0249 | 8/9 |
+| die-graph GNN (wafer-only subgraph) | 1 | 0.5909 | 0.5871 | -0.0037 | 8/9 |
+
+The unseen half is **not** harder; on the two CNNs it is easier. So the unseen-geometry component does not contribute to the drop in the direction assumed, and the decomposition is: a narrow slice, plus whatever is left, which is drift and label shift. The earlier framing overstated the confound in one direction while understating it in the other.
 
 ## Test macro-F1 split by whether the geometry was seen in training
 
@@ -568,6 +594,7 @@ Both macro-F1 columns are averaged over **only the classes present in both halve
 | lot_time | CNN on resized 64x64 (BatchNorm) | erm/sess2 | 0.6458 | 0.6646 | 0.6802 | -0.0155 | 8 | 35,607 | 7,630 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm/sess2 | 0.6997 | 0.7046 | 0.7312 | -0.0266 | 8 | 35,607 | 7,630 |
 | lot_time | size-invariant descriptors + MLP | erm/sess2 | 0.6496 | 0.6330 | 0.6435 | -0.0105 | 8 | 35,607 | 7,630 |
+| lot_time | die-graph GNN (wafer-only subgraph) | erm/sess2 | 0.5501 | 0.5909 | 0.5871 | +0.0037 | 8 | 35,607 | 7,630 |
 
 ## Does the domain definition explain the ERM-equivalence?
 

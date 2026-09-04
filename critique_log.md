@@ -1800,3 +1800,57 @@ fixed reference. I am not going to rebuild the tables this late; instead
 durable statement — the one that does not depend on table composition — is that
 **only the die-graph GNN separates from anything at all**, by 0.0815 against the
 next-worst representation.
+
+### 35. The forward-only drop, decomposed — and I had the second half backwards
+
+The `lot_time` cells of the single-session grid are in, so the decomposition H12
+asked for can finally be done end to end with every cell from one session at
+three seeds.
+
+| representation | `iid` all | `iid` @ the slice | `lot_time` | slice | everything else | total | slice share |
+|---|---|---|---|---|---|---|---|
+| CNN (GroupNorm) | 0.8837 | 0.8245 | 0.7002 | −0.0591 | −0.1244 | −0.1835 | **32%** |
+| CNN (BatchNorm) | 0.8625 | 0.7903 | 0.6438 | −0.0721 | −0.1465 | −0.2186 | **33%** |
+| descriptors + MLP | 0.8443 | 0.7617 | 0.6511 | −0.0826 | −0.1106 | −0.1931 | **43%** |
+
+A third to nearly a half of the forward-only drop is present on a **random**
+split with every one of those geometries seen in training and no temporal
+structure whatever. The narrow slice is intrinsically hard. What is left —
+−0.11 to −0.15 — is the part that deserves to be called drift, and it is still
+the larger share.
+
+**And the other half of my framing was wrong.** §8 and §23 described the drop as
+"part temporal drift and part unseen geometry", on the strength of 14.15% of the
+forward-only test wafers being of a geometry never trained on. Splitting
+`lot_time`'s test set on that boundary, both halves averaged over only the eight
+classes both contain:
+
+| representation | seen geometry | unseen geometry | unseen − seen |
+|---|---|---|---|
+| CNN (GroupNorm) | 0.7032 | 0.7281 | **+0.0249** |
+| CNN (BatchNorm) | 0.6560 | 0.6696 | **+0.0136** |
+| descriptors + MLP | 0.6416 | 0.6387 | −0.0029 |
+| die-graph GNN | 0.5909 | 0.5871 | −0.0037 |
+
+**Unseen geometry is not the hard part.** On both CNNs it is *easier* than the
+seen part of the same test set. So the component I flagged as a confound in the
+headline does not push in the direction I assumed; it pushes weakly the other
+way or not at all.
+
+The corrected statement is two-part rather than three: the forward-only drop is
+**a narrow, intrinsically hard geometry slice (a third to 43% of it) plus drift
+and label shift (the rest)**, and meeting geometries you have never trained on
+costs approximately nothing. That last clause is the interesting one for a fab —
+it says the expensive thing about deployment is not novelty of product, it is
+which products you happen to be running.
+
+**What I did wrong, and it is the same shape as everything else this weekend.**
+I inferred a direction from a *count* — 14.15% of test wafers are of unseen
+geometry, therefore unseen geometry is part of the difficulty — without
+measuring whether those wafers were actually harder. A count is not an effect.
+The measurement was one field away in every run JSON from the moment
+`geometry_decomposition` was written, and I quoted the count in three documents
+across two turns before checking the thing it was standing in for.
+
+Both corrections are now computed sections in `RESULTS.md` rather than prose, so
+neither can drift back.
