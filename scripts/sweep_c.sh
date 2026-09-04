@@ -14,6 +14,12 @@ GPUS=(${GPUS:-2 3})
 LOG=logs/sweep_c.log
 mkdir -p logs runs
 say(){ echo "[$(date +%H:%M:%S)] $*" | tee -a "$LOG"; }
+# A log name that is always a plain filename. The previous version built it with
+# `tr -d ' -'`, which leaves the slash in `--init-from runs/ssl_pretrain.pt`
+# intact; the redirect then pointed into a directory that does not exist, bash
+# failed before exec, and all three sslinit cells were reported as "launched"
+# while never running. Nothing in runs/ and no log to notice it by.
+slug(){ echo "$*" | tr -cs 'A-Za-z0-9' '_' | sed 's/^_//;s/_$//' | cut -c1-90; }
 
 jobs=()
 # new representations, including on the forward-only protocol
@@ -54,11 +60,12 @@ for spec in "${jobs[@]}"; do
   g=${GPUS[$((i % ${#GPUS[@]}))]}
   tta=""
   [[ "$spec" == *"cnn_"* ]] && tta="--tta"
-  tag=$(echo "$spec" | tr -d ' -' | tr '[:upper:]' '[:lower:]' | cut -c1-70)
+  tag=$(slug "$spec")
   say "launch gpu$g: $spec"
   CUDA_VISIBLE_DEVICES=$g $PY scripts/run_bench.py $spec --epochs "$EPOCHS" $tta \
     >> "logs/c_${tag}.log" 2>&1 &
   pids+=($!)
+  if ! [ -e "logs/c_${tag}.log" ]; then say "  !! could not open logs/c_${tag}.log"; fi
   i=$((i+1))
   if [ $((i % ${#GPUS[@]})) -eq 0 ]; then
     wait "${pids[@]}" || say "  (a cell failed; continuing)"

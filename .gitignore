@@ -6,3 +6,4 @@ __pycache__/
 # cached tensors and the 1.6 GB source pickle
 data/
 logs/
+runs.bak_*/

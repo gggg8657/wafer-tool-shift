@@ -76,9 +76,26 @@ class Runner:
         if args.encoder in ("cnn_bn", "cnn_gn", "graph", "rpca_cnn"):
             self.maps64_dev = self.c.maps64.to(self.dev)
         if args.encoder == "rpca_cnn" or args.rpca_features:
-            blob = torch.load(args.rpca, map_location="cpu", weights_only=False)
-            self.resid_dev = blob["residual"].float().to(self.dev)
-            self.rpca_sig = blob["signature"]
+            # The fourth channel is a switch, not a fixture. `residual` is the
+            # RPCA sparse part (the lot signature removed); `failmask` is the
+            # raw failed-die indicator, which the one-hot already carries, and
+            # `zeros` is an information-free channel of the same shape. The two
+            # controls exist because the RPCA low-rank part is rank 0 for most
+            # decomposed lots, which would make `residual` ~= `failmask` and the
+            # win an artefact of the extra channel rather than of the
+            # decomposition.
+            if args.sig_channel == "residual" or args.rpca_features:
+                blob = torch.load(args.rpca, map_location="cpu",
+                                  weights_only=False)
+                self.rpca_sig = blob["signature"]
+            if args.encoder == "rpca_cnn":
+                if args.sig_channel == "residual":
+                    self.resid_dev = blob["residual"].float().to(self.dev)
+                elif args.sig_channel == "failmask":
+                    self.resid_dev = (self.maps64_dev == 2).float()
+                elif args.sig_channel == "zeros":
+                    self.resid_dev = torch.zeros_like(self.maps64_dev,
+                                                     dtype=torch.float32)
         self.dom = domain_vector(self.c, args.protocol)
         tr_all, te = split(self.c, args.protocol, seed=args.seed)
         # domain-disjoint validation carved out of the training domains
@@ -210,7 +227,7 @@ class Runner:
         gstep = 0
         for ep in range(a.epochs):
             model.train()
-            run_loss, nb = 0.0, 0
+            run_loss, nb, run_aux = 0.0, 0, {}
             for sel in self.loaders(self.tr, True):
                 if len(sel) < 4:
                     continue
@@ -223,7 +240,7 @@ class Runner:
                                           device=batch["x"].device)
                     batch = {**batch, "x": fda_amplitude_swap(
                         batch["x"], batch["x"][perm], beta=a.fda_beta)}
-                loss, _ = obj(model, batch, st)
+                loss, aux = obj(model, batch, st)
                 opt.zero_grad(set_to_none=True)
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(params, 1.0)
@@ -232,13 +249,16 @@ class Runner:
                     sched.step()
                 gstep += 1
                 run_loss += float(loss.detach()); nb += 1
+                for k, v in aux.items():
+                    run_aux[k] = run_aux.get(k, 0.0) + float(v)
                 if gstep % a.ema_every == 0:
                     with torch.no_grad():
                         for k, v in model.state_dict().items():
                             ema[k].mul_(a.ema).add_(v.float(), alpha=1 - a.ema)
             va = self.evaluate(model, self.va)
             hist.append({"epoch": ep + 1, "train_loss": run_loss / max(nb, 1),
-                         "val_macro_f1": va["macro_f1"]})
+                         "val_macro_f1": va["macro_f1"],
+                         **{k: v / max(nb, 1) for k, v in run_aux.items()}})
             if va["macro_f1"] > best:
                 best = va["macro_f1"]
                 best_state = {k: v.detach().clone() for k, v in model.state_dict().items()}
@@ -248,7 +268,8 @@ class Runner:
         model.load_state_dict(best_state)
         res = {
             "encoder": a.encoder, "objective": a.objective, "protocol": a.protocol,
-            "tag": a.tag,
+            "tag": a.tag, "sig_channel": a.sig_channel,
+            "ot_lambda": a.ot_lambda,
             "seed": a.seed, "epochs": a.epochs,
             "n_train": len(self.tr), "n_val": len(self.va), "n_test": len(self.te),
             "label_shift_tv": self.label_shift,
@@ -402,6 +423,10 @@ def main():
     p.add_argument("--ema-every", type=int, default=8)
     p.add_argument("--tta", action="store_true")
     p.add_argument("--rpca", default="data/rpca.pt")
+    p.add_argument("--sig-channel", default="residual",
+                   choices=["residual", "failmask", "zeros"],
+                   help="what the rpca_cnn fourth channel carries; failmask and "
+                        "zeros are the ablation controls for the RPCA claim")
     p.add_argument("--rpca-features", action="store_true",
                    help="append the removed lot signature to the descriptors")
     p.add_argument("--hsic-lambda", type=float, default=1.0)

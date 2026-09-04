@@ -94,3 +94,30 @@ if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):
             fn(); print("ok ", name)
+
+
+def test_rpca_only_separates_a_lot_that_shares_something():
+    """The premise behind the `rpca_cnn` fourth channel, as a unit test.
+
+    RPCA is sold here as removing the lot's shared tool signature. It can only
+    do that when there *is* a shared component: on wafers whose failures are
+    independent, the low-rank part is empty and the "residual" is the input
+    unchanged -- which is what happens on 94.8% of the decomposed lots in
+    WM-811K, and is why the fourth channel needs the failmask control in
+    scripts/ablate_sigchannel.sh.
+    """
+    from wts.rpca import rpca
+
+    g = torch.Generator().manual_seed(0)
+    n, d = 20, 256
+    sparse = (torch.rand(n, d, generator=g) < 0.02).float()
+
+    L, S = rpca(sparse.clone(), n_iter=60)
+    assert torch.linalg.matrix_rank(L, rtol=1e-3).item() == 0
+    assert torch.allclose(S, sparse, atol=1e-4)
+
+    shared = torch.zeros(d)
+    shared[:40] = 1.0                       # the "chamber's favourite corner"
+    L2, S2 = rpca(sparse + shared, n_iter=60)
+    assert torch.linalg.matrix_rank(L2, rtol=1e-3).item() >= 1
+    assert L2[:, :40].mean() > 5 * L2[:, 40:].abs().mean()
