@@ -1630,3 +1630,75 @@ about RPCA.
 
 That last clause is a prediction I want on record, because it is the sort of
 thing that is much easier to propose after seeing the number than before.
+
+### 32. The mechanism I predicted is refuted; the one the data hands me is better
+
+§31 recorded, before the clean ablation runs, that if the RPCA residual came out
+below its controls the likely cause was a scale mismatch — a float channel
+concatenated to one-hot channels. I said then it was the sort of explanation
+much easier to propose after seeing a number than before, which is why it went
+on record. It is wrong, and checking took one measurement of the tensor the
+encoder actually receives:
+
+| 4th channel | ch0 | ch1 | ch2 (fail one-hot) | ch3 |
+|---|---|---|---|---|
+| residual | 0.2096 / 0.4070 | 0.6613 / 0.4733 | 0.1291 / 0.3353 | **0.1291 / 0.3353** |
+| failmask | 0.2096 / 0.4070 | 0.6613 / 0.4733 | 0.1291 / 0.3353 | **0.1291 / 0.3353** |
+| zeros | — | — | 0.1291 / 0.3353 | 0.0000 / 0.0000 |
+
+(mean / std). The residual channel is statistically indistinguishable from the
+fail-mask channel *and* from the one-hot channel beside it. Only 5.21% of wafers
+have a residual outside {0, 1} at all, and on those the values run
+[−1.002, +1.026] with mean |v| 0.0770 — the same order of magnitude. **There is
+no scale mismatch.** That explanation is now unavailable to me when the run
+lands, which is the point of having written it down.
+
+**What the data gives instead is a much better answer, and it inverts the whole
+idea.** RPCA splits a lot into what its wafers share and what each does alone,
+and hands the encoder the second on the theory that the shared part is the
+tool's nuisance. That theory needs the defect to be per-wafer and the nuisance
+to be lot-wide. Measured (`scripts/rpca_mechanism.py`):
+
+| class | n | n decomposed | enrichment | failed-die mass removed |
+|---|---|---|---|---|
+| **Edge-Ring** | 9,680 | **7,519** | **15.77x** | **0.616** |
+| Random | 866 | 192 | 4.50x | 0.524 |
+| Donut | 555 | 119 | 4.35x | 0.388 |
+| Near-full | 149 | 26 | 3.54x | 0.810 |
+| Center | 4,294 | 174 | 0.82x | 0.467 |
+| Edge-Loc | 5,189 | 140 | 0.55x | 0.364 |
+| Loc | 3,593 | 80 | 0.45x | 0.236 |
+| **Scratch** | 1,193 | **3** | **0.05x** | — |
+| none | 147,429 | 268 | 0.04x | 0.004 |
+
+The decomposition fires on 4.93% of wafers, and 7,519 of those 8,521 are
+`Edge-Ring` — 77.7% of every `Edge-Ring` wafer in the corpus. On them it removes
+**61.6% of the failed-die mass**.
+
+`Edge-Ring` is edge roll-off. It is a lot-level process condition, shared across
+the wafers of a lot *by definition*. So for the class RPCA touches most, **what
+the lot shares is the defect**, and the low-rank part it subtracts as nuisance is
+the label. The same holds for `Near-full` (0.810 removed), `Donut`, `Random` —
+every pattern that recurs lot-wide.
+
+And the converse is exactly as sharp: `Scratch` is enriched **0.05x** and `Loc`
+0.45x. A scratch on one wafer is not shared by its lot, so the decomposition
+never fires on it. Those two are the long tail this repository has spent the
+weekend failing to move, and they are precisely the classes a lot-signature
+method cannot reach even in principle.
+
+**A per-lot low-rank prior is pointed the wrong way for this corpus.** It
+subtracts signal from the classes that are lot-correlated, and offers nothing to
+the classes that are not. That is a considerably better result than "the channel
+is worth what zeros are worth" — it explains the 5% where the method does
+something, rather than only the 95% where it does nothing, and it predicts
+where the harm should show up.
+
+**H32, recorded before the clean ablation lands:** if the residual arm comes out
+below its controls, the deficit is concentrated in `Edge-Ring` per-class F1 and
+is near zero for `Scratch` and `Loc`. If instead the deficit is spread evenly
+across classes, this mechanism is wrong too and the difference is something
+about the fourth channel in general rather than about what is in it.
+
+The per-class F1 needed to check that is already recorded in every run JSON, so
+the prediction can be scored the moment the twelve cells finish.

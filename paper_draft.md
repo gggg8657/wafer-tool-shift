@@ -148,6 +148,24 @@ Per-lot Robust PCA splits a lot's wafers into a low-rank part (what the lot shar
 | `size` | zeros (control) | 0.8398 ±0.0312 (n=3) | -0.0069 |
 | `size` | *no fourth channel* | 0.8467 ±0.0346 (n=3) | — |
 
+**Why it cannot help, which is more interesting than that it does not.** RPCA's low-rank part is what a lot's wafers share, and it is handed to the encoder on the theory that the shared component is the tool's nuisance signature. That requires the defect to be per-wafer and the nuisance to be lot-wide. On this corpus the opposite holds for the class it fires on most:
+
+| class | n | n with a decomposition | enrichment vs corpus | failed-die mass removed |
+|---|---|---|---|---|
+| Edge-Ring | 9680 | 7519 | 15.77x | 0.616 |
+| Random | 866 | 192 | 4.50x | 0.524 |
+| Donut | 555 | 119 | 4.35x | 0.388 |
+| Near-full | 149 | 26 | 3.54x | 0.810 |
+| Center | 4294 | 174 | 0.82x | 0.467 |
+| Edge-Loc | 5189 | 140 | 0.55x | 0.364 |
+| Loc | 3593 | 80 | 0.45x | 0.236 |
+| Scratch | 1193 | 3 | 0.05x | - |
+| none | 147429 | 268 | 0.04x | 0.004 |
+
+The decomposition fires on 4.93% of wafers, and 7,519 of those 8,521 are `Edge-Ring` — 77.7% of every `Edge-Ring` wafer in the corpus, an enrichment of 15.8x. On those wafers it removes 61.6% of the failed-die mass. `Edge-Ring` is edge roll-off: a lot-level process condition, shared by design across the wafers of a lot. **What the lot shares is the defect, and the decomposition deletes it.**
+
+The converse is just as sharp. `Scratch` has an enrichment of 0.05x — the decomposition essentially never fires on it, because a scratch on one wafer is not shared by its lot. `Loc` is 0.45x. Those two are the long tail this benchmark most needs moved, and they are precisely the classes a lot-signature method cannot reach. A per-lot low-rank prior is pointed the wrong way for this corpus: it subtracts signal from the classes that are lot-correlated and offers nothing to the classes that are not.
+
 On `lot` the three fourth-channel variants are separated from each other by less than the seed spread of any one of them. **A channel of zeros buys what the decomposition buys.** Whatever the fourth channel is worth there, it is worth as extra first-layer capacity, not as information about the tool. On `lot_time` the residual is ahead of both controls at every seed, which is the one place a genuine tool signature should help; the separation is below the controls' half-range at n=3, so we record it as a hypothesis and not a result.
 
 ### 4.2 Lot-adversarial self-supervised pretraining is worse than random initialization
@@ -228,8 +246,9 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | die-graph GNN | `erm` | sess2 | 3 | 0.7524 | ±0.0036 |
 | `lot` | CNN + 4th channel | `erm` | — | 3 | 0.8696 | ±0.0096 |
 | `lot` | CNN + 4th channel | `erm` | failmask | 3 | 0.8692 | ±0.0065 |
-| `lot` | CNN + 4th channel | `erm` | sess2 | 2 | 0.8740 | ±0.0079 |
+| `lot` | CNN + 4th channel | `erm` | sess2 | 3 | 0.8717 | ±0.0079 |
 | `lot` | CNN + 4th channel | `erm` | zerochan | 3 | 0.8689 | ±0.0075 |
+| `lot` | spectral operator | `erm` | sess2 | 3 | 0.8405 | ±0.0216 |
 | `lot_time` | CNN (GroupNorm) | `erm` | — | 3 | 0.6985 | ±0.0045 |
 | `lot_time` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.6345 | ±0.0225 |
 | `lot_time` | CNN + 4th channel | `erm` | — | 3 | 0.7088 | ±0.0070 |

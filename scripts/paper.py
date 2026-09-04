@@ -477,6 +477,48 @@ def main():
     if rows:
         W(table(rows, ["protocol", "fourth channel", "macro-F1", "vs no channel"]))
         W("")
+    rm = Path(a.runs) / "rpca_mechanism.json"
+    if rm.exists():
+        d = json.loads(rm.read_text())
+        pc = d["per_class"]
+        W("**Why it cannot help, which is more interesting than that it does "
+          "not.** RPCA's low-rank part is what a lot's wafers share, and it is "
+          "handed to the encoder on the theory that the shared component is the "
+          "tool's nuisance signature. That requires the defect to be per-wafer "
+          "and the nuisance to be lot-wide. On this corpus the opposite holds "
+          "for the class it fires on most:")
+        W("")
+        W(table([[k, v["n"], v["n_active"],
+                  f"{v['enrichment_vs_corpus']:.2f}x",
+                  (f"{v['mean_failed_die_mass_removed']:.3f}"
+                   if v["mean_failed_die_mass_removed"] is not None else "-")]
+                 for k, v in sorted(pc.items(),
+                                    key=lambda kv: -(kv[1]["enrichment_vs_corpus"] or 0))],
+                ["class", "n", "n with a decomposition",
+                 "enrichment vs corpus", "failed-die mass removed"]))
+        W("")
+        W(f"The decomposition fires on {d['frac_active']:.2%} of wafers, and "
+          f"{pc['Edge-Ring']['n_active']:,} of those "
+          f"{d['n_active']:,} are `Edge-Ring` — "
+          f"{pc['Edge-Ring']['share_active']:.1%} of every `Edge-Ring` wafer in "
+          f"the corpus, an enrichment of "
+          f"{pc['Edge-Ring']['enrichment_vs_corpus']:.1f}x. On those wafers it "
+          f"removes {pc['Edge-Ring']['mean_failed_die_mass_removed']:.1%} of the "
+          "failed-die mass. `Edge-Ring` is edge roll-off: a lot-level process "
+          "condition, shared by design across the wafers of a lot. **What the "
+          "lot shares is the defect, and the decomposition deletes it.**")
+        W("")
+        W("The converse is just as sharp. `Scratch` has an enrichment of "
+          f"{pc['Scratch']['enrichment_vs_corpus']:.2f}x — the decomposition "
+          "essentially never fires on it, because a scratch on one wafer is not "
+          "shared by its lot. `Loc` is "
+          f"{pc['Loc']['enrichment_vs_corpus']:.2f}x. Those two are the long "
+          "tail this benchmark most needs moved, and they are precisely the "
+          "classes a lot-signature method cannot reach. A per-lot low-rank "
+          "prior is pointed the wrong way for this corpus: it subtracts signal "
+          "from the classes that are lot-correlated and offers nothing to the "
+          "classes that are not.")
+        W("")
     W("On `lot` the three fourth-channel variants are separated from each other "
       "by less than the seed spread of any one of them. **A channel of zeros "
       "buys what the decomposition buys.** Whatever the fourth channel is worth "

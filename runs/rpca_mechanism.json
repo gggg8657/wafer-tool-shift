@@ -1,0 +1,75 @@
+{
+  "n_wafers": 172948,
+  "n_active": 8521,
+  "frac_active": 0.04926914448273469,
+  "mean_failed_die_mass_removed_when_active": 0.5808144807815552,
+  "median_failed_die_mass_removed_when_active": 0.6079026460647583,
+  "per_class": {
+    "none": {
+      "n": 147429,
+      "n_active": 268,
+      "share_active": 0.0018178241729917453,
+      "enrichment_vs_corpus": 0.036895793342398356,
+      "mean_failed_die_mass_removed": 0.0037514958530664444
+    },
+    "Center": {
+      "n": 4294,
+      "n_active": 174,
+      "share_active": 0.04052165812761994,
+      "enrichment_vs_corpus": 0.8224550791991097,
+      "mean_failed_die_mass_removed": 0.46716073155403137
+    },
+    "Donut": {
+      "n": 555,
+      "n_active": 119,
+      "share_active": 0.21441441441441442,
+      "enrichment_vs_corpus": 4.351900498080524,
+      "mean_failed_die_mass_removed": 0.38751569390296936
+    },
+    "Edge-Loc": {
+      "n": 5189,
+      "n_active": 140,
+      "share_active": 0.02698015031798034,
+      "enrichment_vs_corpus": 0.5476074448062509,
+      "mean_failed_die_mass_removed": 0.3642256557941437
+    },
+    "Edge-Ring": {
+      "n": 9680,
+      "n_active": 7519,
+      "share_active": 0.7767561983471074,
+      "enrichment_vs_corpus": 15.765571058764879,
+      "mean_failed_die_mass_removed": 0.6156800985336304
+    },
+    "Loc": {
+      "n": 3593,
+      "n_active": 80,
+      "share_active": 0.022265516281658782,
+      "enrichment_vs_corpus": 0.4519160321418053,
+      "mean_failed_die_mass_removed": 0.23562300205230713
+    },
+    "Near-full": {
+      "n": 149,
+      "n_active": 26,
+      "share_active": 0.174496644295302,
+      "enrichment_vs_corpus": 3.54170233981738,
+      "mean_failed_die_mass_removed": 0.8096593618392944
+    },
+    "Random": {
+      "n": 866,
+      "n_active": 192,
+      "share_active": 0.22170900692840648,
+      "enrichment_vs_corpus": 4.499956499266992,
+      "mean_failed_die_mass_removed": 0.5235584378242493
+    },
+    "Scratch": {
+      "n": 1193,
+      "n_active": 3,
+      "share_active": 0.002514668901927913,
+      "enrichment_vs_corpus": 0.05103942697460728,
+      "mean_failed_die_mass_removed": null
+    }
+  },
+  "most_enriched": "Edge-Ring",
+  "least_enriched": "none",
+  "note": "RPCA's low-rank part is what a lot's wafers share. It fires almost only on classes that are lot-level process conditions, where the shared component IS the defect, and essentially never on the per-wafer classes the long tail is made of. The decomposition removes signal from the classes it touches and does nothing for the classes that need help."
+}
