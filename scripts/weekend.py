@@ -355,6 +355,50 @@ def main():
           "four minutes of CPU would have settled it first.")
         W("")
 
+    # ---- the handed-down target, answered with numbers
+    mx = sorted(Path(a.runs).glob("mixedsynth__*.json"))
+    if mx:
+        import collections as _c
+        G = _c.defaultdict(list)
+        for p_ in mx:
+            r = json.loads(p_.read_text())
+            G[(r["protocol"], r["loss"])].append(r)
+        W("### 2.8 The target, answered: 0.95 is not reachable here and focal "
+          "is not the reason")
+        W("")
+        rows = []
+        for proto, label in (("iid", "optimistic (random source split)"),
+                             ("lot", "honest (lot-disjoint sources)")):
+            best, bl = None, None
+            for (pp, loss), rs in G.items():
+                if pp != proto:
+                    continue
+                v = sum(r["test_at_val_tuned_thresholds"]["macro_f1"]
+                        for r in rs) / len(rs)
+                if best is None or v > best:
+                    best, bl = v, loss
+            rows.append([label, f"`{bl}`", f"{best:.4f}", f"{best - 0.95:+.4f}"])
+        W(table(rows, ["protocol", "best loss", "multi-label macro-F1",
+                       "vs the 0.95 target"]))
+        W("")
+        def _vals(k):
+            return sorted(r["test_at_val_tuned_thresholds"]["macro_f1"]
+                          for r in G[k])
+        overlaps = all(
+            not (min(_vals((p_, "focal"))) > max(_vals((p_, "bce")))
+                 or min(_vals((p_, "bce"))) > max(_vals((p_, "focal"))))
+            for p_ in ("iid", "lot"))
+        W("Measured on **MIXED-SYNTH**, which is synthetic — mixed-type wafers "
+          "built by OR-ing two same-geometry WM-811K wafers — and therefore an "
+          "*upper bound* on the real mixed-type task, since overlaid patterns "
+          "do not interact the way compound defects do. So the closest figure "
+          "to the target is the optimistic split of an easier-than-real "
+          "dataset, and it still misses by more than a tenth."
+          + (" Focal's seed range overlaps plain BCE's on both protocols, and "
+             "positive-class weighting is clearly worse: the loss named in the "
+             "target contributes nothing." if overlaps else ""))
+        W("")
+
     # ---------------------------------------------------------------- decisions
     W("## 3. Four things that need a human decision")
     W("")
@@ -378,8 +422,10 @@ def main():
     W("  *Recommendation: (a) if anyone can spare five minutes for the "
       "credentials, else (b) with the upper-bound caveat kept prominent.*")
     W("")
-    W("**Decision 2 — what to do about the 0.95 target.** No honest protocol "
-      "here produces it. The best lot-disjoint cell is "
+    W("**Decision 2 — what to do about the 0.95 target, now that it is "
+      "measured.** Section 2.8 gives the multi-label numbers and section 1 the "
+      "single-label ones; every reading misses, and the closest is the "
+      "optimistic split of a synthetic upper bound. The best lot-disjoint cell is "
       f"{show(agg(C, ('lot', 'cnn_gn', 'erm', '')))} and the best iid cell is "
       f"{show(agg(C, ('iid', 'cnn_gn', 'erm', '')))}. Published figures near "
       "0.95 are 9-class iid splits with heavy augmentation, which is the `iid` "

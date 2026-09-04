@@ -182,6 +182,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range |
 |---|---|---|---|---|---|---|
+| `iid` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.8625 | ±0.0042 |
 | `lot` | CNN (BatchNorm) | `coral` | — | 3 | 0.8468 | ±0.0090 |
 | `lot` | CNN (BatchNorm) | `coral` | dtime | 3 | 0.8443 | ±0.0098 |
 | `lot` | CNN (BatchNorm) | `dann` | — | 3 | 0.8517 | ±0.0080 |
@@ -250,6 +251,51 @@ We therefore constructed **MIXED-SYNTH**: 160,757 training and 53,855 test wafer
 | lot | `posweight` | 1 | 0.7118 | 0.8056 | 0.8280 | 0.8682 |
 
 Thresholds are tuned per class on a lot-disjoint validation split carved from training, never on test. Both numbers are given because threshold tuning is worth several points on a long-tailed label set and the two are different metrics.
+
+### 7.1 The target, answered
+
+The target this work was given is *multi-label F1 >= 0.95 under scarce labels, with focal loss*. Three things have to be said about it, and only the third is a number.
+
+First, **it is not defined on WM-811K**, which is single-label. Any published figure of that shape is measured on a different dataset, or on a single-label problem relabelled as multi-label, or with the defect-free majority class counted among the labels — where it dominates the average and carries it upward. The 8 classes here are defects only; a defect-free wafer is the all-zero target and contributes true negatives, not an easy positive.
+
+Second, **the most favourable honest reading still misses.** Taking the optimistic split, the per-class thresholds tuned on validation, and the best of the three losses:
+
+| protocol | metric | best loss | value | vs the 0.95 target |
+|---|---|---|---|---|
+| optimistic (`iid` sources) | macro-F1 | `focal` | 0.8427 | -0.1073 |
+| optimistic (`iid` sources) | micro-F1 | `focal` | 0.8524 | -0.0976 |
+| optimistic (`iid` sources) | subset accuracy | `focal` | 0.8866 | -0.0634 |
+| honest (`lot`-disjoint sources) | macro-F1 | `focal` | 0.8177 | -0.1323 |
+| honest (`lot`-disjoint sources) | micro-F1 | `focal` | 0.8440 | -0.1060 |
+| honest (`lot`-disjoint sources) | subset accuracy | `focal` | 0.8805 | -0.0695 |
+
+Every reading falls short, and the closest one is on the optimistic split of a **synthetic dataset that is an upper bound on the real task**. The honest number is the lot-disjoint one.
+
+Third, **focal loss contributes nothing**, which is worth stating because it was named in the target as though it were the mechanism:
+
+| protocol | comparison | loss | `bce` | verdict |
+|---|---|---|---|---|
+| `iid` | `focal` vs `bce` | 0.8427 | 0.8427 | ranges overlap |
+| `iid` | `posweight` vs `bce` | 0.8251 | 0.8427 | below by 0.0147 |
+| `lot` | `focal` vs `bce` | 0.8177 | 0.8136 | ranges overlap |
+| `lot` | `posweight` vs `bce` | 0.8042 | 0.8136 | below by 0.0071 |
+
+Focal's seed range overlaps plain BCE's on both protocols. Positive-class weighting is clearly *worse*. This matches the single-label result, where a focal sweep over five values of gamma against its own bit-exact `gamma = 0` control moved nothing either.
+
+The shortfall is where it has been all along. Per-class F1 in the best lot-disjoint cell:
+
+| class | F1 |
+|---|---|
+| Scratch | 0.6888 |
+| Donut | 0.7284 |
+| Loc | 0.7564 |
+| Random | 0.8299 |
+| Edge-Loc | 0.8699 |
+| Near-full | 0.8758 |
+| Center | 0.9126 |
+| Edge-Ring | 0.9296 |
+
+`Scratch` and `Loc` are last here exactly as they are last on the single-label task. Nothing about the multi-label framing changes which patterns are hard; a one-die-wide line is hard because it is a one-die-wide line.
 
 ## 8. Threats to validity
 

@@ -1183,3 +1183,55 @@ nonexistent directory that dropped three cells, and the reporter key collision
 that would have overwritten seeds — and all three shared the property that the
 harness reported success. The fix is chunked accumulation, verified against the
 naive formula to 2.9e-06.
+
+### 21. The handed-down target, answered: 0.95 is not reachable here, and focal is not the reason
+
+The target was *multi-label F1 >= 0.95 under scarce labels, with focal loss*.
+It has now been measured rather than argued about, on MIXED-SYNTH — the overlay
+construction built because MixedWM38 could not be obtained from this machine.
+
+| protocol | best loss | macro-F1 @tuned | micro-F1 @tuned | subset acc. | vs 0.95 |
+|---|---|---|---|---|---|
+| optimistic (`iid` sources) | focal | 0.8427 | 0.8524 | 0.8866 | **−0.1073** |
+| honest (`lot`-disjoint sources) | focal | 0.8177 | 0.8440 | 0.8805 | **−0.1323** |
+
+Every reading misses, and the closest one is the optimistic split of a dataset
+that is by construction *easier than the real task*: overlaid patterns do not
+interact, so a scratch crossing an edge ring changes neither signature, and the
+real MixedWM38 problem is harder than this by an unmeasured amount.
+
+**Focal contributes nothing, and it was named in the target as if it were the
+mechanism.** Its seed range overlaps plain BCE's on both protocols (iid 0.8427
+vs 0.8427; lot 0.8177 vs 0.8136). Positive-class weighting is clearly worse
+(−0.0147, −0.0071). This is the second independent test of the same claim: the
+single-label sweep over gamma in {0, 0.5, 1, 2, 5}, measured against its own
+bit-exact `gamma = 0` control, also moved nothing.
+
+**Why published figures near 0.95 exist and this one does not.** Three
+constructions inflate a "multi-label F1" on wafer data, and all three are
+avoided here:
+
+1. counting the defect-free majority as a label — it is ~85% of the corpus,
+   trivially separable, and it drags any average upward. Here a defect-free
+   wafer is the all-zero target and contributes true negatives only;
+2. reporting weighted- or micro-F1 over a set that includes that majority;
+3. an iid split. Ours is reported, labelled optimistic, and is 0.8427.
+
+The sibling repository's 0.980 weighted-F1 is an instance of (1) and (2) and its
+README says so at the point the number appears; its macro-F1 on the same run is
+0.897. None of these are the same quantity and none should be compared.
+
+**The shortfall is where it has been all weekend.** Per-class F1 in the best
+lot-disjoint cell: Scratch 0.6888, Donut 0.7284, Loc 0.7564, then Random 0.8299
+up to Edge-Ring 0.9296. `Scratch` and `Loc` are last here exactly as they are
+last on the single-label task. The multi-label framing changes nothing about
+which patterns are hard, which is itself worth reporting: a one-die-wide line is
+hard because it is a one-die-wide line, not because of how the label is encoded.
+
+**What I would tell the owner.** The gap to 0.95 is not a tuning gap and it is
+not a loss-function gap — five values of gamma, class-balanced weighting and
+positive weighting have all now been measured and none of them moves it. If
+0.95 is required, the remaining honest levers are input resolution (a scratch is
+a few dies wide and 64x64 blurs it), a larger backbone, and real MixedWM38 data.
+The first of those is the one this corpus most obviously invites and it has not
+been tried.

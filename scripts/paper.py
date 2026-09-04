@@ -571,6 +571,105 @@ def main():
           "carved from training, never on test. Both numbers are given because "
           "threshold tuning is worth several points on a long-tailed label set "
           "and the two are different metrics.")
+        W("")
+        # ---- answer the handed-down target explicitly, from the runs
+        import collections as _c
+        G = _c.defaultdict(dict)
+        for p_ in mixed:
+            r = json.loads(p_.read_text())
+            G[(r["protocol"], r["loss"])][r["seed"]] = r
+
+        def rng(d, path):
+            xs = []
+            for sd in sorted(d):
+                v = d[sd]
+                for k in path:
+                    v = v[k]
+                xs.append(v)
+            return sorted(xs)
+
+        W("### 7.1 The target, answered")
+        W("")
+        W("The target this work was given is *multi-label F1 >= 0.95 under "
+          "scarce labels, with focal loss*. Three things have to be said about "
+          "it, and only the third is a number.")
+        W("")
+        W("First, **it is not defined on WM-811K**, which is single-label. Any "
+          "published figure of that shape is measured on a different dataset, "
+          "or on a single-label problem relabelled as multi-label, or with the "
+          "defect-free majority class counted among the labels — where it "
+          "dominates the average and carries it upward. The 8 classes here are "
+          "defects only; a defect-free wafer is the all-zero target and "
+          "contributes true negatives, not an easy positive.")
+        W("")
+        W("Second, **the most favourable honest reading still misses.** Taking "
+          "the optimistic split, the per-class thresholds tuned on validation, "
+          "and the best of the three losses:")
+        W("")
+        rows = []
+        for proto in ("iid", "lot"):
+            for metric, path in (("macro-F1", ["test_at_val_tuned_thresholds",
+                                               "macro_f1"]),
+                                 ("micro-F1", ["test_at_val_tuned_thresholds",
+                                               "micro_f1"]),
+                                 ("subset accuracy",
+                                  ["test_at_val_tuned_thresholds",
+                                   "subset_accuracy"])):
+                best, bl = None, None
+                for (pp, loss), d in G.items():
+                    if pp != proto:
+                        continue
+                    v = sum(rng(d, path)) / len(d)
+                    if best is None or v > best:
+                        best, bl = v, loss
+                rows.append([("optimistic (`iid` sources)" if proto == "iid"
+                              else "honest (`lot`-disjoint sources)"),
+                             metric, f"`{bl}`", f"{best:.4f}", f"{best - 0.95:+.4f}"])
+        W(table(rows, ["protocol", "metric", "best loss", "value",
+                       "vs the 0.95 target"]))
+        W("")
+        W("Every reading falls short, and the closest one is on the optimistic "
+          "split of a **synthetic dataset that is an upper bound on the real "
+          "task**. The honest number is the lot-disjoint one.")
+        W("")
+        W("Third, **focal loss contributes nothing**, which is worth stating "
+          "because it was named in the target as though it were the mechanism:")
+        W("")
+        cmp_rows = []
+        for proto in ("iid", "lot"):
+            b = rng(G[(proto, "bce")], ["test_at_val_tuned_thresholds", "macro_f1"])
+            for loss in ("focal", "posweight"):
+                x = rng(G[(proto, loss)], ["test_at_val_tuned_thresholds",
+                                           "macro_f1"])
+                if min(x) > max(b):
+                    v = f"above by {min(x) - max(b):.4f}"
+                elif min(b) > max(x):
+                    v = f"below by {min(b) - max(x):.4f}"
+                else:
+                    v = "ranges overlap"
+                cmp_rows.append([f"`{proto}`", f"`{loss}` vs `bce`",
+                                 f"{sum(x)/len(x):.4f}", f"{sum(b)/len(b):.4f}", v])
+        W(table(cmp_rows, ["protocol", "comparison", "loss", "`bce`",
+                           "verdict"]))
+        W("")
+        W("Focal's seed range overlaps plain BCE's on both protocols. "
+          "Positive-class weighting is clearly *worse*. This matches the "
+          "single-label result, where a focal sweep over five values of gamma "
+          "against its own bit-exact `gamma = 0` control moved nothing either.")
+        W("")
+        W("The shortfall is where it has been all along. Per-class F1 in the "
+          "best lot-disjoint cell:")
+        W("")
+        best_cell = max(G[("lot", "focal")].values(),
+                        key=lambda r: r["test_at_val_tuned_thresholds"]["macro_f1"])
+        pcf = best_cell["test_at_val_tuned_thresholds"]["per_class_f1"]
+        W(table([[c, f"{v:.4f}"] for c, v in sorted(pcf.items(), key=lambda kv: kv[1])],
+                ["class", "F1"]))
+        W("")
+        W("`Scratch` and `Loc` are last here exactly as they are last on the "
+          "single-label task. Nothing about the multi-label framing changes "
+          "which patterns are hard; a one-die-wide line is hard because it is a "
+          "one-die-wide line.")
     else:
         W(f"MIXED-SYNTH training results: {NM}. `scripts/mixed_sweep.sh` queued.")
     W("")
