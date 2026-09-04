@@ -166,6 +166,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn | ema | 0.1026 | 0.1026 | +0.0000 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | tent | 0.8671 | 0.8538 | -0.0133 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | ema | 0.8671 | 0.8759 | +0.0087 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm/sslinit | ema | 0.8134 | 0.8053 | -0.0081 |
 | lot | size-invariant descriptors + MLP | anchor | ema | 0.8395 | 0.8400 | +0.0005 |
 | lot | size-invariant descriptors + MLP | coral | ema | 0.8413 | 0.8404 | -0.0009 |
 | lot | size-invariant descriptors + MLP | dann | ema | 0.8443 | 0.8422 | -0.0022 |
@@ -190,6 +191,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot_time | CNN on resized 64x64 (BatchNorm) | erm | ema | 0.6440 | 0.6409 | -0.0031 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | tent | 0.6935 | 0.5933 | -0.1003 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | ema | 0.6935 | 0.7086 | +0.0151 |
+| lot_time | CNN on resized 64x64 (GroupNorm) | erm/sslinit | ema | 0.6120 | 0.6211 | +0.0092 |
 | lot_time | size-invariant descriptors + MLP | anchor | ema | 0.6487 | 0.6441 | -0.0045 |
 | lot_time | size-invariant descriptors + MLP | erm | ema | 0.6496 | 0.6502 | +0.0006 |
 | lot_time | size-invariant descriptors + MLP | erm/rpcafeat | ema | 0.6394 | 0.6467 | +0.0073 |
@@ -224,6 +226,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | size | CNN on resized 64x64 (BatchNorm) | mixup_domain | ema | 0.7565 | 0.7512 | -0.0053 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | tent | 0.8203 | 0.7906 | -0.0297 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | ema | 0.8203 | 0.8175 | -0.0028 |
+| size | CNN on resized 64x64 (GroupNorm) | erm/sslinit | ema | 0.7602 | 0.7520 | -0.0082 |
 | size | size-invariant descriptors + MLP | coral | ema | 0.7937 | 0.7964 | +0.0027 |
 | size | size-invariant descriptors + MLP | dann | ema | 0.7800 | 0.7774 | -0.0026 |
 | size | size-invariant descriptors + MLP | erm | ema | 0.7986 | 0.8005 | +0.0019 |
@@ -243,13 +246,16 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | protocol | representation | variant | macro-F1 | vs plain | p10 domain F1 | vs plain |
 |---|---|---|---|---|---|---|
 | lot | CNN on resized 64x64 (BatchNorm) | + Fourier amplitude swap augmentation | 0.8566 | -0.0021 | 0.4898 | +0.0000 |
+| lot | CNN on resized 64x64 (GroupNorm) | + lot-adversarial SSL initialization | 0.8134 | -0.0537 | 0.4898 | -0.0102 |
 | lot | size-invariant descriptors + MLP | + RPCA lot signature as features | 0.8461 | +0.0044 | 0.4898 | +0.0000 |
 | lot | CNN + RPCA lot-signature channel | 4th channel = raw failed-die mask (RPCA control) | 0.8765 | -0.0049 | 0.5000 | +0.0000 |
 | lot | CNN + RPCA lot-signature channel | 4th channel = zeros (RPCA control) | 0.8772 | -0.0041 | 0.5000 | +0.0000 |
+| lot_time | CNN on resized 64x64 (GroupNorm) | + lot-adversarial SSL initialization | 0.6120 | -0.0816 | 0.4898 | +0.0000 |
 | lot_time | size-invariant descriptors + MLP | + RPCA lot signature as features | 0.6394 | -0.0101 | 0.4898 | +0.0000 |
 | lot_time | CNN + RPCA lot-signature channel | 4th channel = raw failed-die mask (RPCA control) | 0.6905 | -0.0114 | 0.4898 | +0.0000 |
 | lot_time | CNN + RPCA lot-signature channel | 4th channel = zeros (RPCA control) | 0.6991 | -0.0028 | 0.4898 | +0.0000 |
 | size | CNN on resized 64x64 (BatchNorm) | + Fourier amplitude swap augmentation | 0.7572 | -0.0110 | 0.5605 | +0.0006 |
+| size | CNN on resized 64x64 (GroupNorm) | + lot-adversarial SSL initialization | 0.7602 | -0.0601 | 0.5377 | -0.1205 |
 | size | size-invariant descriptors + MLP | + RPCA lot signature as features | 0.7942 | -0.0044 | 0.5377 | -0.0124 |
 | size | CNN + RPCA lot-signature channel | 4th channel = raw failed-die mask (RPCA control) | 0.8287 | +0.0033 | 0.6780 | +0.0141 |
 | size | CNN + RPCA lot-signature channel | 4th channel = zeros (RPCA control) | 0.8236 | -0.0018 | 0.6719 | +0.0081 |
@@ -261,14 +267,17 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range | per seed |
 |---|---|---|---|---|---|---|---|
 | lot | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.8647 | +/-0.0044 | 0.8671, 0.8680, 0.8591 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm | + lot-adversarial SSL initialization | 3 | 0.8143 | +/-0.0091 | 0.8134, 0.8239, 0.8056 |
 | lot | CNN + RPCA lot-signature channel | erm | - | 3 | 0.8696 | +/-0.0096 | 0.8813, 0.8654, 0.8621 |
 | lot | CNN + RPCA lot-signature channel | erm | 4th channel = raw failed-die mask (RPCA control) | 3 | 0.8692 | +/-0.0065 | 0.8765, 0.8678, 0.8634 |
 | lot | CNN + RPCA lot-signature channel | erm | 4th channel = zeros (RPCA control) | 3 | 0.8689 | +/-0.0075 | 0.8772, 0.8673, 0.8622 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.6985 | +/-0.0045 | 0.6935, 0.6993, 0.7026 |
+| lot_time | CNN on resized 64x64 (GroupNorm) | erm | + lot-adversarial SSL initialization | 3 | 0.6345 | +/-0.0225 | 0.6120, 0.6569, 0.6345 |
 | lot_time | CNN + RPCA lot-signature channel | erm | - | 3 | 0.7088 | +/-0.0070 | 0.7020, 0.7159, 0.7084 |
 | lot_time | CNN + RPCA lot-signature channel | erm | 4th channel = raw failed-die mask (RPCA control) | 3 | 0.7004 | +/-0.0096 | 0.6905, 0.7008, 0.7098 |
 | lot_time | CNN + RPCA lot-signature channel | erm | 4th channel = zeros (RPCA control) | 3 | 0.7018 | +/-0.0030 | 0.6991, 0.7011, 0.7051 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.8467 | +/-0.0346 | 0.8203, 0.8301, 0.8895 |
+| size | CNN on resized 64x64 (GroupNorm) | erm | + lot-adversarial SSL initialization | 3 | 0.7711 | +/-0.0265 | 0.7602, 0.7500, 0.8030 |
 | size | CNN + RPCA lot-signature channel | erm | - | 3 | 0.8421 | +/-0.0359 | 0.8254, 0.8146, 0.8863 |
 | size | CNN + RPCA lot-signature channel | erm | 4th channel = raw failed-die mask (RPCA control) | 3 | 0.8421 | +/-0.0343 | 0.8287, 0.8145, 0.8832 |
 | size | CNN + RPCA lot-signature channel | erm | 4th channel = zeros (RPCA control) | 3 | 0.8398 | +/-0.0312 | 0.8236, 0.8167, 0.8790 |

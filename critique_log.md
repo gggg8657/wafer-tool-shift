@@ -387,3 +387,63 @@ that on `lot`, `cnn_gn` with any fourth channel and `cnn_gn` without one are
 indistinguishable at three seeds, mean 0.865–0.870. This is a negative result
 about a method this repo invented for itself, which makes it the least
 convenient kind and the one most worth keeping.
+
+### 6. The SSL-initialized cells, once they actually ran: pretraining costs 5–8 points
+
+With the redirect bug fixed the nine cells ran. `--init-from` reports
+`initialized 26/26 tensors`, i.e. the whole encoder, so the transfer is total,
+not partial.
+
+| protocol | from scratch | SSL-initialized | difference |
+|---|---|---|---|
+| `lot` | 0.8647 ±0.0044 — 0.8671, 0.8680, 0.8591 | 0.8143 ±0.0091 — 0.8134, 0.8239, 0.8056 | **−0.0504** |
+| `size` | 0.8467 ±0.0346 — 0.8203, 0.8301, 0.8895 | 0.7711 ±0.0265 — 0.7602, 0.7500, 0.8030 | **−0.0756** |
+| `lot_time` | 0.6985 ±0.0045 — 0.6935, 0.6993, 0.7026 | 0.6345 ±0.0225 — 0.6120, 0.6569, 0.6345 | **−0.0640** |
+
+On all three protocols the two seed ranges do not overlap at all: the best
+SSL-initialized seed is below the worst from-scratch seed every time. At n=3
+that is about as clean as this design can give. Lot-adversarial masked-die
+pretraining on 638,506 unlabelled wafers does not help under shift — it costs
+five to eight points.
+
+This is consistent with the pretraining log rather than a surprise on top of it.
+The adversary was supposed to push the nuisance cross-entropy up toward its
+chance value of 5.7683; over 8 epochs it went 5.0889, 4.9570, 4.8939, 4.8877,
+4.9902, 5.2285, 4.9598, 5.0374 — traction, never arrival, not monotone. An
+embedding that still predicts the nuisance 0.73 nats better than chance has not
+been made invariant to it; it has been made *worse at the thing we then ask it
+to do*, since the reconstruction objective and the reversal are both pulling the
+representation away from class-discriminative structure.
+
+**The confound I have to rule out before this goes in a paper.** Every cell
+above fine-tunes at `lr 2e-3` on a OneCycle schedule, and that LR was chosen for
+a random initialization. It is not obviously right for pretrained weights, whose
+scale is different: measured from the checkpoint, the deepest conv has mean |w|
+0.0852 against 0.0147 for a freshly constructed encoder, a factor of 5.8. A
+schedule peaking at 2e-3 may simply be destroying what it was given, in which
+case the honest claim is "this pretraining does not survive this recipe", not
+"this pretraining is bad".
+
+Two things I checked before assuming the confound was elsewhere:
+
+- The classifier head is **not** a stale head from another task. The checkpoint
+  carries `head.weight` of shape (9, 128) because `MaskedDieModel` wraps a
+  whole `CnnResized`, but pretraining only ever calls `enc.embed()`, so that
+  head never received a gradient. Its statistics match a fresh init to three
+  decimals (mean |w| 0.04374 vs 0.04419, std 0.05057 vs 0.05104). Loading it is
+  equivalent to a different random draw. So no `--init-body-only` variant is
+  needed and I did not add one.
+- `initialized 26/26` confirms nothing was silently skipped on a shape mismatch,
+  which would have made this a partial-transfer result masquerading as a full one.
+
+`scripts/ssl_lr_sweep.sh` runs **both arms** at 2e-4, 5e-4, 1e-3 (2e-3 is
+already measured for both), two seeds each, and compares LR by LR. Sweeping only
+the pretrained arm and putting its best against the single from-scratch cell
+would be selection on the treatment — the mirror image of the mistake that made
+`rpca_cnn` look like a winner.
+
+**Prediction, recorded before the sweep runs:** if the deficit is a recipe
+mismatch, the sslinit curve should be much flatter in LR than the from-scratch
+curve and should close most of the gap at 2e-4. If sslinit is below scratch at
+every LR, the representation is genuinely worse and the negative result stands
+as stated.
