@@ -320,3 +320,37 @@ def test_permutation_test_is_exact_and_symmetric():
     # and the reason this sweep needs eight seeds: at three per arm the
     # smallest two-sided p is 0.1, so n=3 could never have settled it
     assert 2.0 / m.perm_p([1.0, 2, 3], [4.0, 5, 6])[1] == 0.1
+
+
+def test_hiding_the_fail_plane_actually_hides_it():
+    """The first `--hide-raw-fail` was void and the failure was silent.
+
+    The one-hot is over {outside, pass, fail} and its planes sum to 1
+    everywhere, so zeroing the fail plane leaves it recoverable exactly as
+    `1 - ch0 - ch1`. The experiment that used it produced a clean null that
+    meant nothing. This asserts the property the flag is supposed to have:
+    given the remaining planes, the failed-die mask must NOT be a linear
+    function of them.
+    """
+    from wts.rpca import stack_channels
+
+    maps = torch.tensor([[[0, 1, 2], [1, 2, 0], [2, 0, 1]]], dtype=torch.uint8)
+    fail = (maps == 2).float()
+    x = stack_channels(maps, fail)
+
+    # the bug: the original one-hot leaks the fail plane through its complement
+    assert torch.allclose(x[:, 0] + x[:, 1] + x[:, 2], torch.ones_like(x[:, 0]))
+    assert torch.allclose(1.0 - x[:, 0] - x[:, 1], x[:, 2])
+
+    # the fix: outside / inside / zero / switch, where inside does not
+    # distinguish passing from failing dies
+    hidden = torch.stack([(maps == 0).float(), (maps > 0).float(),
+                          torch.zeros_like(x[:, 2]), x[:, 3]], dim=1)
+    assert torch.allclose(hidden[:, 0] + hidden[:, 1], torch.ones_like(hidden[:, 0]))
+    # every linear combination of the two visible planes is constant on the
+    # inside, so none of them can equal the fail mask
+    inside = maps > 0
+    for a_ in (-1.0, 0.0, 1.0, 2.0):
+        for b_ in (-1.0, 0.0, 1.0, 2.0):
+            guess = a_ * hidden[:, 0] + b_ * hidden[:, 1]
+            assert not torch.allclose(guess[inside], fail[inside])

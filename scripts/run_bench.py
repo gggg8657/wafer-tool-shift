@@ -206,17 +206,28 @@ class Runner:
             x = stack_channels(maps, self.resid_dev[sd])
             if self.a.hide_raw_fail:
                 # `stack_channels` concatenates the fourth channel to the
-                # *intact* one-hot, so channel 2 still carries the raw
-                # failed-die mask and the encoder can simply ignore whatever is
-                # in channel 3. That is why the RPCA residual neither helps nor
+                # *intact* one-hot, so the encoder can ignore whatever is in
+                # channel 3. That is why the RPCA residual neither helps nor
                 # hurts: the decomposition removes 61.6% of the failed-die mass
-                # on the Edge-Ring wafers it fires on, and the model reads the
-                # untouched copy beside it. Zeroing channel 2 removes that
-                # fallback, so the fourth channel becomes the *only* description
-                # of where the wafer failed -- which is the condition under
-                # which "residual vs raw mask" is actually a question.
-                x = x.clone()
-                x[:, 2] = 0.0
+                # on the Edge-Ring wafers it fires on, and the model reads an
+                # untouched copy beside it.
+                #
+                # Removing that fallback is harder than it looks, and the first
+                # attempt at it was void. The one-hot is over {outside, pass,
+                # fail} and its three planes sum to 1 everywhere, so zeroing the
+                # fail plane leaves it exactly recoverable as 1 - ch0 - ch1 by a
+                # single 1x1 convolution. Nothing was hidden.
+                #
+                # What actually hides it is collapsing pass and fail into one
+                # "inside the wafer" plane, so the partition of inside dies into
+                # passing and failing exists only in channel 3:
+                #   ch0 = outside, ch1 = inside, ch2 = 0, ch3 = the switch.
+                x = torch.stack([
+                    (maps == 0).float(),
+                    (maps > 0).float(),
+                    torch.zeros_like(x[:, 2]),
+                    x[:, 3],
+                ], dim=1)
         else:
             x = onehot_maps(maps)
         if self.a.encoder == "graph":

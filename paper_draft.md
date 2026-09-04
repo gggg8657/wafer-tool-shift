@@ -61,7 +61,7 @@ The forward-only test side holds 19 geometries against 338 in training, and 14.1
 
 Every verdict in this section requires two things: the two cells' seed ranges must not overlap, **and** the margin between them must exceed the run-to-run spread between *identical* invocations of one cell — because seeds are run back to back on one pair of GPUs, so a seed range measures the seed and not the pipeline.
 
-That spread is **not one number**. Measured per protocol where it has been measured: `lot` 0.0054. Protocols without their own measurement fall back to 0.0054, the largest measured, since being too strict withdraws a claim and being too lenient publishes one. Observed *seed* ranges differ by protocol far more than that: 0.009–0.019 on `lot` against 0.069–0.072 on `size`.
+That spread is **not one number**. Measured per protocol where it has been measured: `lot` 0.0054, `size` 0.0133. Protocols without their own measurement fall back to 0.0133, the largest measured, since being too strict withdraws a claim and being too lenient publishes one. Observed *seed* ranges differ by protocol far more than that: 0.009–0.019 on `lot` against 0.069–0.072 on `size`.
 
 **Protocol `lot`** (deltas against the same encoder under ERM):
 
@@ -218,6 +218,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (BatchNorm) | `dann` | dtime | 3 | 0.8454 | ±0.0132 |
 | `lot` | CNN (BatchNorm) | `erm` | — | 3 | 0.8522 | ±0.0069 |
 | `lot` | CNN (BatchNorm) | `erm` | dtime | 3 | 0.8514 | ±0.0073 |
+| `lot` | CNN (BatchNorm) | `erm` | gnbn | 8 | 0.8596 | ±0.0143 |
 | `lot` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.8543 | ±0.0045 |
 | `lot` | CNN (BatchNorm) | `group_dro` | — | 3 | 0.8535 | ±0.0063 |
 | `lot` | CNN (BatchNorm) | `group_dro` | dtime | 3 | 0.8257 | ±0.0139 |
@@ -229,6 +230,11 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (BatchNorm) | `mixup_domain` | dtime | 3 | 0.8371 | ±0.0138 |
 | `lot` | CNN (GroupNorm) | `erm` | — | 3 | 0.8647 | ±0.0044 |
 | `lot` | CNN (GroupNorm) | `erm` | cw | 2 | 0.8692 | ±0.0044 |
+| `lot` | CNN (GroupNorm) | `erm` | gnbn | 8 | 0.8726 | ±0.0160 |
+| `lot` | CNN (GroupNorm) | `erm` | poolmean | 3 | 0.8666 | ±0.0064 |
+| `lot` | CNN (GroupNorm) | `erm` | poolmeanmax | 3 | 0.8839 | ±0.0033 |
+| `lot` | CNN (GroupNorm) | `erm` | poolmeanmean | 3 | 0.8717 | ±0.0081 |
+| `lot` | CNN (GroupNorm) | `erm` | rpca2_3ch | 3 | 0.8703 | ±0.0096 |
 | `lot` | CNN (GroupNorm) | `erm` | scratch_lr1e-3 | 2 | 0.8690 | ±0.0009 |
 | `lot` | CNN (GroupNorm) | `erm` | scratch_lr2e-4 | 2 | 0.7993 | ±0.0020 |
 | `lot` | CNN (GroupNorm) | `erm` | scratch_lr5e-4 | 2 | 0.8528 | ±0.0049 |
@@ -246,6 +252,9 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | die-graph GNN | `erm` | sess2 | 3 | 0.7524 | ±0.0036 |
 | `lot` | CNN + 4th channel | `erm` | — | 3 | 0.8696 | ±0.0096 |
 | `lot` | CNN + 4th channel | `erm` | failmask | 3 | 0.8692 | ±0.0065 |
+| `lot` | CNN + 4th channel | `erm` | rpca2_failmask | 3 | 0.8712 | ±0.0057 |
+| `lot` | CNN + 4th channel | `erm` | rpca2_residual | 3 | 0.8701 | ±0.0098 |
+| `lot` | CNN + 4th channel | `erm` | rpca2_zeros | 3 | 0.8669 | ±0.0065 |
 | `lot` | CNN + 4th channel | `erm` | sess2 | 3 | 0.8717 | ±0.0079 |
 | `lot` | CNN + 4th channel | `erm` | zerochan | 3 | 0.8689 | ±0.0075 |
 | `lot` | spectral operator | `erm` | sess2 | 3 | 0.8405 | ±0.0216 |
@@ -254,14 +263,37 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot_time` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.7002 | ±0.0043 |
 | `lot_time` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.6345 | ±0.0225 |
 | `lot_time` | descriptors + MLP | `erm` | sess2 | 3 | 0.6511 | ±0.0020 |
+| `lot_time` | die-graph GNN | `erm` | sess2 | 3 | 0.5566 | ±0.0149 |
 | `lot_time` | CNN + 4th channel | `erm` | — | 3 | 0.7088 | ±0.0070 |
 | `lot_time` | CNN + 4th channel | `erm` | failmask | 3 | 0.7004 | ±0.0096 |
+| `lot_time` | CNN + 4th channel | `erm` | sess2 | 3 | 0.7149 | ±0.0030 |
 | `lot_time` | CNN + 4th channel | `erm` | zerochan | 3 | 0.7018 | ±0.0030 |
+| `lot_time` | spectral operator | `erm` | sess2 | 3 | 0.6530 | ±0.0242 |
+| `size` | CNN (BatchNorm) | `coral` | sizeseed | 3 | 0.7714 | ±0.0137 |
+| `size` | CNN (BatchNorm) | `dann` | sizeseed | 3 | 0.7744 | ±0.0382 |
+| `size` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.7843 | ±0.0312 |
+| `size` | CNN (BatchNorm) | `erm` | sizeseed | 3 | 0.7915 | ±0.0368 |
+| `size` | CNN (BatchNorm) | `group_dro` | sizeseed | 3 | 0.6381 | ±0.0922 |
+| `size` | CNN (BatchNorm) | `irm` | sizeseed | 3 | 0.7657 | ±0.0617 |
+| `size` | CNN (BatchNorm) | `logit_adjust` | sizeseed | 3 | 0.6798 | ±0.0680 |
+| `size` | CNN (BatchNorm) | `mixup_domain` | sizeseed | 3 | 0.7803 | ±0.0405 |
 | `size` | CNN (GroupNorm) | `erm` | — | 3 | 0.8467 | ±0.0346 |
+| `size` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.8413 | ±0.0369 |
 | `size` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.7711 | ±0.0265 |
+| `size` | descriptors + MLP | `coral` | sizeseed | 3 | 0.8036 | ±0.0284 |
+| `size` | descriptors + MLP | `dann` | sizeseed | 3 | 0.7894 | ±0.0241 |
+| `size` | descriptors + MLP | `erm` | sess2 | 3 | 0.8081 | ±0.0301 |
+| `size` | descriptors + MLP | `erm` | sizeseed | 3 | 0.8081 | ±0.0301 |
+| `size` | descriptors + MLP | `group_dro` | sizeseed | 3 | 0.6740 | ±0.1190 |
+| `size` | descriptors + MLP | `irm` | sizeseed | 3 | 0.7902 | ±0.0322 |
+| `size` | descriptors + MLP | `logit_adjust` | sizeseed | 3 | 0.7325 | ±0.0372 |
+| `size` | descriptors + MLP | `mixup_domain` | sizeseed | 3 | 0.8109 | ±0.0269 |
+| `size` | die-graph GNN | `erm` | sess2 | 3 | 0.6899 | ±0.0065 |
 | `size` | CNN + 4th channel | `erm` | — | 3 | 0.8421 | ±0.0359 |
 | `size` | CNN + 4th channel | `erm` | failmask | 3 | 0.8421 | ±0.0343 |
+| `size` | CNN + 4th channel | `erm` | sess2 | 3 | 0.8438 | ±0.0283 |
 | `size` | CNN + 4th channel | `erm` | zerochan | 3 | 0.8398 | ±0.0312 |
+| `size` | spectral operator | `erm` | sess2 | 3 | 0.7607 | ±0.0579 |
 
 A seed reshuffles the model initialization, which training domains become the inner validation split, and — for `lot` and `size` — which groups land in the test set. So this is the spread of the whole pipeline. The `size` protocol's spread is an order of magnitude larger than `lot`'s, because each seed holds out different geometries and geometries are heterogeneous. Any effect reported on `size` that is smaller than that spread is not an effect. `lot_time` is the tightest, and it is the only protocol whose test set does not move with the seed.
 

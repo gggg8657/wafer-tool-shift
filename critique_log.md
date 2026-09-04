@@ -1854,3 +1854,144 @@ across two turns before checking the thing it was standing in for.
 
 Both corrections are now computed sections in `RESULTS.md` rather than prose, so
 neither can drift back.
+
+## Scoring the pre-registered hypotheses
+
+Five hypotheses were written down before their runs. All five have now landed.
+Two confirmed, two falsified, one void because the experiment did not do what I
+thought it did.
+
+### 36. H24 confirmed: pooling is the long tail, and it is the weekend's first positive result
+
+`cnn_gn` on `lot`, three seeds each, one session, `lot` floor 0.0054:
+
+| pool | macro-F1 | vs `mean` | Scratch | Loc | verdict |
+|---|---|---|---|---|---|
+| `mean` (original) | 0.8666 ±r 0.0128 | — | 0.7216 | 0.7714 | — |
+| **`meanmax`** | **0.8839** ±r 0.0065 | **+0.0173** | **0.7782** | 0.7807 | **separated**, margin 0.0067 |
+| `meanmean` (control) | 0.8717 ±r 0.0161 | +0.0052 | 0.7210 | 0.7744 | ranges overlap |
+
+Per class against `mean`: `meanmax` moves **Scratch +0.0566, separated** at margin
+0.0180; the capacity control moves it **−0.0006**. `Loc` +0.0093, overlapping.
+
+**The control is what makes this a result.** `meanmean` has exactly the parameter
+count of `meanmax` and carries the mean concatenated with itself. It buys
+nothing. So the +0.0173 is max pooling, not a wider head — which is the question
+that killed the RPCA channel and would have killed this one had it been the
+answer.
+
+The mechanism holds up: a `Scratch` is a thin connected line, global average
+pooling reduces it to a mean over the wafer that is close to a slightly elevated
+background failure rate, and keeping the extreme recovers it. Six weeks of
+class-imbalance corrections did nothing to `Scratch`; changing what the encoder
+pools moved it 0.057.
+
+My prediction was *"Scratch and Loc move, macro-F1 barely does"*. Half right:
+`Scratch` moved and separated, `Loc` did not, and macro-F1 moved **and**
+separated — I understated the effect. Being wrong in the direction of the result
+being larger than predicted is still being wrong.
+
+### 37. H26 falsified: nothing separates from ERM on `size` either
+
+The `size` protocol's own run-to-run floor, measured first: **0.0133**, two and a
+half times `lot`'s. Then the 42-cell grid, three seeds, one session:
+
+| objective | `cnn_bn` vs ERM | seed range | verdict | `feat` vs ERM | verdict |
+|---|---|---|---|---|---|
+| `group_dro` | **−0.1534** | 0.1844 | margin 0.0008 < floor | **−0.1341** | margin 0.0125 < floor |
+| `logit_adjust` | −0.1117 | 0.1361 | margin 0.0018 < floor | −0.0756 | margin 0.0067 < floor |
+| `irm` | −0.0258 | 0.1234 | overlaps | −0.0179 | overlaps |
+| `coral` | −0.0200 | 0.0274 | overlaps | −0.0045 | overlaps |
+| `dann` | −0.0171 | 0.0763 | overlaps | −0.0188 | overlaps |
+| `mixup_domain` | −0.0112 | 0.0810 | overlaps | +0.0028 | overlaps |
+
+ERM's own seed range on `size` is 0.0735 (`cnn_bn`) and 0.0603 (`feat`).
+
+**I predicted GroupDRO would hold and it does not.** Its mean effect is −0.15,
+the largest in the repository, and it still fails: its seeds span **0.1844**, so
+its range and ERM's overlap almost exactly and the margin is 0.0008. GroupDRO on
+`size` is not a method that loses; it is a method that is *unstable*, sometimes
+catastrophically and sometimes not.
+
+The error in my prediction is the fourth instance of the same mistake. I compared
+−0.27 against "the seed half-range on `size`", meaning ±0.035, measured on
+`cnn_gn` under ERM. The actual seed range for the cell in question is five times
+that. I have now made this error with seed-vs-run-to-run spread (§16), a
+cross-batch baseline (§18), a cross-protocol floor (§28), and now a
+cross-*objective* seed range — and each time the effect looked realer than it
+was.
+
+**The domain-generalization result is now uniform.** Across `lot` and `size`,
+under a degenerate domain definition and a real one, at three seeds with each
+protocol's own floor: **not one of seven borrowed objectives separates from ERM
+anywhere.** That is duller than "GroupDRO is catastrophic on geometry shift" and
+it is what the data supports.
+
+### 38. H30 confirmed, exactly, including the part where the two criteria disagree
+
+GroupNorm against BatchNorm on `lot`, eight seeds per arm, one session:
+
+* mean difference **+0.0130** — predicted "about +0.012";
+* exact permutation test, 12,870 arrangements: **p = 0.0106** — predicted "below 0.05";
+* range test: **ranges overlap** — predicted "still says overlap".
+
+All three parts of the prediction hold, and the disagreement between the two
+criteria is the methodological result it was meant to be. The range test cannot
+resolve this and never could: it grows stricter with sample size, so the eight
+seeds that settle the question make non-overlap *harder*, and at three seeds per
+arm the smallest attainable two-sided p is 0.1 regardless of the data.
+
+So **GroupNorm does beat BatchNorm on `lot`, by 0.0130, p = 0.011.** The claim
+in `README.md` survives, and it is the only one of this repository's original
+claims that has survived the weekend intact. It survives because it was
+re-measured with a test capable of resolving it, not because it was believed.
+
+### 39. H31 confirmed: the clean RPCA ablation says what the original said
+
+All four arms, three seeds, one session, no arm holding a cell the others do not:
+
+| arm | macro-F1 | vs 3-channel | verdict |
+|---|---|---|---|
+| `cnn_gn` 3-channel | 0.8703 ±r 0.0192 | — | — |
+| RPCA residual | 0.8701 ±r 0.0195 | −0.0002 | ranges overlap |
+| raw fail mask | 0.8712 ±r 0.0113 | +0.0009 | ranges overlap |
+| zeros | 0.8669 ±r 0.0130 | −0.0035 | ranges overlap |
+
+Residual vs raw mask −0.0011, residual vs zeros +0.0033, both overlapping. The
+apparent −0.005 deficit from §31's within-session subgroup was n = 2 noise,
+exactly as predicted, and **declining to adopt that reading was the right call**.
+It was the most tempting number of the weekend — it made my own withdrawal look
+sharper — and it was not real.
+
+### 40. H33 void: the experiment did not do what I designed it to do
+
+`--hide-raw-fail` zeroed the one-hot's fail plane so that the fourth channel
+would be the only description of where the wafer failed. It ran, and returned a
+clean null: residual vs raw mask −0.0020, ranges overlap, `Edge-Ring` among the
+least affected classes at −0.0014.
+
+That null is meaningless. The one-hot is over {outside, pass, fail} and **its
+three planes sum to 1 everywhere**, so zeroing the fail plane leaves it exactly
+recoverable as `1 − ch0 − ch1` — a single 1×1 convolution, which the first conv
+layer is. Verified: the reconstruction error is 0.00e+00. Nothing was hidden and
+the model never lost anything.
+
+I would have accepted this null. It agreed with H31, it agreed with the early
+read in §33, and it was the third piece of evidence pointing the same way. What
+made me check was that it disagreed with a *mechanism* I had measured directly —
+RPCA removes 61.6% of `Edge-Ring`'s failed-die mass, and a model given only that
+should notice. When a well-measured mechanism predicts an effect and a clean
+experiment says zero, the experiment is the thing to doubt first.
+
+The six cells are renamed `*.void.bak` rather than deleted, so the record of the
+mistake survives. The fix collapses pass and fail into a single "inside the
+wafer" plane, so the partition exists only in the fourth channel, and
+`tests/test_smoke.py` now asserts that no linear combination of the visible
+planes equals the fail mask. Re-running now.
+
+**The general lesson, and it is the sharpest of the weekend.** Every other error
+here was a scale borrowed from the wrong context. This one is different and
+worse: an experiment that could not have produced a positive result, returning a
+negative one that agreed with everything else I believed. A control that cannot
+fail is not a control, and a null from an experiment with no power is not
+evidence — it is silence.

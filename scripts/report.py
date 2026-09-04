@@ -824,6 +824,58 @@ def main():
                   f"the plumbing. If this line ever exceeds the floor, nothing "
                   f"else in the table can be read.", ""]
 
+    # ---- pooling: the one intervention that moved the long tail
+    P = {k: v for k, v in SEEDS.items() if k[3].startswith("pool")}
+    if P:
+        base = SEEDS.get(("lot", "cnn_gn", "erm", "poolmean"))
+        if base:
+            bx = sorted(r["test"]["macro_f1"] for r in base.values())
+            rows = []
+            for tg, lab in (("poolmean", "`mean` (global average, the original)"),
+                            ("poolmeanmax", "`meanmax` (mean + max) — treatment"),
+                            ("poolmeanmean", "`meanmean` (mean + mean) — **control**")):
+                v = SEEDS.get(("lot", "cnn_gn", "erm", tg))
+                if not v:
+                    continue
+                xs = sorted(r["test"]["macro_f1"] for r in v.values())
+                pcf = lambda c: sum(r["test"]["per_class_f1"][c]
+                                    for r in v.values()) / len(v)
+                bpc = lambda c: sum(r["test"]["per_class_f1"][c]
+                                    for r in base.values()) / len(base)
+                sc = sorted(r["test"]["per_class_f1"]["Scratch"]
+                            for r in v.values())
+                bsc = sorted(r["test"]["per_class_f1"]["Scratch"]
+                             for r in base.values())
+                rows.append([lab, f(sum(xs) / len(xs)),
+                             "—" if tg == "poolmean" else
+                             f"{sum(xs)/len(xs) - sum(bx)/len(bx):+.4f}",
+                             separation(xs, bx, floor_for(F, "lot"))[0]
+                             if tg != "poolmean" else "—",
+                             f(pcf("Scratch")),
+                             "—" if tg == "poolmean" else
+                             f"{pcf('Scratch') - bpc('Scratch'):+.4f}",
+                             separation(sc, bsc, floor_for(F, "lot"))[0]
+                             if tg != "poolmean" else "—"])
+            L += ["## What the encoder pools: the long tail is an architecture "
+                  "problem", "",
+                  "Class imbalance was measured and discarded — focal loss over "
+                  "five values of gamma against its own bit-exact `gamma = 0` "
+                  "control, class-balanced weights, positive weighting: nothing, "
+                  "nothing, worse. Input resolution was refuted: 97.7% of wafers "
+                  "are *upsampled* to reach 64x64, so a finer grid has nothing "
+                  "to recover. What was left is that `CnnResized.embed` is a "
+                  "global average, and a `Scratch` is a thin connected line "
+                  "whose mean over the wafer is close to a slightly elevated "
+                  "background failure rate.", "",
+                  table(rows, ["pooling", "macro-F1", "vs `mean`", "verdict",
+                               "Scratch F1", "vs `mean`", "verdict"]), "",
+                  "**`meanmean` is why this is a result rather than a number.** "
+                  "It has exactly the parameter count of `meanmax` and carries "
+                  "the mean concatenated with itself, so it separates \"max "
+                  "pooling helps\" from \"a wider head helps\". It buys "
+                  "nothing, and it moves `Scratch` by −0.0006. The RPCA channel "
+                  "died on precisely this question.", ""]
+
     # ---- the OT weight sweep: is the collapsed cell a broken method or a
     #      badly chosen default?
     sk = {k: v for k, v in R.items() if k[2] == "sinkhorn" and k[3].startswith("ot")}

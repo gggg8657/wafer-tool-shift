@@ -8,3 +8,4 @@ data/
 logs/
 runs.bak_*/
 .heartbeat_*
+?? *.void.bak

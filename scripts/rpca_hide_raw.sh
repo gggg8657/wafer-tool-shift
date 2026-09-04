@@ -42,8 +42,8 @@ slug(){ echo "$*" | tr -cs 'A-Za-z0-9' '_' | sed 's/^_//;s/_$//' | cut -c1-90; }
 
 jobs=()
 for seed in 0 1 2; do
-  jobs+=("--encoder rpca_cnn --objective erm --protocol lot --seed $seed --sig-channel failmask --hide-raw-fail --tag hideraw_failmask")
-  jobs+=("--encoder rpca_cnn --objective erm --protocol lot --seed $seed --sig-channel residual --hide-raw-fail --tag hideraw_residual")
+  jobs+=("--encoder rpca_cnn --objective erm --protocol lot --seed $seed --sig-channel failmask --hide-raw-fail --tag hideraw2_failmask")
+  jobs+=("--encoder rpca_cnn --objective erm --protocol lot --seed $seed --sig-channel residual --hide-raw-fail --tag hideraw2_residual")
 done
 
 say "=== hide-raw-fail: ${#jobs[@]} cells on GPUs ${GPUS[*]} ==="
