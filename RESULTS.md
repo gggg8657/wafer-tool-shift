@@ -178,6 +178,8 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn | ema | 0.1026 | 0.1026 | +0.0000 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.0 | ema | 0.8609 | 0.8592 | -0.0017 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.003 | ema | 0.8591 | 0.8552 | -0.0039 |
+| lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.01 | ema | 0.8540 | 0.8503 | -0.0037 |
+| lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.03 | ema | 0.8573 | 0.8511 | -0.0062 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | tent | 0.8671 | 0.8538 | -0.0133 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | ema | 0.8671 | 0.8759 | +0.0087 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm/sslinit | ema | 0.8134 | 0.8053 | -0.0081 |
@@ -262,6 +264,8 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN on resized 64x64 (BatchNorm) | + Fourier amplitude swap augmentation | 0.8566 | -0.0021 | 0.4898 | +0.0000 |
 | lot | CNN on resized 64x64 (BatchNorm) | ot0.0 | 0.8609 | +0.7583 | 0.4898 | +0.2558 |
 | lot | CNN on resized 64x64 (BatchNorm) | ot0.003 | 0.8591 | +0.7565 | 0.4898 | +0.2558 |
+| lot | CNN on resized 64x64 (BatchNorm) | ot0.01 | 0.8540 | +0.7515 | 0.4898 | +0.2558 |
+| lot | CNN on resized 64x64 (BatchNorm) | ot0.03 | 0.8573 | +0.7548 | 0.4898 | +0.2558 |
 | lot | CNN on resized 64x64 (GroupNorm) | + lot-adversarial SSL initialization | 0.8134 | -0.0537 | 0.4898 | -0.0102 |
 | lot | size-invariant descriptors + MLP | + RPCA lot signature as features | 0.8461 | +0.0044 | 0.4898 | +0.0000 |
 | lot | CNN + RPCA lot-signature channel | 4th channel = raw failed-die mask (RPCA control) | 0.8765 | -0.0049 | 0.5000 | +0.0000 |
@@ -316,6 +320,31 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | size | 4th = RPCA residual (the claim) | 3 | 0.8421 | +/-0.0359 | -0.0046 |
 | size | 4th = raw failed-die mask (control) | 3 | 0.8421 | +/-0.0343 | -0.0045 |
 | size | 4th = zeros (control) | 3 | 0.8398 | +/-0.0312 | -0.0069 |
+
+## What each protocol actually holds out
+
+A property of the splits, computed without any model. It matters because `lot_time` is read as a *temporal* protocol and its test side is also a narrow slice of geometry space.
+
+| protocol | geometries in train | in test | in test, unseen in train | test wafers of unseen geometry | as a fraction |
+|---|---|---|---|---|---|
+| `iid` | 327 | 266 | 17 | 20 | 0.05% |
+| `lot` | 320 | 209 | 24 | 120 | 0.28% |
+| `size` | 205 | 139 | 139 | 44,908 | 100.00% |
+| `lot_time` | 338 | 19 | 4 | 6,118 | 14.15% |
+
+The forward-only protocol trains on 338 geometries and tests on **19**, with 14.15% of its test wafers of a geometry never trained on. Part of its accuracy drop is geometry shift rather than time. The per-cell `test_seen_geometry` / `test_unseen_geometry` fields split it; cells measured before those were added do not carry them.
+
+### Is the lot numbering production order?
+
+It cannot be proved; it can be refuted as arbitrary. Deciles of lot number, distributional distance against decile gap, versus 200 reassignments of numbers to lots that preserve every lot's contents:
+
+| variable | Spearman(gap, TV) | null p95 | p (one-sided) |
+|---|---|---|---|
+| `geometry` | +0.3834 | 0.2800 | 0.000 |
+| `defect_class` | +0.2560 | 0.3005 | 0.055 |
+| `failed_die_rate_ventile` | +0.4050 | 0.2452 | 0.000 |
+
+Geometry and failed-die rate drift with lot number; the defect-class mix does not. The numbering is not arbitrary, but this cannot separate production order from product blocking -- a product line numbered in a contiguous block gives the same signature.
 
 ## Which lots to pay to measure
 

@@ -29,7 +29,11 @@ mkdir -p logs runs
 say(){ echo "[$(date +%H:%M:%S)] $*" | tee -a "$LOG"; }
 slug(){ echo "$*" | tr -cs 'A-Za-z0-9' '_' | sed 's/^_//;s/_$//' | cut -c1-90; }
 
-REF="--encoder cnn_gn --objective erm --protocol lot --seed 0"
+# --tta is included because the stored seed-0 cell was measured with it. TTA
+# runs after res["test"] is computed and so cannot move test macro-F1, but the
+# gate is a like-for-like check and should not rely on that reasoning being
+# right; it reruns the recorded invocation.
+REF="--encoder cnn_gn --objective erm --protocol lot --seed 0 --tta"
 say "measuring the run-to-run floor: $REF, twice, identical arguments"
 rm -rf /tmp/det_a /tmp/det_b
 CUDA_VISIBLE_DEVICES=${GPUS[0]} $PY scripts/run_bench.py $REF --epochs "$EPOCHS" \

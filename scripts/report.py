@@ -332,6 +332,116 @@ def main():
               table(abl, ["protocol", "fourth channel", "seeds",
                           "mean macro-F1", "half-range", "vs cnn_gn"]), ""]
 
+    # ---- what each protocol actually holds out, and the reproducibility floor
+    tp = Path("runs/time_proxy.json")
+    if tp.exists():
+        d = json.loads(tp.read_text())
+        sg = d.get("split_geometry", {})
+        if sg:
+            L += ["## What each protocol actually holds out", "",
+                  "A property of the splits, computed without any model. It "
+                  "matters because `lot_time` is read as a *temporal* protocol "
+                  "and its test side is also a narrow slice of geometry space.",
+                  "",
+                  table([[f"`{k}`", v["n_geometries_train"],
+                          v["n_geometries_test"], v["n_geometries_test_unseen"],
+                          f"{v['n_test_wafers_unseen_geometry']:,}",
+                          f"{v['frac_test_wafers_unseen_geometry']:.2%}"]
+                         for k, v in sg.items()],
+                        ["protocol", "geometries in train", "in test",
+                         "in test, unseen in train",
+                         "test wafers of unseen geometry", "as a fraction"]),
+                  ""]
+            lt = sg.get("lot_time", {})
+            L += [f"The forward-only protocol trains on "
+                  f"{lt.get('n_geometries_train','?')} geometries and tests on "
+                  f"**{lt.get('n_geometries_test','?')}**, with "
+                  f"{lt.get('frac_test_wafers_unseen_geometry',0):.2%} of its "
+                  "test wafers of a geometry never trained on. Part of its "
+                  "accuracy drop is geometry shift rather than time. The "
+                  "per-cell `test_seen_geometry` / `test_unseen_geometry` "
+                  "fields split it; cells measured before those were added do "
+                  "not carry them.", ""]
+        tv = d.get("variables", {})
+        if tv:
+            L += ["### Is the lot numbering production order?", "",
+                  "It cannot be proved; it can be refuted as arbitrary. "
+                  "Deciles of lot number, distributional distance against "
+                  f"decile gap, versus {d['null_draws']} reassignments of "
+                  "numbers to lots that preserve every lot's contents:", "",
+                  table([[f"`{k}`", f"{v['spearman_gap_vs_tv']:+.4f}",
+                          f"{v['null_p95']:.4f}",
+                          f"{v['p_value_one_sided']:.3f}"]
+                         for k, v in tv.items()],
+                        ["variable", "Spearman(gap, TV)", "null p95",
+                         "p (one-sided)"]),
+                  "",
+                  "Geometry and failed-die rate drift with lot number; the "
+                  "defect-class mix does not. The numbering is not arbitrary, "
+                  "but this cannot separate production order from product "
+                  "blocking -- a product line numbered in a contiguous block "
+                  "gives the same signature.", ""]
+
+    det = Path("runs/determinism.json")
+    if det.exists():
+        dd = json.loads(det.read_text())
+        L += ["## Run-to-run reproducibility floor", "",
+              f"`{dd['cell']}`, run twice under identical arguments: "
+              f"{dd['run_a_macro_f1']:.6f} and {dd['run_b_macro_f1']:.6f}, "
+              f"differing by **{dd['run_to_run_abs_diff']:.2e}**"
+              + ("(bit-reproducible)." if dd["bit_reproducible"] else
+                 " -- the pipeline is not bit-reproducible on this GPU.") + " "
+              + dd["note"], ""]
+
+    # ---- seen / unseen geometry, wherever a cell carries it
+    def matched_macro(sgy, ugy):
+        """macro-F1 of each half over the classes *both* halves contain.
+
+        The raw macro-F1 of the two halves averages over different class sets,
+        so a difference between them can be entirely a difference in which
+        classes happened to be present. Restricting both to the shared classes
+        makes the comparison mean what a reader will assume it means.
+        """
+        if not (sgy and ugy):
+            return None, None, 0
+        shared = sorted(set(sgy["classes_present"]) & set(ugy["classes_present"]))
+        if not shared:
+            return None, None, 0
+        m = lambda r: sum(r["per_class_f1"][c] for c in shared) / len(shared)
+        return m(sgy), m(ugy), len(shared)
+
+    rows = []
+    for (p, e, o, tg), r in sorted(R.items()):
+        if "n_test_seen_geometry" not in r:
+            continue
+        sgy, ugy = r.get("test_seen_geometry"), r.get("test_unseen_geometry")
+        ms, mu, nsh = matched_macro(sgy, ugy)
+        rows.append([p, ENC_LABEL.get(e, e), f"{o}{'/' + tg if tg else ''}",
+                     f(r["test"]["macro_f1"]),
+                     f(ms), f(mu),
+                     f"{ms - mu:+.4f}" if (ms is not None and mu is not None) else "-",
+                     nsh or "-",
+                     f"{r['n_test_seen_geometry']:,}",
+                     f"{r['n_test_unseen_geometry']:,}"])
+    if rows:
+        L += ["## Test macro-F1 split by whether the geometry was seen in "
+              "training", "",
+              "How much of a protocol's difficulty is *unseen geometry* rather "
+              "than whatever else it holds out. This matters most for "
+              "`lot_time`, whose test side is a narrow slice of geometry space "
+              "(see above), and it is the difference between \"forward-only "
+              "time costs 20 points\" and \"forward-only deployment costs 20 "
+              "points, part of it for meeting new products\".", "",
+              "Both macro-F1 columns are averaged over **only the classes "
+              "present in both halves**, counted in `shared classes`; the "
+              "halves do not otherwise hold the same classes and their raw "
+              "macro-F1 values would be averages over different class sets. "
+              "Each half's full per-class F1 is in the run JSON.", "",
+              table(rows, ["protocol", "representation", "objective",
+                           "macro-F1 all", "seen geom. (matched)",
+                           "unseen geom. (matched)", "seen - unseen",
+                           "shared classes", "n seen", "n unseen"]), ""]
+
     # ---- active learning
     al_path = Path("runs/active_learning.json")
     if al_path.exists():
