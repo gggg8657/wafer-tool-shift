@@ -1995,3 +1995,81 @@ worse: an experiment that could not have produced a positive result, returning a
 negative one that agreed with everything else I believed. A control that cannot
 fail is not a control, and a null from an experiment with no power is not
 evidence — it is silence.
+
+### 41. H33 re-run with power: the effect is real, my mechanism is not
+
+The void experiment is redone with the fail plane genuinely hidden — pass and
+fail collapsed into one "inside the wafer" plane, so the partition exists only
+in the fourth channel.
+
+| fourth channel | macro-F1 | seeds | verdict |
+|---|---|---|---|
+| raw fail mask only | 0.8705 ±r 0.0071 | 0.8680, 0.8684, 0.8750 | — |
+| **RPCA residual only** | **0.8434** ±r 0.0178 | 0.8336, 0.8450, 0.8515 | **−0.0271, separated** (margin 0.0165 > floor 0.0054) |
+
+And the design check that the void version failed: with the fail plane *visible*
+the same two arms are 0.8712 and 0.8701, indistinguishable. Hide it and they
+separate by 0.027. So the fallback was exactly what masked the difference, the
+first null was a power failure, and **the RPCA residual is a materially worse
+description of where a wafer failed than the raw mask** — 0.027 worse, when it
+is the only description available.
+
+That vindicates the mechanism at the level it was measured: the decomposition
+does damage the representation. It also means the original ablation's conclusion
+was right for a reason it never tested — the fourth channel is worth nothing not
+because the residual is harmless but because the encoder was handed an
+untouched copy of what the residual destroys.
+
+**My per-class prediction is falsified, and cleanly.** I predicted the damage
+would concentrate in `Edge-Ring`, the class RPCA fires on 77.7% of the time and
+strips 61.6% of the failed-die mass from:
+
+| class | baseline | mass removed | enrichment | damage |
+|---|---|---|---|---|
+| **Donut** | 0.7943 | 0.388 | 4.35x | **−0.1213** (separated) |
+| Near-full | 0.9188 | 0.810 | 3.54x | −0.0649 |
+| Random | 0.8757 | 0.524 | 4.50x | −0.0270 |
+| Center | 0.9308 | 0.467 | 0.82x | −0.0172 |
+| Loc | 0.7740 | 0.236 | 0.45x | −0.0168 |
+| **Edge-Ring** | 0.9841 | **0.616** | **15.77x** | **−0.0038** (overlaps) |
+| Scratch | 0.6996 | — | 0.05x | +0.0221 |
+
+`Edge-Ring` has the most mass removed of any class and is the **second least
+damaged**. `Donut` has less than two thirds as much removed and loses 0.12.
+
+The obvious reading is that damage follows how much *margin* a class had rather
+than how much mass was taken: `Edge-Ring` sits at 0.984 and a partial ring is
+still unmistakably a ring, while `Donut` sits at 0.794, is 555 wafers, and is
+distinguished from `Center` by a hole that deleting a third of the mass can
+close. I cannot support that over the simpler story with these data — across the
+eight classes with a measurement, Spearman(damage, baseline F1) is +0.52 and
+Spearman(damage, mass removed) is −0.45, both weak, both in the expected
+direction, and eight points cannot separate them. Reported as descriptive.
+
+What survives without qualification: **removing "what the lot shares" costs
+0.027 of macro-F1 when nothing else describes the defect, and the cost lands
+almost entirely on classes other than the one the decomposition targets.**
+
+### 42. The one positive result exists on one protocol, which is not enough here
+
+`meanmax` is the only thing this weekend found that works. It is measured on
+`lot`, with `cnn_gn`, and it would be quoted as "the long tail is an
+architecture problem".
+
+A repository whose entire thesis is *results move when the protocol changes* has
+no business reporting a single-protocol win. `scripts/pooling_protocols.sh` runs
+`iid`, `size` and `lot_time` at three seeds for all three variants including the
+capacity control — 27 cells, launched.
+
+**H42, before the run.** On `iid` the effect holds or grows, because max pooling
+is a strictly richer statistic and the test distribution matches training. On
+`lot_time` I expect it to **shrink or reverse**: max pooling keeps the extreme a
+thin structure produces, and under forward-only shift the extremes are exactly
+what a new tool or product changes, so the mean may be the more robust statistic.
+If it reverses, the claim becomes "use max pooling when your test set resembles
+your training set", which is materially weaker and is the version the data would
+support.
+
+I have been wrong about the sign of a per-class effect once already today, so
+this is a prediction about direction only, and the control decides whether any
+of it counts.

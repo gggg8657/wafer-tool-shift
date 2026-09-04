@@ -252,6 +252,8 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | die-graph GNN | `erm` | sess2 | 3 | 0.7524 | ±0.0036 |
 | `lot` | CNN + 4th channel | `erm` | — | 3 | 0.8696 | ±0.0096 |
 | `lot` | CNN + 4th channel | `erm` | failmask | 3 | 0.8692 | ±0.0065 |
+| `lot` | CNN + 4th channel | `erm` | hideraw2_failmask | 3 | 0.8705 | ±0.0035 |
+| `lot` | CNN + 4th channel | `erm` | hideraw2_residual | 3 | 0.8434 | ±0.0089 |
 | `lot` | CNN + 4th channel | `erm` | rpca2_failmask | 3 | 0.8712 | ±0.0057 |
 | `lot` | CNN + 4th channel | `erm` | rpca2_residual | 3 | 0.8701 | ±0.0098 |
 | `lot` | CNN + 4th channel | `erm` | rpca2_zeros | 3 | 0.8669 | ±0.0065 |
