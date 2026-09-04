@@ -173,7 +173,20 @@ def _stratified_group_split(groups, y, frac, seed, min_per_class=1):
     return ~test_mask, test_mask
 
 
-def split(corpus: Corpus, protocol="lot", frac=0.25, seed=0):
+def lot_numbers(corpus):
+    """The integer in each wafer's lot name.
+
+    WM-811K carries no timestamps, but lot names run `lot1 .. lot47542`, and lot
+    numbering in a fab is issued in production order. So the index is a *proxy*
+    for time -- good enough to build a forward-only split, and labelled as a
+    proxy wherever it is used.
+    """
+    import re
+    num = [int(re.findall(r"\d+", n)[0]) for n in corpus.lot_names]
+    return torch.tensor(num, dtype=torch.long)[corpus.lot]
+
+
+def split(corpus: Corpus, protocol="lot", frac=0.25, seed=0, embargo=0.05):
     """(train_idx, test_idx) for one protocol. Indices are LongTensors."""
     y = corpus.labels.numpy()
     if protocol == "iid":
@@ -193,6 +206,26 @@ def split(corpus: Corpus, protocol="lot", frac=0.25, seed=0):
         # keeps the entanglement at its natural level, and `label_shift()`
         # reports whatever remains.
         tr, te = _stratified_group_split(corpus.size_id.numpy(), y, frac, seed)
+    elif protocol == "lot_time":
+        # Purged, embargoed, forward-only -- the split finance uses to stop a
+        # backtest from learning from its own future. Train on the earliest
+        # lots, drop a band so lots adjacent in production order cannot leak
+        # across the boundary, test on the latest. Harder and more honest than a
+        # random lot holdout, because deployment only ever runs forwards.
+        t = lot_numbers(corpus).numpy()
+        order = np.argsort(t, kind="stable")
+        n = len(t)
+        n_test = int(frac * n)
+        n_emb = int(embargo * n)
+        test_pos = order[n - n_test:]
+        train_pos = order[: max(n - n_test - n_emb, 1)]
+        tr = np.zeros(n, dtype=bool); te = np.zeros(n, dtype=bool)
+        tr[train_pos] = True; te[test_pos] = True
+        # a lot must not straddle the boundary
+        lot = corpus.lot.numpy()
+        bad = set(lot[te]) & set(lot[tr])
+        for l in bad:
+            tr[lot == l] = False
     else:
         raise ValueError(f"unknown protocol {protocol!r}")
     return (torch.from_numpy(np.where(tr)[0]), torch.from_numpy(np.where(te)[0]))
@@ -214,3 +247,36 @@ def label_shift(corpus, train_idx, test_idx):
     q = class_counts(corpus, test_idx).float()
     p, q = p / p.sum(), q / q.sum()
     return 0.5 * (p - q).abs().sum().item()
+
+
+# --------------------------------------------------------------------------- #
+# the unlabelled majority
+# --------------------------------------------------------------------------- #
+def build_unlabeled(path="data/LSWMD.pkl", cache="data/unlabeled.pt",
+                    min_dim=8, limit=None):
+    """The 638,507 wafers with no failure label, resized to 64x64.
+
+    Four fifths of WM-811K carries no label at all, which is the realistic
+    situation in a fab: maps are free, classifications are not. Kept with their
+    lot codes so pretraining can use the lot as a nuisance variable to be made
+    unpredictable.
+    """
+    df = load_raw(path)
+    df = df[df["label"] == ""]
+    if limit:
+        df = df.iloc[:limit]
+    maps, lots = [], []
+    for wm, lot in zip(df["waferMap"], df["lotName"]):
+        a = np.asarray(wm, dtype=np.uint8)
+        if a.ndim != 2 or min(a.shape) < min_dim:
+            continue
+        maps.append(torch.from_numpy(resize_nearest(a, 64)))
+        lots.append(str(lot))
+    lot_names = sorted(set(lots))
+    code = {n: i for i, n in enumerate(lot_names)}
+    blob = {"maps64": torch.stack(maps),
+            "lot": torch.tensor([code[n] for n in lots], dtype=torch.long),
+            "lot_names": lot_names}
+    if cache:
+        torch.save(blob, cache)
+    return blob

@@ -24,7 +24,10 @@ import torch.nn.functional as F
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from wts import metrics, methods, tta                                # noqa: E402
 from wts.data import CLASSES, Corpus, label_shift, split             # noqa: E402
+from wts.graph import DieGraphNet                                   # noqa: E402
 from wts.models import CnnResized, FeatMlp, SpectralNet, onehot_maps  # noqa: E402
+from wts.rpca import stack_channels                                  # noqa: E402
+from wts.tta import fda_amplitude_swap                               # noqa: E402
 
 N_BUCKETS = 32          # domains are bucketed for the group-aware objectives
 
@@ -70,8 +73,12 @@ class Runner:
         # the descriptors are 86 MB, so the whole corpus fits in HBM many times
         # over. Doing the one-hot on the GPU rather than per batch on the host
         # is the difference between minutes and seconds per epoch.
-        if args.encoder in ("cnn_bn", "cnn_gn"):
+        if args.encoder in ("cnn_bn", "cnn_gn", "graph", "rpca_cnn"):
             self.maps64_dev = self.c.maps64.to(self.dev)
+        if args.encoder == "rpca_cnn" or args.rpca_features:
+            blob = torch.load(args.rpca, map_location="cpu", weights_only=False)
+            self.resid_dev = blob["residual"].float().to(self.dev)
+            self.rpca_sig = blob["signature"]
         self.dom = domain_vector(self.c, args.protocol)
         tr_all, te = split(self.c, args.protocol, seed=args.seed)
         # domain-disjoint validation carved out of the training domains
@@ -114,7 +121,15 @@ class Runner:
             x = onehot_maps(maps).to(self.dev)
             mask = (maps > 0).to(self.dev)
             return {"x": x, "y": y, "d": d, "mask": mask}
-        x = onehot_maps(self.maps64_dev[sel.to(self.dev)])
+        sd = sel.to(self.dev)
+        maps = self.maps64_dev[sd]
+        if self.a.encoder == "rpca_cnn":
+            # the lot's shared signature has been moved into its own channel
+            x = stack_channels(maps, self.resid_dev[sd])
+        else:
+            x = onehot_maps(maps)
+        if self.a.encoder == "graph":
+            return {"x": x, "y": y, "d": d, "mask": maps > 0}
         return {"x": x, "y": y, "d": d, "mask": None}
 
     def loaders(self, idx, shuffle, batch=None):
@@ -128,9 +143,13 @@ class Runner:
     def build(self):
         n = len(CLASSES)
         if self.a.encoder == "feat":
-            m = FeatMlp(self.feat_raw.shape[1], n, hidden=self.a.width * 4)
+            m = FeatMlp(self.feat_dim_used, n, hidden=self.a.width * 4)
         elif self.a.encoder == "spectral":
             m = SpectralNet(n, width=self.a.width, modes=self.a.modes)
+        elif self.a.encoder == "graph":
+            m = DieGraphNet(n, width=self.a.width, n_layers=4)
+        elif self.a.encoder == "rpca_cnn":
+            m = CnnResized(n, width=self.a.width, norm="gn", in_ch=4)
         else:
             m = CnnResized(n, width=self.a.width,
                            norm="bn" if self.a.encoder == "cnn_bn" else "gn")
@@ -140,11 +159,25 @@ class Runner:
         a = self.a
         torch.manual_seed(a.seed)
         if a.encoder == "feat":
+            if a.rpca_features:
+                # six numbers describing the lot signature RPCA removed --
+                # "which tool signature is this" as an explicit feature
+                self.feat_raw = torch.cat([self.feat_raw, self.rpca_sig], dim=1)
+            self.feat_dim_used = self.feat_raw.shape[1]
             self.feat_dev = self.feat_raw.to(self.dev)
             tr_dev = self.tr.to(self.dev)
             self.mu = self.feat_dev[tr_dev].mean(0, keepdim=True)
             self.sd = self.feat_dev[tr_dev].std(0, keepdim=True).clamp_min(1e-6)
         model = self.build()
+        if a.init_from:
+            sd = torch.load(a.init_from, map_location=self.dev,
+                            weights_only=False)["model"]
+            own = model.state_dict()
+            loaded = {k: v for k, v in sd.items()
+                      if k in own and own[k].shape == v.shape}
+            model.load_state_dict({**own, **loaded})
+            print(f"  initialized {len(loaded)}/{len(own)} tensors from "
+                  f"{a.init_from}", flush=True)
         counts = torch.bincount(self.c.labels[self.tr], minlength=len(CLASSES))
         prior = (counts.float() / counts.sum()).clamp_min(1e-9)
         st = {
@@ -154,7 +187,9 @@ class Runner:
             "q": torch.ones(N_BUCKETS, device=self.dev) / N_BUCKETS,
             "irm_lambda": a.irm_lambda, "coral_lambda": a.coral_lambda,
             "mix_alpha": a.mix_alpha, "lamb": a.dann_lambda,
-            "masked": a.encoder == "spectral",
+            "hsic_lambda": a.hsic_lambda, "ot_lambda": a.ot_lambda,
+            "anchor_gamma": a.anchor_gamma, "n_dom": N_BUCKETS,
+            "masked": a.encoder in ("spectral", "graph"),
             "domain_index": torch.arange(N_BUCKETS, device=self.dev),
             "dummy": torch.tensor(1.0, device=self.dev, requires_grad=True),
         }
@@ -180,6 +215,14 @@ class Runner:
                 if len(sel) < 4:
                     continue
                 batch = self.batch_of(sel)
+                if a.fda_aug > 0 and torch.rand(()) < a.fda_aug \
+                        and batch["x"].shape[0] > 1:
+                    # push this wafer toward another lot's low-frequency
+                    # "style" while leaving the defect (the phase) intact
+                    perm = torch.randperm(batch["x"].shape[0],
+                                          device=batch["x"].device)
+                    batch = {**batch, "x": fda_amplitude_swap(
+                        batch["x"], batch["x"][perm], beta=a.fda_beta)}
                 loss, _ = obj(model, batch, st)
                 opt.zero_grad(set_to_none=True)
                 loss.backward()
@@ -205,6 +248,7 @@ class Runner:
         model.load_state_dict(best_state)
         res = {
             "encoder": a.encoder, "objective": a.objective, "protocol": a.protocol,
+            "tag": a.tag,
             "seed": a.seed, "epochs": a.epochs,
             "n_train": len(self.tr), "n_val": len(self.va), "n_test": len(self.te),
             "label_shift_tv": self.label_shift,
@@ -215,6 +259,7 @@ class Runner:
         }
         cal = self.calibration(model)
         res["test"] = self.evaluate(model, self.te, groups=True, cal=cal)
+        res["test"].update(self.weighted_coverage(model, cal))
 
         if a.tta and a.encoder != "feat":
             # unlabelled target batches: what a fab would actually have on a new
@@ -235,7 +280,8 @@ class Runner:
 
         out = Path(a.out)
         out.mkdir(parents=True, exist_ok=True)
-        name = f"{a.protocol}__{a.encoder}__{a.objective}__s{a.seed}.json"
+        suffix = f"__{a.tag}" if a.tag else ""
+        name = f"{a.protocol}__{a.encoder}__{a.objective}{suffix}__s{a.seed}.json"
         (out / name).write_text(json.dumps(res, indent=2))
         print(f"wrote {out/name}")
         t = res["test"]
@@ -251,8 +297,9 @@ class Runner:
         out, ys = [], []
         for sel in batches:
             b = self.batch_of(sel)
-            logits = model(b["x"], b["mask"]) if self.a.encoder == "spectral" \
-                else model(b["x"])
+            logits = (model(b["x"], b["mask"])
+                      if self.a.encoder in ("spectral", "graph")
+                      else model(b["x"]))
             out.append(logits.softmax(1).float().cpu())
             ys.append(self.c.labels[sel])
         return torch.cat(out).numpy(), torch.cat(ys).numpy()
@@ -264,6 +311,55 @@ class Runner:
         # not index order; the domains are read back from the same batch list
         g = self.dom[torch.cat(batches)].numpy() if groups else None
         return metrics.summarize(y, p, groups=g, cal=cal)
+
+    def weighted_coverage(self, model, cal):
+        """Conformal coverage with an importance correction for the shift.
+
+        Split conformal assumes calibration and test are exchangeable, which a
+        tool change breaks. The weighted version restores the guarantee given
+        the likelihood ratio p_test(x)/p_train(x); it is estimated here by a
+        logistic probe on the embeddings, so the correction is only as good as
+        that probe -- which is why both numbers are reported side by side.
+        """
+        with torch.no_grad():
+            ev = self.embed_all(model, self.va)
+            et = self.embed_all(model, self.te)
+        Xp = torch.cat([ev, et]).to(self.dev)
+        yp = torch.cat([torch.zeros(len(ev)), torch.ones(len(et))]).to(self.dev)
+        Xp = (Xp - Xp.mean(0, keepdim=True)) / Xp.std(0, keepdim=True).clamp_min(1e-6)
+        probe = nn.Linear(Xp.shape[1], 1).to(self.dev)
+        po = torch.optim.Adam(probe.parameters(), lr=1e-2)
+        for _ in range(300):
+            l = F.binary_cross_entropy_with_logits(probe(Xp).squeeze(1), yp)
+            po.zero_grad(set_to_none=True); l.backward(); po.step()
+        with torch.no_grad():
+            # odds of "belongs to the test domain" is the likelihood ratio
+            w_cal = probe(Xp[:len(ev)]).squeeze(1).exp().clamp(1e-3, 1e3).cpu().numpy()
+            w_te = probe(Xp[len(ev):]).squeeze(1).exp().clamp(1e-3, 1e3).cpu().numpy()
+        pte, yte = self.probs_for(model, self.loaders(self.te, False,
+                                                      batch=max(self.a.batch, 512)))
+        keep = metrics.weighted_conformal(cal[0], cal[1], pte, w_cal, w_te)
+        return {"weighted_conformal_coverage": metrics.coverage_of(keep, yte),
+                "weighted_conformal_set_size": float(keep.sum(1).mean()),
+                "domain_probe_auc": float(metrics.auroc(
+                    np.concatenate([w_cal, w_te]),
+                    np.concatenate([np.zeros(len(w_cal)), np.ones(len(w_te))])))}
+
+    @torch.no_grad()
+    def embed_all(self, model, idx, cap=6000):
+        """Pooled embeddings for a capped subsample, used by the shift probes."""
+        model.eval()
+        out = []
+        got = 0
+        for sel in self.loaders(idx, False, batch=max(self.a.batch, 512)):
+            b = self.batch_of(sel)
+            e = (model.embed(b["x"], b["mask"])
+                 if self.a.encoder in ("spectral", "graph") else model.embed(b["x"]))
+            out.append(e.float().cpu())
+            got += len(sel)
+            if got >= cap:
+                break
+        return torch.cat(out)
 
     def calibration(self, model):
         """Conformal calibration on held-out *training* domains (the val split)."""
@@ -277,15 +373,20 @@ def main():
     p.add_argument("--features", default="data/features.pt")
     p.add_argument("--out", default="runs")
     p.add_argument("--encoder", default="cnn_bn",
-                   choices=["cnn_bn", "cnn_gn", "spectral", "feat"])
+                   choices=["cnn_bn", "cnn_gn", "spectral", "feat", "graph",
+                            "rpca_cnn"])
     p.add_argument("--objective", default="erm", choices=list(methods.OBJECTIVES))
-    p.add_argument("--protocol", default="lot", choices=["iid", "lot", "size"])
+    p.add_argument("--protocol", default="lot",
+                   choices=["iid", "lot", "size", "lot_time"])
     p.add_argument("--epochs", type=int, default=12)
     p.add_argument("--batch", type=int, default=256)
     p.add_argument("--lr", type=float, default=2e-3)
     p.add_argument("--width", type=int, default=32)
     p.add_argument("--modes", type=int, default=12)
     p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--tag", default="",
+                   help="variant label; keeps a variant from overwriting the "
+                        "plain cell it should be compared against")
     p.add_argument("--class-weight", action="store_true")
     p.add_argument("--tau", type=float, default=1.0)
     p.add_argument("--dro-eta", type=float, default=0.01)
@@ -296,8 +397,20 @@ def main():
     p.add_argument("--ema", type=float, default=0.99)
     p.add_argument("--ema-every", type=int, default=8)
     p.add_argument("--tta", action="store_true")
+    p.add_argument("--rpca", default="data/rpca.pt")
+    p.add_argument("--rpca-features", action="store_true",
+                   help="append the removed lot signature to the descriptors")
+    p.add_argument("--hsic-lambda", type=float, default=1.0)
+    p.add_argument("--ot-lambda", type=float, default=1.0)
+    p.add_argument("--anchor-gamma", type=float, default=4.0)
+    p.add_argument("--fda-aug", type=float, default=0.0,
+                   help="probability of a Fourier amplitude swap per batch")
+    p.add_argument("--fda-beta", type=float, default=0.05)
+    p.add_argument("--init-from", default=None,
+                   help="checkpoint from scripts/pretrain_ssl.py")
     args = p.parse_args()
-    print(f"== {args.protocol} / {args.encoder} / {args.objective} ==", flush=True)
+    label = f"{args.protocol} / {args.encoder} / {args.objective}"
+    print(f"== {label}{' / ' + args.tag if args.tag else ''} ==", flush=True)
     Runner(args).run()
 
 

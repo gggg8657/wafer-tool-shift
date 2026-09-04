@@ -190,3 +190,110 @@ OBJECTIVES = {
 }
 NEEDS_DOMAIN = {"group_dro", "dann", "irm", "coral", "mixup_domain"}
 NEEDS_EMBED = {"dann", "coral"}
+
+
+# --------------------------------------------------------------------------- #
+# independence and transport penalties
+# --------------------------------------------------------------------------- #
+def _rbf(x, sigma=None):
+    d2 = torch.cdist(x, x).pow(2)
+    if sigma is None:                      # median heuristic
+        sigma = d2.detach().flatten().median().clamp_min(1e-6).sqrt()
+    return torch.exp(-d2 / (2 * sigma**2))
+
+
+def hsic_penalty(emb, dom, n_dom):
+    """Hilbert-Schmidt independence criterion between features and domain.
+
+    DANN asks a classifier whether the domain is predictable and can be fooled
+    by a weak classifier; HSIC measures statistical dependence directly, with no
+    adversary to under-train. From the kernel-methods literature, where it is
+    the standard test for independence.
+    """
+    B = emb.shape[0]
+    if B < 8:
+        return emb.new_zeros(())
+    K = _rbf(emb)
+    D = F.one_hot(dom, n_dom).float()
+    L = D @ D.T                            # delta kernel on a categorical label
+    H = torch.eye(B, device=emb.device) - 1.0 / B
+    return (K @ H @ L @ H).diagonal().sum() / (B - 1) ** 2
+
+
+def sinkhorn_divergence(a, b, eps=0.1, n_iter=25):
+    """Entropic optimal transport between two embedding clouds.
+
+    CORAL matches second moments, which is blind to any difference the
+    covariance cannot see. OT compares the distributions themselves; the
+    entropic version is differentiable and cheap enough to put in a training
+    loop. From computational optimal transport.
+    """
+    C = torch.cdist(a, b).pow(2)
+    C = C / C.detach().max().clamp_min(1e-8)
+    n, m = a.shape[0], b.shape[0]
+    mu = a.new_full((n,), 1.0 / n)
+    nu = b.new_full((m,), 1.0 / m)
+    K = torch.exp(-C / eps)
+    u = torch.ones_like(mu)
+    for _ in range(n_iter):
+        v = nu / (K.T @ u).clamp_min(1e-12)
+        u = mu / (K @ v).clamp_min(1e-12)
+    P = u[:, None] * K * v[None, :]
+    return (P * C).sum()
+
+
+def hsic(model, batch, st):
+    x, y, d = batch["x"], batch["y"], batch["d"]
+    emb = model.embed(x, batch["mask"]) if st.get("masked") else model.embed(x)
+    cls = F.cross_entropy(model.head(emb), y, weight=st.get("cw"))
+    pen = hsic_penalty(emb, d, st["n_dom"])
+    return cls + st["hsic_lambda"] * pen, {"hsic": float(pen)}
+
+
+def sinkhorn(model, batch, st):
+    x, y, d = batch["x"], batch["y"], batch["d"]
+    emb = model.embed(x, batch["mask"]) if st.get("masked") else model.embed(x)
+    cls = F.cross_entropy(model.head(emb), y, weight=st.get("cw"))
+    groups = [emb[d == g] for g in torch.unique(d)]
+    groups = [g for g in groups if g.shape[0] >= 4]
+    pen = emb.new_zeros(())
+    pairs = 0
+    for i in range(0, len(groups) - 1, 2):        # disjoint pairs, cost-capped
+        pen = pen + sinkhorn_divergence(groups[i], groups[i + 1])
+        pairs += 1
+    if pairs:
+        pen = pen / pairs
+    return cls + st["ot_lambda"] * pen, {"ot": float(pen)}
+
+
+def anchor(model, batch, st):
+    """Anchor regression, adapted to a classifier.
+
+    From econometrics and causal inference: with an anchor A that may affect
+    both the covariates and the outcome, penalizing the component of the
+    residual that A can explain buys distributional robustness against shifts
+    generated through A -- exactly the setting here, where the anchor is the lot
+    and the shift is a new lot. `gamma` interpolates between ERM (gamma = 1) and
+    a hard invariance constraint (gamma -> infinity).
+
+    The classifier version penalizes the per-domain mean of the residual
+    softmax(logits) - onehot(y); a predictor whose errors are unbiased within
+    every lot has nothing left for the anchor to explain.
+    """
+    x, y, d = batch["x"], batch["y"], batch["d"]
+    logits = model(x, batch["mask"]) if st.get("masked") else model(x)
+    cls = F.cross_entropy(logits, y, weight=st.get("cw"))
+    resid = logits.softmax(1) - F.one_hot(y, logits.shape[1]).float()
+    pen = logits.new_zeros(())
+    B = x.shape[0]
+    for g in torch.unique(d):
+        m = d == g
+        if m.sum() < 2:
+            continue
+        pen = pen + (m.sum() / B) * resid[m].mean(0).pow(2).sum()
+    return cls + (st["anchor_gamma"] - 1.0) * pen, {"anchor_penalty": float(pen)}
+
+
+OBJECTIVES.update({"hsic": hsic, "sinkhorn": sinkhorn, "anchor": anchor})
+NEEDS_DOMAIN.update({"hsic", "sinkhorn", "anchor"})
+NEEDS_EMBED.update({"hsic", "sinkhorn"})

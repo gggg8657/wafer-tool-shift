@@ -1,6 +1,9 @@
 """Regenerate RESULTS.md from runs/*.json. Nothing here is hand-typed."""
-import sys; from pathlib import Path as _P; sys.path.insert(0, str(_P(__file__).resolve().parents[1]))
 from __future__ import annotations
+
+import sys
+from pathlib import Path as _P
+sys.path.insert(0, str(_P(__file__).resolve().parents[1]))
 
 import argparse
 import json
@@ -29,7 +32,7 @@ def load(run_dir):
     out = {}
     for p in sorted(Path(run_dir).glob("*.json")):
         r = json.loads(p.read_text())
-        out[(r["protocol"], r["encoder"], r["objective"])] = r
+        out[(r["protocol"], r["encoder"], r["objective"], r.get("tag", ""))] = r
     return out
 
 
@@ -38,9 +41,20 @@ ENC_LABEL = {
     "cnn_bn": "CNN on resized 64x64 (BatchNorm)",
     "cnn_gn": "CNN on resized 64x64 (GroupNorm)",
     "spectral": "spectral operator, native resolution",
+    "graph": "die-graph GNN (wafer-only subgraph)",
+    "rpca_cnn": "CNN + RPCA lot-signature channel",
+}
+TAG_LABEL = {
+    "": "-",
+    "rpcafeat": "+ RPCA lot signature as features",
+    "fda": "+ Fourier amplitude swap augmentation",
+    "sslinit": "+ lot-adversarial SSL initialization",
 }
 OBJ_NOTE = {
     "erm": "-",
+    "hsic": "kernel independence testing",
+    "sinkhorn": "optimal transport",
+    "anchor": "econometrics / anchor regression",
     "logit_adjust": "long-tail recognition",
     "group_dro": "robust optimization",
     "dann": "domain adaptation",
@@ -87,7 +101,7 @@ def main():
     rows = []
     for e in encs:
         for p in protos:
-            r = R.get((p, e, "erm"))
+            r = R.get((p, e, "erm", ""))
             if not r:
                 continue
             t = r["test"]
@@ -106,8 +120,8 @@ def main():
     # ---- the headline gap
     gaps = []
     for e in encs:
-        a, b, c = (R.get(("iid", e, "erm")), R.get(("lot", e, "erm")),
-                   R.get(("size", e, "erm")))
+        a, b, c = (R.get(("iid", e, "erm", "")), R.get(("lot", e, "erm", "")),
+                   R.get(("size", e, "erm", "")))
         if not (a and b):
             continue
         gaps.append([ENC_LABEL[e], f(a["test"]["macro_f1"]), f(b["test"]["macro_f1"]),
@@ -127,11 +141,11 @@ def main():
     for p in [x for x in protos if x != "iid"]:
         rows = []
         for e in encs:
-            base = R.get((p, e, "erm"))
+            base = R.get((p, e, "erm", ""))
             if not base:
                 continue
             for o in ["erm"] + objs:
-                r = R.get((p, e, o))
+                r = R.get((p, e, o, ""))
                 if not r:
                     continue
                 t, bt = r["test"], base["test"]
@@ -153,11 +167,11 @@ def main():
 
     # ---- TTA
     rows = []
-    for (p, e, o), r in sorted(R.items()):
+    for (p, e, o, tg), r in sorted(R.items()):
         for name in ("adabn", "tent", "ema"):
             key = f"test_{name}"
             if key in r:
-                rows.append([p, ENC_LABEL[e], o, name,
+                rows.append([p, ENC_LABEL[e], f"{o}{'/' + tg if tg else ''}", name,
                              f(r["test"]["macro_f1"]), f(r[key]["macro_f1"]),
                              f"{r[key]['macro_f1'] - r['test']['macro_f1']:+.4f}"])
     if rows:
@@ -167,6 +181,57 @@ def main():
               "weights, a free check on whether flatness helped.", "",
               table(rows, ["protocol", "representation", "objective", "method",
                            "base macro-F1", "after", "delta"]), ""]
+
+    # ---- tagged variants against their untagged twin
+    rows = []
+    for (p, e, o, tg), r in sorted(R.items()):
+        if not tg:
+            continue
+        base = R.get((p, e, o, ""))
+        t = r["test"]
+        rows.append([p, ENC_LABEL[e], TAG_LABEL.get(tg, tg), f(t["macro_f1"]),
+                     ("-" if not base else
+                      f"{t['macro_f1'] - base['test']['macro_f1']:+.4f}"),
+                     f(t.get("p10_domain_macro_f1")),
+                     ("-" if not base else
+                      f"{(t.get('p10_domain_macro_f1') or 0) - (base['test'].get('p10_domain_macro_f1') or 0):+.4f}")])
+    if rows:
+        L += ["## Variants, against the same cell without them", "",
+              table(rows, ["protocol", "representation", "variant", "macro-F1",
+                           "vs plain", "p10 domain F1", "vs plain"]), ""]
+
+    # ---- active learning
+    al_path = Path("runs/active_learning.json")
+    if al_path.exists():
+        al = json.loads(al_path.read_text())
+        budgets = al["budgets"]
+        rows = []
+        for strat, curve in al["results"].items():
+            rows.append([strat] + [f"{curve[str(b)]['macro_f1_mean']:.4f}"
+                                   for b in budgets])
+        L += ["## Which lots to pay to measure", "",
+              f"Budgets are spent in whole lots out of {al['n_pool_lots']} "
+              f"available, seeded with {al['seed_lots']} random lots, "
+              f"{al['seeds']} seeds. Test set is the fixed lot-disjoint split.",
+              "",
+              table(rows, ["strategy"] + [f"{b} lots" for b in budgets]), ""]
+
+    # ---- SSL pretraining
+    ssl_path = Path("runs/ssl_pretrain.json")
+    if ssl_path.exists():
+        ssl = json.loads(ssl_path.read_text())
+        h = ssl["history"]
+        L += ["## Lot-adversarial self-supervised pretraining", "",
+              f"Masked-die modelling on {ssl['n_unlabeled']:,} unlabelled "
+              f"wafers with a gradient-reversed lot head, "
+              f"{ssl['minutes']:.1f} min.", "",
+              table([[r["epoch"], f(r["recon_ce"]), f(r["lot_ce"]),
+                      f(r["lot_ce_chance"])] for r in h],
+                    ["epoch", "masked-die CE", "lot CE (adversarial)",
+                     "lot CE at chance"]),
+              "",
+              "The lot CE rising toward chance is the signal that the embedding "
+              "is losing its ability to name its own lot.", ""]
 
     # ---- per-class for the best lot-protocol cell
     lot_cells = {k: v for k, v in R.items() if k[0] == "lot"}

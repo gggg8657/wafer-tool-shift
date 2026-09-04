@@ -131,3 +131,37 @@ def summarize(y_true, probs, groups=None, cal=None, alpha=0.1):
         out["conformal_set_size"] = float(keep.sum(1).mean())
         out["conformal_target"] = 1 - alpha
     return out
+
+
+def weighted_conformal(cal_probs, cal_y, test_probs, cal_w, test_w, alpha=0.1):
+    """Conformal prediction under covariate shift, with importance weights.
+
+    Standard split conformal assumes calibration and test are exchangeable. Under
+    a tool change they are not, and the coverage guarantee quietly fails. The
+    weighted version (Tibshirani et al.) restores it if the likelihood ratio
+    p_test(x) / p_train(x) is known -- estimated here by a domain classifier, so
+    the guarantee is only as good as that estimate. Reported alongside the
+    unweighted number so the correction's effect is visible rather than assumed.
+    """
+    n_classes = cal_probs.shape[1]
+    keep = np.zeros_like(test_probs, dtype=bool)
+    for c in range(n_classes):
+        m = cal_y == c
+        if m.sum() < 10:
+            keep[:, c] = True
+            continue
+        s = 1.0 - cal_probs[m, c]
+        w = np.asarray(cal_w)[m]
+        order = np.argsort(s)
+        s_sorted, w_sorted = s[order], w[order]
+        for i in range(test_probs.shape[0]):
+            tot = w_sorted.sum() + test_w[i]
+            cum = np.cumsum(w_sorted) / max(tot, 1e-12)
+            j = int(np.searchsorted(cum, 1 - alpha))
+            q = s_sorted[min(j, len(s_sorted) - 1)]
+            keep[i, c] = (1.0 - test_probs[i, c]) <= q
+    return keep
+
+
+def coverage_of(keep, y_true):
+    return float(keep[np.arange(len(y_true)), y_true].mean())
