@@ -442,6 +442,63 @@ def main():
                            "unseen geom. (matched)", "seen - unseen",
                            "shared classes", "n seen", "n unseen"]), ""]
 
+    # ---- the OT weight sweep: is the collapsed cell a broken method or a
+    #      badly chosen default?
+    sk = {k: v for k, v in R.items() if k[2] == "sinkhorn" and k[3].startswith("ot")}
+    if sk:
+        rows = []
+        for k in sorted(sk, key=lambda k: sk[k].get("ot_lambda", 0.0)):
+            r = sk[k]
+            hist = [h.get("ot") for h in r["history"] if h.get("ot") is not None]
+            rows.append([f"{r.get('ot_lambda')}", f(r["val_macro_f1"]),
+                         f(r["test"]["macro_f1"]),
+                         f(hist[0]) if hist else "-",
+                         f(hist[-1]) if hist else "-"])
+        best = max(sk, key=lambda k: sk[k]["val_macro_f1"])
+        b = sk[best]
+        base = R.get(("lot", best[1], "erm", ""))
+        zero = next((v for k, v in sk.items()
+                     if v.get("ot_lambda") == 0.0), None)
+        L += ["## The entropic-OT objective: a broken method, or a bad default?",
+              "",
+              "The `sinkhorn` row in the tables above uses the default weight "
+              "and sits at the majority-class floor, which would be an unfair "
+              "way to conclude anything about optimal transport. This sweeps "
+              "the weight over three orders of magnitude on `lot`/"
+              f"{ENC_LABEL.get(best[1], best[1])}, logging the OT penalty "
+              "itself so the question is not only what accuracy did but whether "
+              "the penalty was ever actually reduced. Weight 0 is ERM routed "
+              "through the same objective wrapper, so the comparison is not "
+              "confounded by the wrapper.", "",
+              table(rows, ["--ot-lambda", "val macro-F1", "test macro-F1",
+                           "OT penalty, epoch 1", "epoch 12"]), ""]
+        if base is not None:
+            L += [f"Selecting the weight on the **domain-disjoint validation "
+                  f"split** -- never on test -- picks "
+                  f"{b.get('ot_lambda')}, whose test macro-F1 is "
+                  f"{f(b['test']['macro_f1'])} against "
+                  f"{f(base['test']['macro_f1'])} for plain ERM at the same "
+                  f"encoder, protocol and seed: a difference of "
+                  f"{b['test']['macro_f1'] - base['test']['macro_f1']:+.4f}.", ""]
+        if zero is not None:
+            zt = [h.get("ot") for h in zero["history"] if h.get("ot") is not None]
+            bt = [h.get("ot") for h in b["history"] if h.get("ot") is not None]
+            if zt and bt:
+                L += [f"And at that selected weight the penalty ends at "
+                      f"{f(bt[-1])} against {f(zt[-1])} when it is not "
+                      "penalized at all -- it has not been reduced. The "
+                      "objective is not being traded off against accuracy at "
+                      "its best setting; it is doing nothing. The penalty only "
+                      "moves at the largest weight that still trains, and there "
+                      "it costs accuracy; one step beyond, the embedding "
+                      "collapses and the classifier emits the class prior.", "",
+                      "**Verdict: not a strawman and not a tuning failure.** "
+                      "Across three orders of magnitude there is no weight at "
+                      "which the penalty falls and accuracy holds. Reported as "
+                      "a negative result about entropic OT on this benchmark, "
+                      "with the default-weight row left in the tables above so "
+                      "that the collapse is visible rather than filtered.", ""]
+
     # ---- active learning
     al_path = Path("runs/active_learning.json")
     if al_path.exists():

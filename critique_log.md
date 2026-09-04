@@ -689,3 +689,58 @@ demanded agreement to 1e-9, i.e. assumed bit-reproducibility on a GPU, which
 nobody had tested and which would have aborted the whole stage on a property
 that is not a bug. The floor goes to `runs/determinism.json` for the reports to
 cite, because it bounds every same-seed comparison here.
+
+### 10. The sinkhorn verdict: not a strawman, and not a tuning failure
+
+Six of seven weights in (λ = 1.0 still running with logging; the original
+untagged λ = 1.0 cell already sits at 0.1026). Selection on the domain-disjoint
+validation split, never on test:
+
+| `--ot-lambda` | val macro-F1 | test macro-F1 | OT penalty ep1 → ep12 | penalty vs unpenalized |
+|---|---|---|---|---|
+| 0.0 (ERM through the wrapper) | 0.8796 | 0.8609 | 0.1360 → 0.1691 | — |
+| **0.003 (selected on val)** | **0.8822** | 0.8591 | 0.1360 → 0.1699 | +0.0008 |
+| 0.01 | 0.8794 | 0.8540 | 0.1359 → 0.1705 | +0.0013 |
+| 0.03 | 0.8713 | 0.8573 | 0.1354 → 0.1689 | −0.0002 |
+| 0.1 | 0.8701 | 0.8485 | 0.1343 → 0.1713 | +0.0021 |
+| 0.3 | 0.8571 | 0.8352 | 0.1316 → 0.1550 | −0.0141 |
+| 1.0 | 0.1018 | 0.1026 | (collapsed) | — |
+
+Plain ERM for the same encoder, protocol and seed: val 0.8759, test 0.8587.
+
+**Tuned properly, the method does exactly nothing.** Weight selected on
+validation gives test 0.8591 against ERM's 0.8587 — **+0.0004**, an order of
+magnitude below the ~0.002 same-code-path gap noted in §9 and two orders below
+the seed spread. And the reason it does nothing is visible in the penalty
+column, which is why logging the objectives' aux dict was worth the five-line
+change: **at the selected weight the OT penalty is not reduced at all** (0.1699
+against 0.1691 unpenalized). This is not a method trading accuracy for
+invariance and landing at a wash. It is a method that is switched off.
+
+The penalty only moves at λ = 0.3, where it falls 8.3% and costs 0.0257 of
+macro-F1; one step further and the embedding collapses. So the useful window —
+penalty down, accuracy held — does not exist anywhere in three orders of
+magnitude.
+
+**What I would have concluded without the sweep, and why it would have been
+wrong.** The original table showed `sinkhorn` at 0.1026, a delta of −0.7562, in
+a row that a reader would take as "optimal transport fails badly on this
+benchmark". That reading is unearned: it is one untuned default, and agy was
+right to call it a strawman. The corrected claim is narrower, better supported
+and less dramatic: entropic OT between lot embeddings, swept over three orders
+of magnitude and selected honestly, is indistinguishable from ERM, and its
+penalty term is inert at every weight that trains.
+
+**Note the interaction with §4.** These sinkhorn cells used the `hash32` domain
+definition, whose 32 buckets have a mean pairwise label TV of 0.0208. An OT
+penalty between near-identical clouds having nothing to reduce is *exactly what
+the penalty column shows*. So this result and the domain-definition result are
+the same finding seen from two directions, and the honest statement is that
+entropic OT is inert **on domains defined this way** — which is one more reason
+the `domain_def` sweep, now the next stage to run, is the most important thing
+queued. I am not going to claim OT is dead on this corpus until it has been
+given domains that differ.
+
+The row stays in the tables with the collapse visible and the sweep beside it.
+A table that quietly drops its embarrassments is worse than one that explains
+them.

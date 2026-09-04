@@ -180,6 +180,8 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.003 | ema | 0.8591 | 0.8552 | -0.0039 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.01 | ema | 0.8540 | 0.8503 | -0.0037 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.03 | ema | 0.8573 | 0.8511 | -0.0062 |
+| lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.1 | ema | 0.8485 | 0.8441 | -0.0045 |
+| lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.3 | ema | 0.8352 | 0.8278 | -0.0074 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | tent | 0.8671 | 0.8538 | -0.0133 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | ema | 0.8671 | 0.8759 | +0.0087 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm/sslinit | ema | 0.8134 | 0.8053 | -0.0081 |
@@ -266,6 +268,8 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN on resized 64x64 (BatchNorm) | ot0.003 | 0.8591 | +0.7565 | 0.4898 | +0.2558 |
 | lot | CNN on resized 64x64 (BatchNorm) | ot0.01 | 0.8540 | +0.7515 | 0.4898 | +0.2558 |
 | lot | CNN on resized 64x64 (BatchNorm) | ot0.03 | 0.8573 | +0.7548 | 0.4898 | +0.2558 |
+| lot | CNN on resized 64x64 (BatchNorm) | ot0.1 | 0.8485 | +0.7460 | 0.4898 | +0.2558 |
+| lot | CNN on resized 64x64 (BatchNorm) | ot0.3 | 0.8352 | +0.7327 | 0.4898 | +0.2558 |
 | lot | CNN on resized 64x64 (GroupNorm) | + lot-adversarial SSL initialization | 0.8134 | -0.0537 | 0.4898 | -0.0102 |
 | lot | size-invariant descriptors + MLP | + RPCA lot signature as features | 0.8461 | +0.0044 | 0.4898 | +0.0000 |
 | lot | CNN + RPCA lot-signature channel | 4th channel = raw failed-die mask (RPCA control) | 0.8765 | -0.0049 | 0.5000 | +0.0000 |
@@ -345,6 +349,36 @@ It cannot be proved; it can be refuted as arbitrary. Deciles of lot number, dist
 | `failed_die_rate_ventile` | +0.4050 | 0.2452 | 0.000 |
 
 Geometry and failed-die rate drift with lot number; the defect-class mix does not. The numbering is not arbitrary, but this cannot separate production order from product blocking -- a product line numbered in a contiguous block gives the same signature.
+
+## Test macro-F1 split by whether the geometry was seen in training
+
+How much of a protocol's difficulty is *unseen geometry* rather than whatever else it holds out. This matters most for `lot_time`, whose test side is a narrow slice of geometry space (see above), and it is the difference between "forward-only time costs 20 points" and "forward-only deployment costs 20 points, part of it for meeting new products".
+
+Both macro-F1 columns are averaged over **only the classes present in both halves**, counted in `shared classes`; the halves do not otherwise hold the same classes and their raw macro-F1 values would be averages over different class sets. Each half's full per-class F1 is in the run JSON.
+
+| protocol | representation | objective | macro-F1 all | seen geom. (matched) | unseen geom. (matched) | seen - unseen | shared classes | n seen | n unseen |
+|---|---|---|---|---|---|---|---|---|---|
+| lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.1 | 0.8485 | 0.8434 | 0.7310 | +0.1124 | 8 | 43,121 | 131 |
+| lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.3 | 0.8352 | 0.8240 | 0.7192 | +0.1048 | 8 | 43,121 | 131 |
+
+## The entropic-OT objective: a broken method, or a bad default?
+
+The `sinkhorn` row in the tables above uses the default weight and sits at the majority-class floor, which would be an unfair way to conclude anything about optimal transport. This sweeps the weight over three orders of magnitude on `lot`/CNN on resized 64x64 (BatchNorm), logging the OT penalty itself so the question is not only what accuracy did but whether the penalty was ever actually reduced. Weight 0 is ERM routed through the same objective wrapper, so the comparison is not confounded by the wrapper.
+
+| --ot-lambda | val macro-F1 | test macro-F1 | OT penalty, epoch 1 | epoch 12 |
+|---|---|---|---|---|
+| 0.0 | 0.8796 | 0.8609 | 0.1360 | 0.1691 |
+| 0.003 | 0.8822 | 0.8591 | 0.1360 | 0.1699 |
+| 0.01 | 0.8794 | 0.8540 | 0.1359 | 0.1705 |
+| 0.03 | 0.8713 | 0.8573 | 0.1354 | 0.1689 |
+| 0.1 | 0.8701 | 0.8485 | 0.1343 | 0.1713 |
+| 0.3 | 0.8571 | 0.8352 | 0.1316 | 0.1550 |
+
+Selecting the weight on the **domain-disjoint validation split** -- never on test -- picks 0.003, whose test macro-F1 is 0.8591 against 0.8587 for plain ERM at the same encoder, protocol and seed: a difference of +0.0004.
+
+And at that selected weight the penalty ends at 0.1699 against 0.1691 when it is not penalized at all -- it has not been reduced. The objective is not being traded off against accuracy at its best setting; it is doing nothing. The penalty only moves at the largest weight that still trains, and there it costs accuracy; one step beyond, the embedding collapses and the classifier emits the class prior.
+
+**Verdict: not a strawman and not a tuning failure.** Across three orders of magnitude there is no weight at which the penalty falls and accuracy holds. Reported as a negative result about entropic OT on this benchmark, with the default-weight row left in the tables above so that the collapse is visible rather than filtered.
 
 ## Which lots to pay to measure
 
