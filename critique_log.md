@@ -2184,3 +2184,80 @@ controls, which is where it reads best — here is what did not work, here is wh
 did, and here is the control that makes the difference between the two claims.
 It carries the `iid` result and states the claim at the strength the completed
 protocols support rather than at the strength `lot` alone would allow.
+
+### 46. A coverage check, and the one orphan it found closes the RPCA story
+
+§45 named a structural limitation: the generators regenerate numbers faithfully
+and do not regenerate structure, so a result can exist that no document reports.
+`scripts/coverage_check.py` enumerates the experiment families in `runs/` and
+checks each is consumed by a generator.
+
+**The first version reported 24 orphans and nearly all were false.** It searched
+the *documents* for each file's name — but a document discusses MIXED-SYNTH at
+length without ever writing the string `mixedsynth__iid__bce__s0`. The question
+that matters is whether any generator *reads* the result, since nothing
+unreadable can be reported. Rewritten that way it finds **one**:
+`runs/rpca_lambda.json`.
+
+Worth noting that I caught this before quoting the 24. A check that cries wolf
+is worse than no check, and I have spent the weekend on the harm done by numbers
+that mean something other than they appear to.
+
+**The orphan turned out to be the last piece of the RPCA story.** It is the
+sweep behind the decomposition's one hyperparameter, and its docstring said the
+choice was "documented rather than asserted". The documentation is measured on
+the wrong population.
+
+The script takes `[:40]` of the lots with at least 20 wafers, sorted by lot id.
+Reading the shipped decomposition's own signature column:
+
+| sample | mean rank at the standard weight | fraction rank 0 |
+|---|---|---|
+| **first 40 by lot id** (what the sweep used) | **0.475** | 0.525 |
+| random 40, three seeds | 0.050, 0.025, 0.050 | 0.950–0.975 |
+| all 6,504 lots | 0.050 | 0.951 |
+
+The first-40 figure reproduces the sweep's reported 0.475 exactly, which
+confirms I have the selection right. It is roughly ten times more likely to
+yield a non-trivial decomposition than a random sample. Lot id is not arbitrary
+here — §8 measured geometry and failed-die rate both drifting with it — so
+`[:40]` of a sorted list is a slice, not a sample, and this was the most
+favourable slice available. My first guess, that the discrepancy was lot size
+(the sweep required ≥20 wafers, production uses ≥12), is refuted: rank 0 for
+94.99% of ≥20-wafer lots against 94.83% of ≥12.
+
+**Re-run on 200 random lots, the question the sweep should have answered:**
+
+| lambda | mean rank | sparse share | low-rank energy |
+|---|---|---|---|
+| x0.5 | 0.00 | 1.000 | 0.000 |
+| **x1.0 (standard)** | **0.04** | 0.978 | **0.022** |
+| x1.5 | 0.11 | 0.967 | 0.032 |
+| x2.0 | 0.32 | 0.950 | 0.049 |
+| **x3.0** | **10.23** | 0.596 | **0.382** |
+| x4.0 | 17.79 | 0.258 | 0.727 |
+| x8.0 | 24.02 | 0.005 | 0.994 |
+
+**There is no useful operating point.** Up to twice the standard weight the
+low-rank part is empty and the decomposition returns its input; one step further
+and the rank jumps from 0.32 to 10.23 and it absorbs 38% of the failure energy,
+which on this corpus means it has begun eating the defect (§32: the class it
+fires on hardest is `Edge-Ring`, whose defect *is* what the lot shares). The
+transition is abrupt and nothing sits between the two failure modes.
+
+So the RPCA account is now complete at every level, and each level was measured
+rather than argued:
+
+1. **The hyperparameter** has no good setting on a representative sample.
+2. **The decomposition** therefore returns rank 0 for 95% of wafers, and where
+   it does fire it removes 61.6% of `Edge-Ring`'s failed-die mass.
+3. **The residual** is consequently a materially worse description of the defect
+   than the raw mask — 0.027 worse when it is the only description available.
+4. **The channel** is nonetheless worth exactly what a channel of zeros is
+   worth, because `stack_channels` hands the encoder an untouched copy of what
+   the residual destroys.
+
+Point 4 was the original finding and it is the least interesting of the four. It
+took until the last orphan to see that the method never had a setting at which
+it could have worked, and the evidence that said otherwise was forty lots chosen
+by a slice.

@@ -166,6 +166,22 @@ The decomposition fires on 4.93% of wafers, and 7,519 of those 8,521 are `Edge-R
 
 The converse is just as sharp. `Scratch` has an enrichment of 0.05x — the decomposition essentially never fires on it, because a scratch on one wafer is not shared by its lot. `Loc` is 0.45x. Those two are the long tail this benchmark most needs moved, and they are precisely the classes a lot-signature method cannot reach. A per-lot low-rank prior is pointed the wrong way for this corpus: it subtracts signal from the classes that are lot-correlated and offers nothing to the classes that are not.
 
+**And there is no setting of its one knob that would have helped.** The decomposition has a single parameter, the sparsity weight, and it decides everything. Swept over 200 lots drawn at random from the 6,504 with at least 20 wafers:
+
+| lambda | mean rank of the low-rank part | fraction rank 0 | sparse share | low-rank energy share |
+|---|---|---|---|---|
+| x0.5 | 0.00 | 1.00 | 1.000 | 0.000 |
+| x1.0 | 0.04 | 0.96 | 0.978 | 0.022 |
+| x1.5 | 0.11 | 0.90 | 0.967 | 0.032 |
+| x2.0 | 0.32 | 0.81 | 0.950 | 0.049 |
+| x3.0 | 10.23 | 0.28 | 0.596 | 0.382 |
+| x4.0 | 17.79 | 0.08 | 0.258 | 0.727 |
+| x8.0 | 24.02 | 0.00 | 0.005 | 0.994 |
+
+The transition is abrupt and there is no useful regime between the two failure modes. Up to twice the standard weight the low-rank part is empty — mean rank below 0.4, under 5% of the failure energy — and the 'decomposition' returns its input. One step further and the rank jumps to 10 and the low-rank part absorbs 38% of the energy, which on this corpus means it has started eating the defect. **The method is not badly tuned here; it has no good operating point.**
+
+This was documented at the time and the documentation was measured on the wrong population. The original sweep took the first 40 lots of a lot-id-sorted list and reported a mean rank of 0.475 and 0.302 of the failure energy in the low-rank part at the standard weight — from which it concluded the decomposition was working. The same weight on a random sample gives 0.040 and 0.022. Lot id is not arbitrary on this corpus: geometry and failed-die rate both drift with it, so `[:40]` of a sorted list is a slice and not a sample, and it happened to be the most favourable slice available.
+
 On `lot` the three fourth-channel variants are separated from each other by less than the seed spread of any one of them. **A channel of zeros buys what the decomposition buys.** Whatever the fourth channel is worth there, it is worth as extra first-layer capacity, not as information about the tool. On `lot_time` the residual is ahead of both controls at every seed, which is the one place a genuine tool signature should help; the separation is below the controls' half-range at n=3, so we record it as a hypothesis and not a result.
 
 ### 4.2 Lot-adversarial self-supervised pretraining is worse than random initialization
@@ -191,7 +207,11 @@ What was left is that `CnnResized.embed` is a global average over the final feat
 | `lot` | `meanmax` (treatment) | +0.0173 | **clears the floor** | +0.0566 | **clears the floor** |
 | `lot` | `meanmean` (**control**) | +0.0052 | overlaps | -0.0006 | overlaps |
 | `iid` | `meanmax` (treatment) | +0.0090 | below the floor (0.0041) | +0.0253 | overlaps |
-| `iid` | `meanmean` (**control**) | -0.0003 | overlaps | +0.0023 | overlaps |
+| `iid` | `meanmean` (**control**) | +0.0003 | overlaps | -0.0061 | overlaps |
+| `size` | `meanmax` (treatment) | -0.0590 | below the floor (0.0068) | -0.0777 | below the floor (0.0087) |
+| `size` | `meanmean` (**control**) | +0.0022 | overlaps | -0.0044 | overlaps |
+| `lot_time` | `meanmax` (treatment) | [not measured] | [not measured] | [not measured] | [not measured] |
+| `lot_time` | `meanmean` (**control**) | [not measured] | [not measured] | [not measured] | [not measured] |
 
 On `lot` the treatment clears the floor on both macro-F1 and `Scratch`, and the control clears neither — so the gain is max pooling and not a wider head. That is the question the RPCA fourth channel failed, asked here before the claim rather than after it.
 
@@ -228,7 +248,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `iid` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.8625 | ±0.0042 |
 | `iid` | CNN (GroupNorm) | `erm` | poolmean | 3 | 0.8836 | ±0.0032 |
 | `iid` | CNN (GroupNorm) | `erm` | poolmeanmax | 3 | 0.8926 | ±0.0023 |
-| `iid` | CNN (GroupNorm) | `erm` | poolmeanmean | 2 | 0.8833 | ±0.0051 |
+| `iid` | CNN (GroupNorm) | `erm` | poolmeanmean | 3 | 0.8839 | ±0.0051 |
 | `iid` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.8837 | ±0.0016 |
 | `iid` | descriptors + MLP | `erm` | sess2 | 3 | 0.8443 | ±0.0076 |
 | `iid` | spectral operator | `erm` | sess2 | 3 | 0.8576 | ±0.0142 |
@@ -282,6 +302,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | spectral operator | `erm` | sess2 | 3 | 0.8405 | ±0.0216 |
 | `lot_time` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.6438 | ±0.0017 |
 | `lot_time` | CNN (GroupNorm) | `erm` | — | 3 | 0.6985 | ±0.0045 |
+| `lot_time` | CNN (GroupNorm) | `erm` | poolmean | 2 | 0.7074 | ±0.0117 |
 | `lot_time` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.7002 | ±0.0043 |
 | `lot_time` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.6345 | ±0.0225 |
 | `lot_time` | descriptors + MLP | `erm` | sess2 | 3 | 0.6511 | ±0.0020 |
@@ -300,6 +321,9 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `size` | CNN (BatchNorm) | `logit_adjust` | sizeseed | 3 | 0.6798 | ±0.0680 |
 | `size` | CNN (BatchNorm) | `mixup_domain` | sizeseed | 3 | 0.7803 | ±0.0405 |
 | `size` | CNN (GroupNorm) | `erm` | — | 3 | 0.8467 | ±0.0346 |
+| `size` | CNN (GroupNorm) | `erm` | poolmean | 3 | 0.8404 | ±0.0377 |
+| `size` | CNN (GroupNorm) | `erm` | poolmeanmax | 3 | 0.7814 | ±0.0345 |
+| `size` | CNN (GroupNorm) | `erm` | poolmeanmean | 3 | 0.8426 | ±0.0290 |
 | `size` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.8413 | ±0.0369 |
 | `size` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.7711 | ±0.0265 |
 | `size` | descriptors + MLP | `coral` | sizeseed | 3 | 0.8036 | ±0.0284 |

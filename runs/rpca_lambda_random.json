@@ -1,0 +1,59 @@
+{
+  "n_lots": 200,
+  "min_lot_size": 20,
+  "sample": "random",
+  "seed": 0,
+  "n_lots_available": 6504,
+  "sweep": [
+    {
+      "lambda_scale": 0.5,
+      "mean_rank": 0.0,
+      "frac_rank_zero": 1.0,
+      "sparse_share": 0.9999999985098839,
+      "lowrank_energy_share": 0.0
+    },
+    {
+      "lambda_scale": 1.0,
+      "mean_rank": 0.04,
+      "frac_rank_zero": 0.96,
+      "sparse_share": 0.9780721275508404,
+      "lowrank_energy_share": 0.02200504794716835
+    },
+    {
+      "lambda_scale": 1.5,
+      "mean_rank": 0.11,
+      "frac_rank_zero": 0.9,
+      "sparse_share": 0.9674864864349365,
+      "lowrank_energy_share": 0.03244328800123185
+    },
+    {
+      "lambda_scale": 2.0,
+      "mean_rank": 0.315,
+      "frac_rank_zero": 0.805,
+      "sparse_share": 0.9501916638016701,
+      "lowrank_energy_share": 0.04933104532439756
+    },
+    {
+      "lambda_scale": 3.0,
+      "mean_rank": 10.23,
+      "frac_rank_zero": 0.28,
+      "sparse_share": 0.5962243600419606,
+      "lowrank_energy_share": 0.38221908979719954
+    },
+    {
+      "lambda_scale": 4.0,
+      "mean_rank": 17.79,
+      "frac_rank_zero": 0.08,
+      "sparse_share": 0.2581330762285347,
+      "lowrank_energy_share": 0.7266234581544996
+    },
+    {
+      "lambda_scale": 8.0,
+      "mean_rank": 24.02,
+      "frac_rank_zero": 0.0,
+      "sparse_share": 0.005124842730001546,
+      "lowrank_energy_share": 0.9943847215175629
+    }
+  ],
+  "note": "The original run of this script took the first 40 lots of a lot-id-sorted list, which on this corpus is a biased slice: it gives mean rank 0.475 at lambda x1.0 against 0.050 for a random sample and 0.050 for all 6,504 lots."
+}

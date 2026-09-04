@@ -519,6 +519,49 @@ def main():
           "from the classes that are lot-correlated and offers nothing to the "
           "classes that are not.")
         W("")
+    lam = Path(a.runs) / "rpca_lambda_random.json"
+    lam0 = Path(a.runs) / "rpca_lambda.json"
+    if lam.exists():
+        d = json.loads(lam.read_text())
+        rows = [[f"x{r['lambda_scale']}", f"{r['mean_rank']:.2f}",
+                 f"{r['frac_rank_zero']:.2f}" if "frac_rank_zero" in r else "-",
+                 f"{r['sparse_share']:.3f}", f"{r['lowrank_energy_share']:.3f}"]
+                for r in d["sweep"]]
+        W("**And there is no setting of its one knob that would have helped.** "
+          "The decomposition has a single parameter, the sparsity weight, and "
+          f"it decides everything. Swept over {d['n_lots']} lots drawn at "
+          f"random from the {d['n_lots_available']:,} with at least 20 wafers:")
+        W("")
+        W(table(rows, ["lambda", "mean rank of the low-rank part",
+                       "fraction rank 0", "sparse share",
+                       "low-rank energy share"]))
+        W("")
+        W("The transition is abrupt and there is no useful regime between the "
+          "two failure modes. Up to twice the standard weight the low-rank part "
+          "is empty — mean rank below 0.4, under 5% of the failure energy — and "
+          "the 'decomposition' returns its input. One step further and the "
+          "rank jumps to 10 and the low-rank part absorbs 38% of the energy, "
+          "which on this corpus means it has started eating the defect. **The "
+          "method is not badly tuned here; it has no good operating point.**")
+        W("")
+        if lam0.exists():
+            d0 = json.loads(lam0.read_text())
+            r1 = next((r for r in d0["sweep"] if r["lambda_scale"] == 1.0), None)
+            rr = next((r for r in d["sweep"] if r["lambda_scale"] == 1.0), None)
+            if r1 and rr:
+                W("This was documented at the time and the documentation was "
+                  "measured on the wrong population. The original sweep took "
+                  f"the first {d0['n_lots']} lots of a lot-id-sorted list and "
+                  f"reported a mean rank of {r1['mean_rank']:.3f} and "
+                  f"{r1['lowrank_energy_share']:.3f} of the failure energy in "
+                  "the low-rank part at the standard weight — from which it "
+                  "concluded the decomposition was working. The same weight on "
+                  f"a random sample gives {rr['mean_rank']:.3f} and "
+                  f"{rr['lowrank_energy_share']:.3f}. Lot id is not arbitrary "
+                  "on this corpus: geometry and failed-die rate both drift with "
+                  "it, so `[:40]` of a sorted list is a slice and not a sample, "
+                  "and it happened to be the most favourable slice available.")
+                W("")
     W("On `lot` the three fourth-channel variants are separated from each other "
       "by less than the seed spread of any one of them. **A channel of zeros "
       "buys what the decomposition buys.** Whatever the fourth channel is worth "
