@@ -2315,3 +2315,53 @@ resolved GroupNorm against BatchNorm when the range test could not.
 p below 0.05. If it does not, max pooling is simply unestablished either way on
 `size`, and the honest summary of the weekend's one positive finding is that it
 holds on one protocol out of four and is unmeasured on the rest.
+
+### 48. The fourth silent no-op, caught before it produced a missing answer
+
+`scripts/pooling_size_seeds.sh` ends by invoking the permutation test to resolve
+the `size` pooling effect. The invocation cannot work. `gn_vs_bn.py` globs
+
+```
+runs/lot__cnn_*__erm__{tag}__s*.json
+```
+
+with the protocol, both encoders and the objective hardcoded, because it was
+written for exactly one comparison. Asked for `--tag poolsize` on the `size`
+protocol it matches **zero files**, prints `need equal, >=2 seeds per arm; have
+0 and 0`, and returns 0. The stage would have completed, logged success, and
+produced no `runs/pooling_size_perm.json` — and I would have gone looking for
+the answer to H47 and found nothing, with no error to explain why.
+
+That is the fourth silent no-op of this project, after the redirect into a
+nonexistent directory that dropped three cells, the reporter key collision that
+would have overwritten seeds, and the OOM that killed the first wafer-budget run
+while its stage logged `done`. All four share the property that the harness
+reported success. The pattern is now frequent enough to be the finding rather
+than the anecdote: **in this codebase, the default failure mode is silence, and
+every stage boundary is a place where an error can be converted into an absence.**
+
+Three things done about this one:
+
+* **The tool is generalized.** `--protocol`, `--objective`, `--arm-a`, `--arm-b`
+  make it a permutation test between any two cell families, which is what it
+  should have been when it was written. The legacy path is unchanged and
+  verified: re-running the GroupNorm/BatchNorm comparison reproduces p = 0.01057
+  and the same difference to five decimals.
+* **An empty match is now an error.** It prints which arm had how many seeds and
+  exits 2, so a queued caller cannot mistake "matched nothing" for "nothing to
+  report", and it writes no output file rather than an empty one.
+* **The contract is asserted** in `tests/test_smoke.py`: an empty match must
+  return 2, print `ERROR`, and leave no file behind.
+
+I did not edit `pooling_size_seeds.sh`, which was executing at the time. Bash
+reads a script by byte offset and rewriting one mid-run can drop it into the
+middle of a line — I did that once already this weekend with `chain_rest.sh` and
+had to kill and relaunch it. The corrected call is queued as a separate stage
+that waits for the sweep's own completion marker.
+
+**What made me look.** Nothing failed. I checked because the previous turn ended
+by saying the analysis was queued, and writing that sentence prompted the
+question of whether the thing I had queued was the thing I needed. Of the four
+silent no-ops, three were found by that kind of incidental check and one by the
+absence of an output file. None was found by anything failing, because nothing
+did.

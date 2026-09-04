@@ -23,6 +23,7 @@ import glob
 import json
 from itertools import combinations
 from pathlib import Path
+import sys
 
 
 def perm_p(a, b):
@@ -44,19 +45,56 @@ def perm_p(a, b):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", default="runs")
-    ap.add_argument("--tag", default="gnbn")
+    ap.add_argument("--tag", default="gnbn",
+                    help="legacy: the GroupNorm/BatchNorm sweep's tag")
     ap.add_argument("--out", default="runs/gn_vs_bn.json")
+    # Explicit arms, so this is a permutation test between any two cell
+    # families rather than only between the two normalizations. The first
+    # version hardcoded `lot__cnn_*__erm__<tag>`, which meant a queued call
+    # asking it to compare pooling variants on `size` matched zero files and
+    # returned quietly -- the fourth silent no-op of this weekend. A tool that
+    # answers the wrong question loudly is fine; one that answers nothing
+    # quietly is not.
+    ap.add_argument("--protocol", default="lot")
+    ap.add_argument("--objective", default="erm")
+    ap.add_argument("--arm-a", default=None,
+                    help="encoder[:tag] for the first arm, e.g. cnn_gn or "
+                         "cnn_gn:poolmeanmax")
+    ap.add_argument("--arm-b", default=None)
+    ap.add_argument("--label-a", default=None)
+    ap.add_argument("--label-b", default=None)
     a = ap.parse_args()
 
-    got = {"cnn_gn": {}, "cnn_bn": {}}
-    for f in glob.glob(f"{a.runs}/lot__cnn_*__erm__{a.tag}__s*.json"):
-        r = json.loads(Path(f).read_text())
-        got[r["encoder"]][r["seed"]] = r["test"]["macro_f1"]
-    gn = [got["cnn_gn"][s] for s in sorted(got["cnn_gn"])]
-    bn = [got["cnn_bn"][s] for s in sorted(got["cnn_bn"])]
-    if len(gn) < 2 or len(bn) < 2 or len(gn) != len(bn):
-        print(f"need equal, >=2 seeds per arm; have {len(gn)} and {len(bn)}")
-        return
+    def collect(spec, fallback_tag):
+        enc, _, tg = spec.partition(":")
+        tg = tg or fallback_tag
+        out = {}
+        for f in glob.glob(f"{a.runs}/{a.protocol}__{enc}__{a.objective}"
+                           f"__{tg}__s*.json"):
+            r = json.loads(Path(f).read_text())
+            out[r["seed"]] = r["test"]["macro_f1"]
+        return out, f"{a.protocol}/{enc}/{tg}"
+
+    if a.arm_a and a.arm_b:
+        ga, na = collect(a.arm_a, a.tag)
+        gb, nb = collect(a.arm_b, a.tag)
+    else:
+        got = {"cnn_gn": {}, "cnn_bn": {}}
+        for f in glob.glob(f"{a.runs}/lot__cnn_*__erm__{a.tag}__s*.json"):
+            r = json.loads(Path(f).read_text())
+            got[r["encoder"]][r["seed"]] = r["test"]["macro_f1"]
+        ga, gb = got["cnn_gn"], got["cnn_bn"]
+        na, nb = "cnn_gn", "cnn_bn"
+    na, nb = (a.label_a or na), (a.label_b or nb)
+    shared = sorted(set(ga) & set(gb))
+    gn = [ga[s] for s in shared]
+    bn = [gb[s] for s in shared]
+    if len(gn) < 2:
+        # loudly, and with a non-zero exit, so a queued caller cannot mistake
+        # "matched nothing" for "found nothing to report"
+        print(f"ERROR: need >=2 seeds present in BOTH arms; "
+              f"{na} has {len(ga)}, {nb} has {len(gb)}, shared {len(shared)}")
+        return 2
 
     F = json.loads(Path(a.runs, "determinism__lot__cnn_gn.json").read_text()) \
         if Path(a.runs, "determinism__lot__cnn_gn.json").exists() else None
@@ -67,7 +105,8 @@ def main():
     margin = (0.0 if overlap else
               (min(gn) - max(bn) if min(gn) > max(bn) else max(gn) - min(bn)))
     rec = {
-        "cell": "lot / erm / one session",
+        "cell": f"{a.protocol} / {a.objective} / one session",
+        "arm_a": na, "arm_b": nb,
         "n_per_arm": len(gn),
         "cnn_gn": gn, "cnn_bn": bn,
         "mean_gn": sum(gn) / len(gn), "mean_bn": sum(bn) / len(bn),
@@ -96,4 +135,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main() or 0)

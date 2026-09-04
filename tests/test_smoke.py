@@ -354,3 +354,35 @@ def test_hiding_the_fail_plane_actually_hides_it():
         for b_ in (-1.0, 0.0, 1.0, 2.0):
             guess = a_ * hidden[:, 0] + b_ * hidden[:, 1]
             assert not torch.allclose(guess[inside], fail[inside])
+
+
+def test_permutation_tool_reports_an_empty_match_loudly():
+    """A queued call asked this tool to compare pooling variants on `size` and
+    it matched zero files, because the globs were hardcoded to the `lot`
+    protocol and two named encoders. It printed a note and returned 0. That is
+    the fourth silent no-op of this project, so the contract is now asserted:
+    an empty match is a non-zero exit, not a quiet return.
+    """
+    import importlib.util
+    import io
+    import contextlib
+    from pathlib import Path as _Path
+
+    spec = importlib.util.spec_from_file_location(
+        "gnbn2", _Path(__file__).resolve().parents[1] / "scripts" / "gn_vs_bn.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+
+    argv = sys.argv
+    try:
+        sys.argv = ["gn_vs_bn.py", "--protocol", "nosuchprotocol",
+                    "--arm-a", "cnn_gn:nope", "--arm-b", "cnn_bn:nope",
+                    "--out", "/tmp/_perm_should_not_exist.json"]
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = m.main()
+    finally:
+        sys.argv = argv
+    assert rc == 2, "an empty match must not look like success"
+    assert "ERROR" in buf.getvalue()
+    assert not _Path("/tmp/_perm_should_not_exist.json").exists()
