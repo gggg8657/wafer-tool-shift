@@ -52,7 +52,7 @@ Three caveats on the last four columns, all of which came out of reading this ta
 
 ### Is that ordering resolvable?
 
-Each adjacent pair in the ranking above, per protocol, with the verdict from whether the observed seed ranges overlap. This is deliberately non-parametric: three seeds do not support a p-value, but whether one cell's worst seed beat the other's best is a fact about what was seen.
+Each adjacent pair in the ranking above, per protocol, with the verdict from whether the observed seed ranges overlap. This is deliberately non-parametric: three seeds do not support a p-value, but whether one cell's worst seed beat the other's best is a fact about what was seen. The run-to-run floor -- two identical invocations of one cell -- is 5.42e-03, so a margin near that is not a separation.
 
 | protocol | higher | lower | gap | seeds | verdict |
 |---|---|---|---|---|---|
@@ -82,7 +82,7 @@ A separate claim from the ranking, because BatchNorm mixes statistics across wha
 | protocol | GroupNorm | BatchNorm | GN - BN | seeds | verdict |
 |---|---|---|---|---|---|
 | `iid` | 0.8855 | 0.8594 | +0.0261 | 1/1 | no error bar (n=1) |
-| `lot` | 0.8647 | 0.8522 | +0.0126 | 3/3 | every GN seed above every BN seed, margin 0.0004 |
+| `lot` | 0.8647 | 0.8522 | +0.0126 | 3/3 | below the floor (margin 0.0004 < 0.0054) |
 | `lot_time` | 0.6985 | 0.6440 | +0.0545 | 3/1 | no error bar (n=1) |
 | `size` | 0.8467 | 0.7682 | +0.0784 | 3/1 | no error bar (n=1) |
 
@@ -187,9 +187,11 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN on resized 64x64 (BatchNorm) | coral | adabn | 0.8553 | 0.8075 | -0.0478 |
 | lot | CNN on resized 64x64 (BatchNorm) | coral | tent | 0.8553 | 0.8124 | -0.0429 |
 | lot | CNN on resized 64x64 (BatchNorm) | coral | ema | 0.8553 | 0.8484 | -0.0069 |
+| lot | CNN on resized 64x64 (BatchNorm) | coral/dtime | ema | 0.8569 | 0.8480 | -0.0089 |
 | lot | CNN on resized 64x64 (BatchNorm) | dann | adabn | 0.8596 | 0.8135 | -0.0461 |
 | lot | CNN on resized 64x64 (BatchNorm) | dann | tent | 0.8596 | 0.8338 | -0.0259 |
 | lot | CNN on resized 64x64 (BatchNorm) | dann | ema | 0.8596 | 0.8577 | -0.0019 |
+| lot | CNN on resized 64x64 (BatchNorm) | dann/dtime | ema | 0.8583 | 0.8519 | -0.0064 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm | adabn | 0.8587 | 0.8139 | -0.0448 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm | tent | 0.8587 | 0.8313 | -0.0274 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm | ema | 0.8587 | 0.8575 | -0.0012 |
@@ -204,6 +206,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN on resized 64x64 (BatchNorm) | hsic | adabn | 0.8628 | 0.8225 | -0.0402 |
 | lot | CNN on resized 64x64 (BatchNorm) | hsic | tent | 0.8628 | 0.8358 | -0.0270 |
 | lot | CNN on resized 64x64 (BatchNorm) | hsic | ema | 0.8628 | 0.8595 | -0.0033 |
+| lot | CNN on resized 64x64 (BatchNorm) | hsic/dtime | ema | 0.8568 | 0.8579 | +0.0011 |
 | lot | CNN on resized 64x64 (BatchNorm) | irm | adabn | 0.8536 | 0.8003 | -0.0533 |
 | lot | CNN on resized 64x64 (BatchNorm) | irm | tent | 0.8536 | 0.8280 | -0.0256 |
 | lot | CNN on resized 64x64 (BatchNorm) | irm | ema | 0.8536 | 0.8501 | -0.0035 |
@@ -214,6 +217,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN on resized 64x64 (BatchNorm) | mixup_domain | adabn | 0.8541 | 0.7914 | -0.0627 |
 | lot | CNN on resized 64x64 (BatchNorm) | mixup_domain | tent | 0.8541 | 0.8023 | -0.0518 |
 | lot | CNN on resized 64x64 (BatchNorm) | mixup_domain | ema | 0.8541 | 0.8469 | -0.0072 |
+| lot | CNN on resized 64x64 (BatchNorm) | mixup_domain/dtime | ema | 0.8522 | 0.8456 | -0.0066 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn | adabn | 0.1026 | 0.1026 | +0.0000 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn | tent | 0.1026 | 0.1026 | +0.0000 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn | ema | 0.1026 | 0.1026 | +0.0000 |
@@ -226,7 +230,19 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot1.0 | ema | 0.1026 | 0.1026 | +0.0000 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | tent | 0.8671 | 0.8538 | -0.0133 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | ema | 0.8671 | 0.8759 | +0.0087 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm/cw | ema | 0.8736 | 0.8707 | -0.0029 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm/scratch_lr1e-3 | ema | 0.8699 | 0.8633 | -0.0066 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm/scratch_lr2e-4 | ema | 0.8012 | 0.7877 | -0.0135 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm/scratch_lr5e-4 | ema | 0.8480 | 0.8441 | -0.0038 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm/sslinit | ema | 0.8134 | 0.8053 | -0.0081 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm/sslinit_lr1e-3 | ema | 0.7733 | 0.7730 | -0.0004 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm/sslinit_lr2e-4 | ema | 0.6615 | 0.6546 | -0.0069 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm/sslinit_lr5e-4 | ema | 0.7414 | 0.7432 | +0.0018 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal/focal0.0 | ema | 0.8781 | 0.8729 | -0.0052 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal/focal0.5 | ema | 0.8760 | 0.8727 | -0.0033 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal/focal1.0 | ema | 0.8748 | 0.8701 | -0.0047 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal/focal2.0 | ema | 0.8654 | 0.8607 | -0.0047 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal/focal5.0 | ema | 0.8694 | 0.8659 | -0.0035 |
 | lot | size-invariant descriptors + MLP | anchor | ema | 0.8395 | 0.8400 | +0.0005 |
 | lot | size-invariant descriptors + MLP | coral | ema | 0.8413 | 0.8404 | -0.0009 |
 | lot | size-invariant descriptors + MLP | dann | ema | 0.8443 | 0.8422 | -0.0022 |
@@ -305,10 +321,14 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 
 | protocol | representation | variant | macro-F1 | vs plain | p10 domain F1 | vs plain |
 |---|---|---|---|---|---|---|
+| lot | CNN on resized 64x64 (BatchNorm) | dtime | 0.8569 | +0.0016 | 0.4898 | +0.0000 |
+| lot | CNN on resized 64x64 (BatchNorm) | dtime | 0.8583 | -0.0013 | 0.4898 | +0.0000 |
 | lot | CNN on resized 64x64 (BatchNorm) | dtime | 0.8583 | -0.0004 | 0.4898 | +0.0000 |
 | lot | CNN on resized 64x64 (BatchNorm) | + Fourier amplitude swap augmentation | 0.8566 | -0.0021 | 0.4898 | +0.0000 |
 | lot | CNN on resized 64x64 (BatchNorm) | dtime | 0.8402 | -0.0213 | 0.4898 | +0.0000 |
+| lot | CNN on resized 64x64 (BatchNorm) | dtime | 0.8568 | -0.0059 | 0.4898 | +0.0000 |
 | lot | CNN on resized 64x64 (BatchNorm) | dtime | 0.8529 | -0.0007 | 0.4898 | +0.0000 |
+| lot | CNN on resized 64x64 (BatchNorm) | dtime | 0.8522 | -0.0019 | 0.4898 | +0.0000 |
 | lot | CNN on resized 64x64 (BatchNorm) | ot0.0 | 0.8609 | +0.7583 | 0.4898 | +0.2558 |
 | lot | CNN on resized 64x64 (BatchNorm) | ot0.003 | 0.8591 | +0.7565 | 0.4898 | +0.2558 |
 | lot | CNN on resized 64x64 (BatchNorm) | ot0.01 | 0.8540 | +0.7515 | 0.4898 | +0.2558 |
@@ -316,7 +336,19 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN on resized 64x64 (BatchNorm) | ot0.1 | 0.8485 | +0.7460 | 0.4898 | +0.2558 |
 | lot | CNN on resized 64x64 (BatchNorm) | ot0.3 | 0.8352 | +0.7327 | 0.4898 | +0.2558 |
 | lot | CNN on resized 64x64 (BatchNorm) | ot1.0 | 0.1026 | +0.0000 | 0.2340 | +0.0000 |
+| lot | CNN on resized 64x64 (GroupNorm) | cw | 0.8736 | +0.0064 | 0.5000 | +0.0000 |
+| lot | CNN on resized 64x64 (GroupNorm) | scratch_lr1e-3 | 0.8699 | +0.0028 | 0.5000 | +0.0000 |
+| lot | CNN on resized 64x64 (GroupNorm) | scratch_lr2e-4 | 0.8012 | -0.0659 | 0.4898 | -0.0102 |
+| lot | CNN on resized 64x64 (GroupNorm) | scratch_lr5e-4 | 0.8480 | -0.0192 | 0.4898 | -0.0102 |
 | lot | CNN on resized 64x64 (GroupNorm) | + lot-adversarial SSL initialization | 0.8134 | -0.0537 | 0.4898 | -0.0102 |
+| lot | CNN on resized 64x64 (GroupNorm) | sslinit_lr1e-3 | 0.7733 | -0.0938 | 0.4898 | -0.0102 |
+| lot | CNN on resized 64x64 (GroupNorm) | sslinit_lr2e-4 | 0.6615 | -0.2056 | 0.4894 | -0.0106 |
+| lot | CNN on resized 64x64 (GroupNorm) | sslinit_lr5e-4 | 0.7414 | -0.1258 | 0.4898 | -0.0102 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal0.0 | 0.8781 | - | 0.5000 | - |
+| lot | CNN on resized 64x64 (GroupNorm) | focal0.5 | 0.8760 | - | 0.5000 | - |
+| lot | CNN on resized 64x64 (GroupNorm) | focal1.0 | 0.8748 | - | 0.5000 | - |
+| lot | CNN on resized 64x64 (GroupNorm) | focal2.0 | 0.8654 | - | 0.5000 | - |
+| lot | CNN on resized 64x64 (GroupNorm) | focal5.0 | 0.8694 | - | 0.5000 | - |
 | lot | size-invariant descriptors + MLP | + RPCA lot signature as features | 0.8461 | +0.0044 | 0.4898 | +0.0000 |
 | lot | CNN + RPCA lot-signature channel | 4th channel = raw failed-die mask (RPCA control) | 0.8765 | -0.0049 | 0.5000 | +0.0000 |
 | lot | CNN + RPCA lot-signature channel | 4th channel = zeros (RPCA control) | 0.8772 | -0.0041 | 0.5000 | +0.0000 |
@@ -336,14 +368,34 @@ Each seed reshuffles the model init *and* which training domains become the inne
 
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range | per seed |
 |---|---|---|---|---|---|---|---|
+| lot | CNN on resized 64x64 (BatchNorm) | coral | - | 3 | 0.8468 | +/-0.0090 | 0.8553, 0.8479, 0.8373 |
+| lot | CNN on resized 64x64 (BatchNorm) | coral | dtime | 3 | 0.8443 | +/-0.0098 | 0.8569, 0.8373, 0.8388 |
+| lot | CNN on resized 64x64 (BatchNorm) | dann | - | 3 | 0.8517 | +/-0.0080 | 0.8596, 0.8436, 0.8518 |
+| lot | CNN on resized 64x64 (BatchNorm) | dann | dtime | 3 | 0.8454 | +/-0.0132 | 0.8583, 0.8319, 0.8460 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm | - | 3 | 0.8522 | +/-0.0069 | 0.8587, 0.8448, 0.8530 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm | dtime | 3 | 0.8514 | +/-0.0073 | 0.8583, 0.8438, 0.8521 |
 | lot | CNN on resized 64x64 (BatchNorm) | group_dro | - | 3 | 0.8535 | +/-0.0063 | 0.8615, 0.8501, 0.8488 |
 | lot | CNN on resized 64x64 (BatchNorm) | group_dro | dtime | 3 | 0.8257 | +/-0.0139 | 0.8402, 0.8125, 0.8244 |
+| lot | CNN on resized 64x64 (BatchNorm) | hsic | - | 3 | 0.8527 | +/-0.0080 | 0.8628, 0.8484, 0.8469 |
+| lot | CNN on resized 64x64 (BatchNorm) | hsic | dtime | 3 | 0.8488 | +/-0.0076 | 0.8568, 0.8417, 0.8479 |
 | lot | CNN on resized 64x64 (BatchNorm) | irm | - | 3 | 0.8418 | +/-0.0094 | 0.8536, 0.8371, 0.8348 |
 | lot | CNN on resized 64x64 (BatchNorm) | irm | dtime | 3 | 0.8465 | +/-0.0052 | 0.8529, 0.8424, 0.8443 |
+| lot | CNN on resized 64x64 (BatchNorm) | mixup_domain | - | 3 | 0.8398 | +/-0.0108 | 0.8541, 0.8330, 0.8324 |
+| lot | CNN on resized 64x64 (BatchNorm) | mixup_domain | dtime | 3 | 0.8371 | +/-0.0138 | 0.8522, 0.8246, 0.8347 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.8647 | +/-0.0044 | 0.8671, 0.8680, 0.8591 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm | cw | 2 | 0.8692 | +/-0.0044 | 0.8736, 0.8648 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm | scratch_lr1e-3 | 2 | 0.8690 | +/-0.0009 | 0.8699, 0.8681 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm | scratch_lr2e-4 | 2 | 0.7993 | +/-0.0020 | 0.8012, 0.7973 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm | scratch_lr5e-4 | 2 | 0.8528 | +/-0.0049 | 0.8480, 0.8577 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | + lot-adversarial SSL initialization | 3 | 0.8143 | +/-0.0091 | 0.8134, 0.8239, 0.8056 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm | sslinit_lr1e-3 | 2 | 0.7755 | +/-0.0022 | 0.7733, 0.7777 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm | sslinit_lr2e-4 | 2 | 0.6529 | +/-0.0087 | 0.6615, 0.6442 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm | sslinit_lr5e-4 | 2 | 0.7427 | +/-0.0013 | 0.7414, 0.7440 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal | focal0.0 | 2 | 0.8730 | +/-0.0050 | 0.8781, 0.8680 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal | focal0.5 | 2 | 0.8759 | +/-0.0001 | 0.8760, 0.8758 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal | focal1.0 | 2 | 0.8729 | +/-0.0019 | 0.8748, 0.8710 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal | focal2.0 | 2 | 0.8701 | +/-0.0048 | 0.8654, 0.8749 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal | focal5.0 | 2 | 0.8745 | +/-0.0051 | 0.8694, 0.8795 |
 | lot | CNN + RPCA lot-signature channel | erm | - | 3 | 0.8696 | +/-0.0096 | 0.8813, 0.8654, 0.8621 |
 | lot | CNN + RPCA lot-signature channel | erm | 4th channel = raw failed-die mask (RPCA control) | 3 | 0.8692 | +/-0.0065 | 0.8765, 0.8678, 0.8634 |
 | lot | CNN + RPCA lot-signature channel | erm | 4th channel = zeros (RPCA control) | 3 | 0.8689 | +/-0.0075 | 0.8772, 0.8673, 0.8622 |
@@ -402,6 +454,12 @@ It cannot be proved; it can be refuted as arbitrary. Deciles of lot number, dist
 
 Geometry and failed-die rate drift with lot number; the defect-class mix does not. The numbering is not arbitrary, but this cannot separate production order from product blocking -- a product line numbered in a contiguous block gives the same signature.
 
+## Run-to-run reproducibility floor
+
+`lot / cnn_gn / erm / seed 0 --tta`, run 6 times under identical arguments: 0.8723, 0.8760, 0.8767, 0.8767, 0.8772, 0.8778. Range **0.0054**, standard deviation 0.0019 -- the pipeline is not bit-reproducible on this GPU. The observed range over identical invocations bounds every same-seed comparison in this repository: two cells whose test macro-F1 differ by less than it have not been shown to differ at all, whatever their arguments. An earlier version of this file estimated the same quantity from a single pair of runs, which understated it.
+
+The stored value for that cell is 0.8671, which is **outside** the range of the repeats, 0.0052 from the nearest one, and every repeat lands above it. That is not symmetric noise: something about the environment or the code changed between when that cell was measured and now. `scripts/backfill_metrics.sh` refuses to overwrite measured cells while that is true.
+
 ## Test macro-F1 split by whether the geometry was seen in training
 
 How much of a protocol's difficulty is *unseen geometry* rather than whatever else it holds out. This matters most for `lot_time`, whose test side is a narrow slice of geometry space (see above), and it is the difference between "forward-only time costs 20 points" and "forward-only deployment costs 20 points, part of it for meeting new products".
@@ -410,22 +468,44 @@ Both macro-F1 columns are averaged over **only the classes present in both halve
 
 | protocol | representation | objective | macro-F1 all | seen geom. (matched) | unseen geom. (matched) | seen - unseen | shared classes | n seen | n unseen |
 |---|---|---|---|---|---|---|---|---|---|
+| lot | CNN on resized 64x64 (BatchNorm) | coral/dtime | 0.8569 | 0.8448 | 0.8688 | -0.0240 | 8 | 43,121 | 131 |
+| lot | CNN on resized 64x64 (BatchNorm) | dann/dtime | 0.8583 | 0.8435 | 0.8242 | +0.0193 | 8 | 43,121 | 131 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm/dtime | 0.8583 | 0.8438 | 0.8605 | -0.0166 | 8 | 43,121 | 131 |
 | lot | CNN on resized 64x64 (BatchNorm) | group_dro/dtime | 0.8402 | 0.8276 | 0.8396 | -0.0120 | 8 | 43,121 | 131 |
+| lot | CNN on resized 64x64 (BatchNorm) | hsic/dtime | 0.8568 | 0.8470 | 0.9140 | -0.0671 | 8 | 43,121 | 131 |
 | lot | CNN on resized 64x64 (BatchNorm) | irm/dtime | 0.8529 | 0.8387 | 0.8406 | -0.0019 | 8 | 43,121 | 131 |
+| lot | CNN on resized 64x64 (BatchNorm) | mixup_domain/dtime | 0.8522 | 0.8401 | 0.7818 | +0.0583 | 8 | 43,121 | 131 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.1 | 0.8485 | 0.8434 | 0.7310 | +0.1124 | 8 | 43,121 | 131 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.3 | 0.8352 | 0.8240 | 0.7192 | +0.1048 | 8 | 43,121 | 131 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot1.0 | 0.1026 | 0.1155 | 0.0618 | +0.0537 | 8 | 43,121 | 131 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm/cw | 0.8736 | 0.8643 | 0.9186 | -0.0543 | 8 | 43,121 | 131 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm/scratch_lr1e-3 | 0.8699 | 0.8579 | 0.9085 | -0.0506 | 8 | 43,121 | 131 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm/scratch_lr2e-4 | 0.8012 | 0.7813 | 0.7811 | +0.0001 | 8 | 43,121 | 131 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm/scratch_lr5e-4 | 0.8480 | 0.8345 | 0.8659 | -0.0314 | 8 | 43,121 | 131 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm/sslinit_lr1e-3 | 0.7733 | 0.7545 | 0.6711 | +0.0833 | 8 | 43,121 | 131 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm/sslinit_lr2e-4 | 0.6615 | 0.6287 | 0.5407 | +0.0880 | 8 | 43,121 | 131 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm/sslinit_lr5e-4 | 0.7414 | 0.7198 | 0.6403 | +0.0795 | 8 | 43,121 | 131 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal/focal0.0 | 0.8781 | 0.8673 | 0.9012 | -0.0339 | 8 | 43,121 | 131 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal/focal0.5 | 0.8760 | 0.8648 | 0.9056 | -0.0408 | 8 | 43,121 | 131 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal/focal1.0 | 0.8748 | 0.8622 | 0.8948 | -0.0326 | 8 | 43,121 | 131 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal/focal2.0 | 0.8654 | 0.8585 | 0.8132 | +0.0453 | 8 | 43,121 | 131 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal/focal5.0 | 0.8694 | 0.8559 | 0.8347 | +0.0211 | 8 | 43,121 | 131 |
 
 ## Does the domain definition explain the ERM-equivalence?
 
 Every group-aware objective was originally handed `lot % 32` as its domain: 10,762 lots averaged into 32 buckets whose mean pairwise label total-variation is 0.0208, against 0.1666 between real lots. An invariance penalty asked to equalize distributions that are already equal is satisfied by doing nothing, so ERM-equivalence on `lot` was close to guaranteed by construction rather than discovered. `time_decile` replaces it with ten fixed, ordered, lot-level production-order groups carrying a label TV of 0.1822. One change; everything else fixed.
 
-| objective | representation | domain = `lot % 32` | domain = production decile | difference | n domains |
-|---|---|---|---|---|---|
-| `erm` | CNN on resized 64x64 (BatchNorm) | 0.8522 ±0.0069 (n=3) | 0.8514 ±0.0073 (n=3) | -0.0008 | 10 |
-| `group_dro` | CNN on resized 64x64 (BatchNorm) | 0.8535 ±0.0063 (n=3) | 0.8257 ±0.0139 (n=3) | -0.0277 | 10 |
-| `irm` | CNN on resized 64x64 (BatchNorm) | 0.8418 ±0.0094 (n=3) | 0.8465 ±0.0052 (n=3) | +0.0047 | 10 |
+| objective | representation | `lot % 32` (TV 0.021) | vs ERM | production decile (TV 0.182) | vs ERM | vs ERM under real domains |
+|---|---|---|---|---|---|---|
+| `coral` | CNN on resized 64x64 (BatchNorm) | 0.8468 ±0.0090 | -0.0053 | 0.8443 ±0.0098 | -0.0071 | ranges overlap |
+| `dann` | CNN on resized 64x64 (BatchNorm) | 0.8517 ±0.0080 | -0.0005 | 0.8454 ±0.0132 | -0.0060 | ranges overlap |
+| `erm` | CNN on resized 64x64 (BatchNorm) | 0.8522 ±0.0069 | +0.0000 | 0.8514 ±0.0073 | +0.0000 | ranges overlap |
+| `group_dro` | CNN on resized 64x64 (BatchNorm) | 0.8535 ±0.0063 | +0.0013 | 0.8257 ±0.0139 | -0.0257 | below the floor (margin 0.0035 < 0.0054) |
+| `hsic` | CNN on resized 64x64 (BatchNorm) | 0.8527 ±0.0080 | +0.0005 | 0.8488 ±0.0076 | -0.0026 | ranges overlap |
+| `irm` | CNN on resized 64x64 (BatchNorm) | 0.8418 ±0.0094 | -0.0103 | 0.8465 ±0.0052 | -0.0049 | ranges overlap |
+| `mixup_domain` | CNN on resized 64x64 (BatchNorm) | 0.8398 ±0.0108 | -0.0124 | 0.8371 ±0.0138 | -0.0143 | ranges overlap |
+
+The last column asks whether the objective's seed range and ERM's seed range overlap under the *real* domain definition. This is the question H4 was posed to answer: were these methods tying with ERM because they had been switched off by a degenerate domain vocabulary? The answer is no. Given domains that carry an order of magnitude more label shift, six of the seven still cannot be separated from ERM, and the one that can is **worse**. The negative result survives a much stronger test than the one that produced it.
 
 **Null control.** `erm` never reads the domain label, so its two columns must agree; they differ by at most 0.0010, against a measured same-code-path floor of about 0.002. The domain machinery did not change ERM, so the other rows are differences in the objective and not in the plumbing. If this line ever exceeds the floor, nothing else in the table can be read.
 
@@ -522,21 +602,21 @@ Masked-die modelling on 638,506 unlabelled wafers with a gradient-reversed lot h
 
 The nuisance CE rising toward chance is the signal that the embedding is losing the lot's failure-rate decile and the wafer geometry. An earlier version asked the adversary to name the lot itself out of 64 hashed buckets; its loss sat at chance from epoch 1 because the label was unpredictable, so gradient reversal had nothing to reverse -- a vacuous adversary that reads as invariance in the logs.
 
-## Per-class F1, best `lot` cell (CNN + RPCA lot-signature channel, erm)
+## Per-class F1, best `lot` cell (CNN on resized 64x64 (GroupNorm), focal)
 
-Selected on validation macro-F1 (0.8977); its test macro-F1 is 0.8813. Selecting on test macro-F1 instead would have picked the same cell, so the two rules agree here and nothing is riding on the choice.
+Selected on validation macro-F1 (0.8984); its test macro-F1 is 0.8654. Selecting on *test* instead would have picked CNN + RPCA lot-signature channel / erm at 0.8813; that is selection on the test set across 55 cells and the number would be an artefact of it.
 
 | class | F1 |
 |---|---|
-| none | 0.9916 |
-| Center | 0.9291 |
-| Donut | 0.8125 |
-| Edge-Loc | 0.8712 |
-| Edge-Ring | 0.9841 |
-| Loc | 0.7659 |
-| Near-full | 0.9315 |
-| Random | 0.8995 |
-| Scratch | 0.7466 |
+| none | 0.9908 |
+| Center | 0.9263 |
+| Donut | 0.7619 |
+| Edge-Loc | 0.8589 |
+| Edge-Ring | 0.9818 |
+| Loc | 0.7527 |
+| Near-full | 0.9333 |
+| Random | 0.8914 |
+| Scratch | 0.6914 |
 
 The long tail is where the shift bites: `Near-full` has 149 examples in the whole corpus and `Scratch` is a one-die-wide line, which global descriptors average away.
 

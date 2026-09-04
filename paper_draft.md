@@ -6,7 +6,7 @@
 
 Wafer-map defect classification is usually reported on a random split of WM-811K. We rebuild it as a domain-generalization benchmark on the same 172,948 labelled wafers, 10,762 lots and 344 geometries, with four protocols that differ only in what is held out, and we find that the axis the literature worries about is not the expensive one. Holding out whole lots costs a GroupNorm CNN 0.8855 → 0.8647 ±0.0044 (n=3) macro-F1; holding out *future* lots under a purged, embargoed, forward-only split costs 0.6985 ±0.0045 (n=3) — though we then show that split is not purely temporal, since its test side is a narrow geometry slice with a seventh of its wafers of geometries never trained on.
 
-The rest of the paper is a sequence of our own claims failing their own controls, and we think that is the contribution. Nine borrowed invariance objectives fail to beat ERM — but on the lot protocol that finding is an artefact of how `domain` was defined in our own harness, which bucketed 10,762 lots into 32 near-identical groups. So far 2 of them have been re-run against a domain vocabulary that carries real shift (group_dro, irm), and the ones that move, move *down* — which strengthens the negative result rather than rescuing the methods. Two methods we built for this corpus do not survive their controls: an RPCA lot-signature channel is matched by a fourth channel of zeros, and lot-adversarial self-supervised pretraining is worse than random initialization. Our active-learning result compared heuristics that had bought a fifth of the labels random had. And the representation ranking the benchmark exists to produce is not resolvable at three seeds: across the adjacent pairs on four protocols, only the die-graph GNN is clearly separated from anything. We report seed spread and a run-to-run reproducibility floor throughout, because both are larger than most of the effects the first version of this table reported.
+The rest of the paper is a sequence of our own claims failing their own controls, and we think that is the contribution. Nine borrowed invariance objectives fail to beat ERM — but on the lot protocol that finding is an artefact of how `domain` was defined in our own harness, which bucketed 10,762 lots into 32 near-identical groups. So far 6 of them have been re-run against a domain vocabulary that carries real shift (coral, dann, group_dro, hsic, irm, mixup_domain), and the ones that move, move *down* — which strengthens the negative result rather than rescuing the methods. Two methods we built for this corpus do not survive their controls: an RPCA lot-signature channel is matched by a fourth channel of zeros, and lot-adversarial self-supervised pretraining is worse than random initialization. Our active-learning result compared heuristics that had bought a fifth of the labels random had. And the representation ranking the benchmark exists to produce is not resolvable at three seeds: across the adjacent pairs on four protocols, only the die-graph GNN is clearly separated from anything. We report seed spread and a run-to-run reproducibility floor throughout, because both are larger than most of the effects the first version of this table reported.
 
 ## 1. Four protocols over one corpus
 
@@ -64,13 +64,13 @@ The forward-only test side holds 19 geometries against 338 in training, and 14.1
 | representation | objective | macro-F1 | vs ERM |
 |---|---|---|---|
 | CNN (BatchNorm) | `anchor` | 0.8637 | +0.0115 |
-| CNN (BatchNorm) | `coral` | 0.8553 | +0.0031 |
-| CNN (BatchNorm) | `dann` | 0.8596 | +0.0075 |
+| CNN (BatchNorm) | `coral` | 0.8468 ±0.0090 (n=3) | -0.0053 |
+| CNN (BatchNorm) | `dann` | 0.8517 ±0.0080 (n=3) | -0.0005 |
 | CNN (BatchNorm) | `group_dro` | 0.8535 ±0.0063 (n=3) | +0.0013 |
-| CNN (BatchNorm) | `hsic` | 0.8628 | +0.0106 |
+| CNN (BatchNorm) | `hsic` | 0.8527 ±0.0080 (n=3) | +0.0005 |
 | CNN (BatchNorm) | `irm` | 0.8418 ±0.0094 (n=3) | -0.0103 |
 | CNN (BatchNorm) | `logit_adjust` | 0.8170 | -0.0352 |
-| CNN (BatchNorm) | `mixup_domain` | 0.8541 | +0.0019 |
+| CNN (BatchNorm) | `mixup_domain` | 0.8398 ±0.0108 (n=3) | -0.0124 |
 | CNN (BatchNorm) | `sinkhorn` | 0.1026 | -0.7496 |
 | descriptors + MLP | `anchor` | 0.8395 | -0.0022 |
 | descriptors + MLP | `coral` | 0.8413 | -0.0004 |
@@ -110,8 +110,12 @@ On `size` the same hash is far less degenerate — 344 geometries into 32 bucket
 | objective | domain = `lot % 32` | domain = production decile | difference |
 |---|---|---|---|
 | `erm` | 0.8522 ±0.0069 (n=3) | 0.8514 ±0.0073 (n=3) | -0.0008 |
+| `coral` | 0.8468 ±0.0090 (n=3) | 0.8443 ±0.0098 (n=3) | -0.0025 |
+| `dann` | 0.8517 ±0.0080 (n=3) | 0.8454 ±0.0132 (n=3) | -0.0062 |
 | `group_dro` | 0.8535 ±0.0063 (n=3) | 0.8257 ±0.0139 (n=3) | -0.0277 |
+| `hsic` | 0.8527 ±0.0080 (n=3) | 0.8488 ±0.0076 (n=3) | -0.0039 |
 | `irm` | 0.8418 ±0.0094 (n=3) | 0.8465 ±0.0052 (n=3) | +0.0047 |
+| `mixup_domain` | 0.8398 ±0.0108 (n=3) | 0.8371 ±0.0138 (n=3) | -0.0027 |
 
 `erm` never reads the domain label, so its two columns must agree exactly; it is included as the null control on the plumbing.
 
@@ -178,14 +182,34 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range |
 |---|---|---|---|---|---|---|
+| `lot` | CNN (BatchNorm) | `coral` | — | 3 | 0.8468 | ±0.0090 |
+| `lot` | CNN (BatchNorm) | `coral` | dtime | 3 | 0.8443 | ±0.0098 |
+| `lot` | CNN (BatchNorm) | `dann` | — | 3 | 0.8517 | ±0.0080 |
+| `lot` | CNN (BatchNorm) | `dann` | dtime | 3 | 0.8454 | ±0.0132 |
 | `lot` | CNN (BatchNorm) | `erm` | — | 3 | 0.8522 | ±0.0069 |
 | `lot` | CNN (BatchNorm) | `erm` | dtime | 3 | 0.8514 | ±0.0073 |
 | `lot` | CNN (BatchNorm) | `group_dro` | — | 3 | 0.8535 | ±0.0063 |
 | `lot` | CNN (BatchNorm) | `group_dro` | dtime | 3 | 0.8257 | ±0.0139 |
+| `lot` | CNN (BatchNorm) | `hsic` | — | 3 | 0.8527 | ±0.0080 |
+| `lot` | CNN (BatchNorm) | `hsic` | dtime | 3 | 0.8488 | ±0.0076 |
 | `lot` | CNN (BatchNorm) | `irm` | — | 3 | 0.8418 | ±0.0094 |
 | `lot` | CNN (BatchNorm) | `irm` | dtime | 3 | 0.8465 | ±0.0052 |
+| `lot` | CNN (BatchNorm) | `mixup_domain` | — | 3 | 0.8398 | ±0.0108 |
+| `lot` | CNN (BatchNorm) | `mixup_domain` | dtime | 3 | 0.8371 | ±0.0138 |
 | `lot` | CNN (GroupNorm) | `erm` | — | 3 | 0.8647 | ±0.0044 |
+| `lot` | CNN (GroupNorm) | `erm` | cw | 2 | 0.8692 | ±0.0044 |
+| `lot` | CNN (GroupNorm) | `erm` | scratch_lr1e-3 | 2 | 0.8690 | ±0.0009 |
+| `lot` | CNN (GroupNorm) | `erm` | scratch_lr2e-4 | 2 | 0.7993 | ±0.0020 |
+| `lot` | CNN (GroupNorm) | `erm` | scratch_lr5e-4 | 2 | 0.8528 | ±0.0049 |
 | `lot` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.8143 | ±0.0091 |
+| `lot` | CNN (GroupNorm) | `erm` | sslinit_lr1e-3 | 2 | 0.7755 | ±0.0022 |
+| `lot` | CNN (GroupNorm) | `erm` | sslinit_lr2e-4 | 2 | 0.6529 | ±0.0087 |
+| `lot` | CNN (GroupNorm) | `erm` | sslinit_lr5e-4 | 2 | 0.7427 | ±0.0013 |
+| `lot` | CNN (GroupNorm) | `focal` | focal0.0 | 2 | 0.8730 | ±0.0050 |
+| `lot` | CNN (GroupNorm) | `focal` | focal0.5 | 2 | 0.8759 | ±0.0001 |
+| `lot` | CNN (GroupNorm) | `focal` | focal1.0 | 2 | 0.8729 | ±0.0019 |
+| `lot` | CNN (GroupNorm) | `focal` | focal2.0 | 2 | 0.8701 | ±0.0048 |
+| `lot` | CNN (GroupNorm) | `focal` | focal5.0 | 2 | 0.8745 | ±0.0051 |
 | `lot` | CNN + 4th channel | `erm` | — | 3 | 0.8696 | ±0.0096 |
 | `lot` | CNN + 4th channel | `erm` | failmask | 3 | 0.8692 | ±0.0065 |
 | `lot` | CNN + 4th channel | `erm` | zerochan | 3 | 0.8689 | ±0.0075 |
@@ -210,7 +234,22 @@ We therefore constructed **MIXED-SYNTH**: 160,757 training and 53,855 test wafer
 
 **MIXED-SYNTH is synthetic and is an upper bound.** Overlaid patterns do not interact: a real scratch crossing a real edge ring changes both signatures where they meet, and a pixel-wise OR has no such term. No number measured on MIXED-SYNTH is a statement about WM-811K or about MixedWM38.
 
-MIXED-SYNTH training results: [not measured]. `scripts/mixed_sweep.sh` queued.
+| source split | loss | seed | macro-F1 @0.5 | macro-F1 @tuned | micro-F1 @tuned | subset acc. |
+|---|---|---|---|---|---|---|
+| iid | `bce` | 0 | 0.8399 | 0.8435 | 0.8521 | 0.8870 |
+| iid | `bce` | 1 | 0.8400 | 0.8419 | 0.8507 | 0.8843 |
+| iid | `focal` | 0 | 0.8407 | 0.8435 | 0.8511 | 0.8855 |
+| iid | `focal` | 1 | 0.8382 | 0.8419 | 0.8537 | 0.8876 |
+| iid | `posweight` | 0 | 0.7200 | 0.8230 | 0.8312 | 0.8668 |
+| iid | `posweight` | 1 | 0.7190 | 0.8272 | 0.8360 | 0.8732 |
+| lot | `bce` | 0 | 0.8071 | 0.8145 | 0.8431 | 0.8789 |
+| lot | `bce` | 1 | 0.8098 | 0.8127 | 0.8411 | 0.8777 |
+| lot | `focal` | 0 | 0.8166 | 0.8239 | 0.8473 | 0.8806 |
+| lot | `focal` | 1 | 0.8077 | 0.8115 | 0.8406 | 0.8804 |
+| lot | `posweight` | 0 | 0.7186 | 0.8029 | 0.8268 | 0.8644 |
+| lot | `posweight` | 1 | 0.7118 | 0.8056 | 0.8280 | 0.8682 |
+
+Thresholds are tuned per class on a lot-disjoint validation split carved from training, never on test. Both numbers are given because threshold tuning is worth several points on a long-tailed label set and the two are different metrics.
 
 ## 8. Threats to validity
 

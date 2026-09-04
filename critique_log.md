@@ -991,3 +991,137 @@ comparisons this corpus can support at all, and the honest answer is likely to
 be "the GNN is worse, and nothing else is distinguishable". A benchmark that
 cannot rank its own baselines is a finding about the benchmark, and a more
 useful one than a leaderboard.
+
+### 16. The reproducibility floor was measured from one pair of runs, and was 4.5x too small
+
+The backfill gate refused. It compared a fresh re-run of `lot/cnn_gn/erm/s0`
+against the stored value, found them 0.0082 apart, and declared that larger than
+the "run-to-run floor" of 0.0012 it had just measured. That was the right call
+for the wrong reason: **0.0012 was the difference between exactly two runs**, a
+one-sample estimate of a spread, and I had multiplied it by three and called it
+a tolerance.
+
+Six identical invocations of the same cell (`scripts/determinism_repeats.sh`):
+
+```
+0.8723  0.8760  0.8767  0.8767  0.8772  0.8778
+range 0.0054   stdev 0.0019
+```
+
+So the floor is **0.0054**, four and a half times the pair-based estimate. A
+gate whose tolerance is estimated that badly refuses correct backfills, and
+would as happily admit wrong ones.
+
+But the stored value, 0.8671, is **outside** all six repeats — 0.0052 below the
+nearest. Six of six above it is not symmetric noise, so the gate's refusal
+stood and something had to be found.
+
+**What it was not: my code.** I extracted `scripts/run_bench.py` and the whole
+`wts` package at commit `373b9cc` — before every change made this weekend — into
+a scratch directory and ran the identical cell three times on my own GPUs:
+
+```
+old code, GPUs 0/1:  0.8742  0.8784  0.8753
+new code, GPUs 0/1:  0.8723 ... 0.8778
+stored, Friday:      0.8671
+```
+
+The old code lands inside the new code's range. Nothing I changed moved the
+number. The difference is environmental — the original sweep ran on GPUs 2 and 3
+(`sweep.sh` defaults to them) and this weekend's work is confined to 0 and 1 by
+the GPU lease, so the comparison could not be run on the original hardware
+without taking devices that belong to another session. I did not take them.
+
+**The finding this actually produces, which is larger than the bug it was
+chasing.** The *total* reproducibility spread of this benchmark, across the
+hardware and sessions it has actually been run on, is around 0.01 — the 0.0054
+within one session plus a further ~0.005 offset between sessions. The seed
+spreads I have been quoting all weekend (±0.004–0.010 on `lot`) are an
+**underestimate of total variability**, because all three seeds of any cell were
+run back-to-back on the same two GPUs. Seed spread measures the seed; it does
+not measure the pipeline.
+
+### 17. Applying the floor: nothing separates from ERM, including the one thing that looked like it did
+
+`report.py` now runs every verdict through one helper that requires two things:
+the seed ranges must not overlap, **and** the margin between them must exceed
+the measured run-to-run floor. A margin below the floor is not a separation
+however cleanly the seeds sort.
+
+Re-reading the completed domain-definition sweep (`cnn_bn`, `lot`, 3 seeds
+each, deltas against ERM under the *same* domain definition):
+
+| objective | `lot % 32` (TV 0.021) | vs ERM | production decile (TV 0.182) | vs ERM | verdict under real domains |
+|---|---|---|---|---|---|
+| `erm` | 0.8522 ±0.0069 | — | 0.8514 ±0.0073 | — | — |
+| `group_dro` | 0.8535 ±0.0063 | +0.0013 | 0.8257 ±0.0139 | −0.0257 | margin 0.0035 < floor 0.0054 |
+| `hsic` | 0.8527 ±0.0080 | +0.0005 | 0.8488 ±0.0076 | −0.0026 | ranges overlap |
+| `irm` | 0.8418 ±0.0094 | −0.0103 | 0.8465 ±0.0052 | −0.0049 | ranges overlap |
+| `coral` | 0.8468 ±0.0090 | −0.0053 | 0.8443 ±0.0098 | −0.0071 | ranges overlap |
+| `dann` | 0.8517 ±0.0080 | −0.0005 | 0.8454 ±0.0132 | −0.0060 | ranges overlap |
+| `mixup_domain` | 0.8398 ±0.0108 | −0.0124 | 0.8371 ±0.0138 | −0.0143 | ranges overlap |
+
+Last turn I wrote that GroupDRO "is the first objective to move once the domain
+means something, and it moves down… roughly two half-ranges, so a real effect
+rather than noise." That was wrong, and it was wrong because I was comparing
+against a seed spread rather than against the pipeline's own reproducibility.
+The margin between GroupDRO's seed range and ERM's is 0.0035, below the 0.0054
+floor. I withdraw it.
+
+**H4 is answered, and the answer is cleaner than either outcome I anticipated.**
+The ERM-equivalence was *both* an artefact of a degenerate domain definition
+*and* true anyway: given a domain vocabulary carrying nine times the label
+shift, not one of seven borrowed objectives can be distinguished from ERM at the
+floor. The original claim was unearned — the experiment as run could not have
+shown otherwise — and the corrected experiment reaches the same conclusion
+honestly. That is the version worth publishing.
+
+### 18. The gamma=0 control earned its place
+
+`focal --focal-gamma 0` is exactly cross-entropy, asserted bit-for-bit in
+`tests/test_smoke.py`, and it was put in the sweep so that a movement could be
+attributed. It caught something:
+
+```
+ERM cells        0.8591  0.8671  0.8680     mean 0.8647
+focal g=0 cells  0.8680  0.8781             mean 0.8730
+```
+
+The two are the same computation, and the focal batch sits **+0.0083** above the
+ERM cells. Under the naive range-overlap test this read as a clean separation —
+"focal γ=0 beats ERM by 0.008" — which is impossible. It is a batch offset of
+exactly the size described in §16.
+
+So the honest comparison is each γ against **γ=0, run in the same batch**:
+
+| cell | seeds | vs γ=0 | verdict |
+|---|---|---|---|
+| γ=0.0 | 0.8680, 0.8781 | — | — |
+| γ=0.5 | 0.8758, 0.8760 | +0.0028 | ranges overlap |
+| γ=1.0 | 0.8710, 0.8748 | −0.0001 | ranges overlap |
+| γ=2.0 | 0.8654, 0.8749 | −0.0029 | ranges overlap |
+| γ=5.0 | 0.8694, 0.8795 | +0.0014 | ranges overlap |
+
+**Focal loss does nothing on this corpus**, which is what
+`scripts/longtail_sweep.sh` recorded as its prior before running. Against the
+*wrong* baseline it would have read as +0.008 to +0.011 and looked like the
+weekend's one positive result. Class-balanced weighting likewise overlaps ERM.
+
+The general lesson, which I want stated because it cost nothing and saved a
+false claim: when a sweep is run as a batch, its own no-op setting is a better
+baseline than a cell measured in a different batch, and every sweep should carry
+one.
+
+### 19. What survives the floor
+
+Not everything collapses. Checked against the same 0.0054:
+
+* **SSL pretraining is worse than random initialization**, at every learning
+  rate, with margins of 0.035 to 0.136 — six to twenty-five times the floor.
+  And my recorded prediction was wrong in an informative direction: I expected
+  that if the deficit were a recipe mismatch the gap would *close* at low LR.
+  It widens — −0.0504 at 2e-3, −0.0935 at 1e-3, −0.1102 at 5e-4, −0.1464 at
+  2e-4. The confound is refuted, not merely unsupported.
+* **The die-graph GNN is worse than everything else**, by 0.086 on `lot`.
+* **The RPCA fourth channel is matched by zeros** — that was already an
+  overlap result and the floor only strengthens it.

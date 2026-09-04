@@ -1,0 +1,95 @@
+{
+  "n_wafers": 172948,
+  "n_lots": 10762,
+  "n_geometries": 344,
+  "class_counts": {
+    "none": 147429,
+    "Center": 4294,
+    "Donut": 555,
+    "Edge-Loc": 5189,
+    "Edge-Ring": 9680,
+    "Loc": 3593,
+    "Near-full": 149,
+    "Random": 866,
+    "Scratch": 1193
+  },
+  "max_wafers_in_one_lot": 25,
+  "domain_label_tv": {
+    "hash32_lot": {
+      "mean_pairwise_label_tv": 0.02083472844126725,
+      "n_groups_scored": 32,
+      "min_wafers_per_group": 200,
+      "n_groups_total": 32
+    },
+    "hash32_size": {
+      "mean_pairwise_label_tv": 0.2591602260180246,
+      "n_groups_scored": 31,
+      "min_wafers_per_group": 200,
+      "n_groups_total": 32
+    },
+    "time_decile": {
+      "mean_pairwise_label_tv": 0.18220550815960954,
+      "n_groups_scored": 10,
+      "min_wafers_per_group": 200,
+      "n_groups_total": 10
+    },
+    "fail_decile": {
+      "mean_pairwise_label_tv": 0.12305646137085026,
+      "n_groups_scored": 10,
+      "min_wafers_per_group": 200,
+      "n_groups_total": 10
+    },
+    "geometry": {
+      "mean_pairwise_label_tv": 0.44662841198932274,
+      "n_groups_scored": 58,
+      "min_wafers_per_group": 200,
+      "n_groups_total": 344
+    },
+    "real_lots": {
+      "mean_pairwise_label_tv": 0.16659704986615734,
+      "n_groups_scored": 6504,
+      "min_wafers_per_group": 20,
+      "n_groups_total": 10762
+    }
+  },
+  "rpca": {
+    "n_wafers": 172948,
+    "n_decomposed": 164824,
+    "frac_rank0_of_decomposed": 0.9483024477958679,
+    "frac_residual_identical_to_failmask": 0.9527198672294617,
+    "rank_histogram": {
+      "0": 156303,
+      "1": 8391,
+      "2": 105,
+      "3": 25
+    }
+  },
+  "p10_quantization": {
+    "n_lot_cells": 63,
+    "n_distinct_values": 6,
+    "most_common": [
+      {
+        "value": 0.489796,
+        "n_cells": 47
+      },
+      {
+        "value": 0.5,
+        "n_cells": 11
+      },
+      {
+        "value": 0.234043,
+        "n_cells": 2
+      }
+    ],
+    "n_test_lots_scored_min12": 1732
+  },
+  "ssl_checkpoint": {
+    "deepest_conv": "body.17.weight",
+    "ckpt_mean_abs_w": 0.08522170037031174,
+    "fresh_mean_abs_w": 0.014765407890081406,
+    "ratio": 5.7717132568359375,
+    "head_ckpt_mean_abs_w": 0.043740127235651016,
+    "head_fresh_mean_abs_w": 0.04520910605788231,
+    "n_unlabeled": 638506
+  }
+}

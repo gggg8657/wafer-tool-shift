@@ -70,8 +70,23 @@ def lot_scores(model, X, pool_idx, lot, dev, strategy, chosen_emb=None):
             if chosen_emb is None or len(chosen_emb) == 0:
                 s = np.linalg.norm(e - e.mean(0, keepdims=True), axis=1)
             else:
-                d = ((e[:, None, :] - chosen_emb[None, :, :]) ** 2).sum(-1)
-                s = np.sqrt(d.min(1))          # k-center: distance to the set
+                # k-center: distance from each pool point to the nearest chosen
+                # point. The obvious ((e[:,None,:] - c[None,:,:])**2).sum(-1)
+                # materializes |pool| x |chosen| x dim floats, which under a
+                # WAFER budget reaches tens of billions of entries and is killed
+                # without a traceback -- which is how the first wafer-budget run
+                # died silently two strategies in. Chunked over the pool and
+                # accumulated as a running minimum, memory is O(chunk x chosen).
+                c = np.ascontiguousarray(chosen_emb, dtype=np.float32)
+                e32 = np.ascontiguousarray(e, dtype=np.float32)
+                cn = (c ** 2).sum(1)[None, :]
+                s = np.empty(len(e32), dtype=np.float32)
+                step_n = max(1, int(2e7 // max(len(c), 1)))
+                for i in range(0, len(e32), step_n):
+                    blk = e32[i:i + step_n]
+                    # ||a-b||^2 = ||a||^2 - 2a.b + ||b||^2
+                    d2 = (blk ** 2).sum(1)[:, None] - 2.0 * (blk @ c.T) + cn
+                    s[i:i + step_n] = np.sqrt(np.maximum(d2.min(1), 0.0))
         else:
             s = np.random.default_rng(0).random(len(pool_idx))
     lots = lot[pool_idx].numpy()

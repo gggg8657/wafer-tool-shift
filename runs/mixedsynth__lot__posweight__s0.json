@@ -1,0 +1,130 @@
+{
+  "dataset": "MIXED-SYNTH",
+  "synthetic": true,
+  "note": "SYNTHETIC. Mixed-type wafers constructed by OR-ing the failed dies of two same-geometry WM-811K wafers. Not MixedWM38. No interaction between overlaid patterns, so metrics on this set are an upper bound on the real mixed-type task.",
+  "protocol": "lot",
+  "loss": "posweight",
+  "gamma": 2.0,
+  "seed": 0,
+  "tag": "",
+  "epochs": 12,
+  "n_train": 137389,
+  "n_val": 24244,
+  "n_test": 54415,
+  "minutes": 1.16,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.629740039785037,
+      "val_macro_f1_at_0.5": 0.4983415901660919
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.42176170083841574,
+      "val_macro_f1_at_0.5": 0.5317341089248657
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.3579948698508673,
+      "val_macro_f1_at_0.5": 0.6293184757232666
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.30765909836167954,
+      "val_macro_f1_at_0.5": 0.595832109451294
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.25933030330935003,
+      "val_macro_f1_at_0.5": 0.6293562054634094
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.2293850599304258,
+      "val_macro_f1_at_0.5": 0.6493197679519653
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.2079352099497003,
+      "val_macro_f1_at_0.5": 0.6934871077537537
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.18872632130675254,
+      "val_macro_f1_at_0.5": 0.7069321274757385
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.17385802757917615,
+      "val_macro_f1_at_0.5": 0.7287609577178955
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.16141051035964069,
+      "val_macro_f1_at_0.5": 0.7294712066650391
+    },
+    {
+      "epoch": 11,
+      "train_loss": 0.15115890880869753,
+      "val_macro_f1_at_0.5": 0.722764790058136
+    },
+    {
+      "epoch": 12,
+      "train_loss": 0.14581298570060197,
+      "val_macro_f1_at_0.5": 0.7282602787017822
+    }
+  ],
+  "val_macro_f1_at_0.5": 0.7294712066650391,
+  "test_at_0.5": {
+    "macro_f1": 0.7185838222503662,
+    "micro_f1": 0.7451987266540527,
+    "subset_accuracy": 0.7781310300468621,
+    "hamming_accuracy": 0.9569052650923459,
+    "per_class_f1": {
+      "Center": 0.8078470826148987,
+      "Donut": 0.5517477989196777,
+      "Edge-Loc": 0.8066490888595581,
+      "Edge-Ring": 0.9061404466629028,
+      "Loc": 0.6447726488113403,
+      "Near-full": 0.8025477528572083,
+      "Random": 0.6789486408233643,
+      "Scratch": 0.5500174164772034
+    },
+    "thresholds": {
+      "Center": 0.5,
+      "Donut": 0.5,
+      "Edge-Loc": 0.5,
+      "Edge-Ring": 0.5,
+      "Loc": 0.5,
+      "Near-full": 0.5,
+      "Random": 0.5,
+      "Scratch": 0.5
+    }
+  },
+  "test_at_val_tuned_thresholds": {
+    "macro_f1": 0.802856981754303,
+    "micro_f1": 0.8267610669136047,
+    "subset_accuracy": 0.86439400900487,
+    "hamming_accuracy": 0.976385187907746,
+    "per_class_f1": {
+      "Center": 0.8855773210525513,
+      "Donut": 0.6804123520851135,
+      "Edge-Loc": 0.8604082465171814,
+      "Edge-Ring": 0.9231439232826233,
+      "Loc": 0.7299281358718872,
+      "Near-full": 0.8563611507415771,
+      "Random": 0.8096656799316406,
+      "Scratch": 0.6773589849472046
+    },
+    "thresholds": {
+      "Center": 0.8750000000000003,
+      "Donut": 0.9250000000000004,
+      "Edge-Loc": 0.8250000000000003,
+      "Edge-Ring": 0.8500000000000003,
+      "Loc": 0.8000000000000003,
+      "Near-full": 0.9000000000000004,
+      "Random": 0.9250000000000004,
+      "Scratch": 0.8250000000000003
+    }
+  }
+}

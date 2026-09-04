@@ -30,6 +30,34 @@ def f(x, n=4):
     return "-" if x is None else f"{x:.{n}f}"
 
 
+def separation(xs, base, floor):
+    """Verdict on whether two cells differ, given the reproducibility floor.
+
+    Two tests, and both have to pass. First, do the observed seed ranges
+    overlap? Three seeds do not support a p-value, but whether one cell's worst
+    seed beat the other's best is a fact about what was seen. Second, is the
+    margin between those ranges larger than the spread between *identical*
+    invocations of one cell? Seeds are all run in one session on one pair of
+    GPUs, so a seed range understates total variability; a margin below the
+    run-to-run floor is not a separation no matter how cleanly the seeds sort.
+
+    Returns (verdict string, signed margin).
+    """
+    if not xs or not base or len(xs) < 2 or len(base) < 2:
+        return "no error bar", None
+    if min(xs) > max(base):
+        m = min(xs) - max(base)
+    elif min(base) > max(xs):
+        m = -(min(base) - max(xs))
+    else:
+        return "ranges overlap", 0.0
+    if floor is None:
+        return f"ranges disjoint by {abs(m):.4f}", m
+    if abs(m) > floor:
+        return f"**separated** (margin {abs(m):.4f} > floor {floor:.4f})", m
+    return f"below the floor (margin {abs(m):.4f} < {floor:.4f})", m
+
+
 def load(run_dir):
     """Benchmark cells only -- `runs/` also holds the active-learning curve, the
     RPCA lambda sweep and the pretraining history, which have their own shapes.
@@ -141,6 +169,11 @@ def main():
           "fixed while holding out groups, so the shift it induces is measured "
           "rather than ignored.", ""]
 
+    # the reproducibility floor, needed by every verdict below
+    det_p = Path("runs/determinism.json")
+    _d = json.loads(det_p.read_text()) if det_p.exists() else None
+    floor = (_d.get("range", _d.get("run_to_run_abs_diff")) if _d else None)
+
     # ---- stage A
     encs = [e for e in ENC_LABEL if any(k[1] == e for k in R)]
 
@@ -204,9 +237,6 @@ def main():
               "change do not carry them.", ""]
 
     # ---- is the representation ordering resolvable at the measured noise?
-    det_p = Path("runs/determinism.json")
-    floor = (json.loads(det_p.read_text())["run_to_run_abs_diff"]
-             if det_p.exists() else None)
     res_rows = []
     for p in protos:
         vals = {}
@@ -218,15 +248,9 @@ def main():
         for a_, b_ in zip(order, order[1:]):
             xa, xb = vals[a_], vals[b_]
             gap = sum(xa) / len(xa) - sum(xb) / len(xb)
+            verdict = separation(xa, xb, floor)[0]
             if len(xa) == 1 or len(xb) == 1:
                 verdict = "no error bar (n=1)"
-            elif min(xa) > max(xb):
-                m = min(xa) - max(xb)
-                verdict = (f"ranges disjoint by {m:.4f}"
-                           + ("" if floor is None or m > 3 * floor
-                              else " -- below the run-to-run floor"))
-            else:
-                verdict = "ranges overlap"
             res_rows.append([f"`{p}`", ENC_LABEL.get(a_, a_),
                              ENC_LABEL.get(b_, b_), f"{gap:+.4f}",
                              f"{len(xa)}/{len(xb)}", verdict])
@@ -253,17 +277,9 @@ def main():
         xg = sorted(r["test"]["macro_f1"] for r in g.values())
         xb = sorted(r["test"]["macro_f1"] for r in b.values())
         gap = sum(xg) / len(xg) - sum(xb) / len(xb)
+        v = separation(xg, xb, floor)[0]
         if len(xg) == 1 or len(xb) == 1:
             v = "no error bar (n=1)"
-        elif min(xg) > max(xb):
-            m = min(xg) - max(xb)
-            v = (f"every GN seed above every BN seed, margin {m:.4f}"
-                 + ("" if floor is None or m > 3 * floor
-                    else f" -- below the {floor:.2e} run-to-run floor"))
-        elif min(xb) > max(xg):
-            v = "every BN seed above every GN seed"
-        else:
-            v = "ranges overlap"
         nrm.append([f"`{p}`", f"{sum(xg)/len(xg):.4f}", f"{sum(xb)/len(xb):.4f}",
                     f"{gap:+.4f}", f"{len(xg)}/{len(xb)}", v])
     if nrm:
@@ -485,13 +501,29 @@ def main():
     det = Path("runs/determinism.json")
     if det.exists():
         dd = json.loads(det.read_text())
+        n_rep = dd.get("n_repeats", 2)
+        vals = dd.get("macro_f1_values")
         L += ["## Run-to-run reproducibility floor", "",
-              f"`{dd['cell']}`, run twice under identical arguments: "
-              f"{dd['run_a_macro_f1']:.6f} and {dd['run_b_macro_f1']:.6f}, "
-              f"differing by **{dd['run_to_run_abs_diff']:.2e}**"
-              + ("(bit-reproducible)." if dd["bit_reproducible"] else
-                 " -- the pipeline is not bit-reproducible on this GPU.") + " "
-              + dd["note"], ""]
+              f"`{dd['cell']}`, run {n_rep} times under identical arguments"
+              + (": " + ", ".join(f"{v:.4f}" for v in vals) if vals else "")
+              + f". Range **{floor:.4f}**"
+              + (f", standard deviation {dd['stdev']:.4f}"
+                 if "stdev" in dd else "")
+              + ("." if dd.get("bit_reproducible") else
+                 " -- the pipeline is not bit-reproducible on this GPU.")
+              + " " + dd["note"], ""]
+        if "stored_inside_repeat_range" in dd:
+            L += [f"The stored value for that cell is "
+                  f"{dd['stored_macro_f1']:.4f}, which is **"
+                  + ("inside" if dd["stored_inside_repeat_range"]
+                     else "outside") + "** the range of the repeats"
+                  + ("." if dd["stored_inside_repeat_range"] else
+                     f", {dd['stored_distance_to_nearest_repeat']:.4f} from the "
+                     "nearest one, and every repeat lands above it. That is not "
+                     "symmetric noise: something about the environment or the "
+                     "code changed between when that cell was measured and now. "
+                     "`scripts/backfill_metrics.sh` refuses to overwrite "
+                     "measured cells while that is true."), ""]
 
     # ---- seen / unseen geometry, wherever a cell carries it
     def matched_macro(sgy, ugy):
@@ -552,17 +584,28 @@ def main():
             xs = sorted(r["test"]["macro_f1"] for r in v.values())
             return (sum(xs) / len(xs), (max(xs) - min(xs)) / 2, len(xs))
 
+        def vals(v):
+            return sorted(r["test"]["macro_f1"] for r in v.values()) if v else None
+
         rows = []
         for k in sorted(dt):
             p_, e, o, _ = k
             a_ = ms(SEEDS.get((p_, e, o, "")))
             b_ = ms(dt[k])
+            # against ERM measured under the *same* domain definition, so the
+            # comparison is internal to the column
+            erm_h = vals(SEEDS.get((p_, e, "erm", "")))
+            erm_d = vals(SEEDS.get((p_, e, "erm", "dtime")))
+            xb = vals(dt[k])
+            def verdict(x, base):
+                return separation(x, base, floor)[0]
             rows.append([
                 f"`{o}`", ENC_LABEL.get(e, e),
-                f"{a_[0]:.4f} ±{a_[1]:.4f} (n={a_[2]})" if a_ else "-",
-                f"{b_[0]:.4f} ±{b_[1]:.4f} (n={b_[2]})",
-                f"{b_[0] - a_[0]:+.4f}" if a_ else "-",
-                next(iter(dt[k].values())).get("n_invariance_domains", "-")])
+                f"{a_[0]:.4f} ±{a_[1]:.4f}" if a_ else "-",
+                f"{a_[0] - (sum(erm_h) / len(erm_h)):+.4f}" if (a_ and erm_h) else "-",
+                f"{b_[0]:.4f} ±{b_[1]:.4f}",
+                f"{b_[0] - (sum(erm_d) / len(erm_d)):+.4f}" if erm_d else "-",
+                verdict(xb, erm_d)])
         L += ["## Does the domain definition explain the ERM-equivalence?", "",
               "Every group-aware objective was originally handed `lot % 32` as "
               "its domain: 10,762 lots averaged into 32 buckets whose mean "
@@ -574,8 +617,18 @@ def main():
               "fixed, ordered, lot-level production-order groups carrying a "
               "label TV of 0.1822. One change; everything else fixed.", "",
               table(rows, ["objective", "representation",
-                           "domain = `lot % 32`", "domain = production decile",
-                           "difference", "n domains"]), ""]
+                           "`lot % 32` (TV 0.021)", "vs ERM",
+                           "production decile (TV 0.182)", "vs ERM",
+                           "vs ERM under real domains"]), "",
+              "The last column asks whether the objective's seed range and "
+              "ERM's seed range overlap under the *real* domain definition. "
+              "This is the question H4 was posed to answer: were these methods "
+              "tying with ERM because they had been switched off by a "
+              "degenerate domain vocabulary? The answer is no. Given domains "
+              "that carry an order of magnitude more label shift, six of the "
+              "seven still cannot be separated from ERM, and the one that can "
+              "is **worse**. The negative result survives a much stronger test "
+              "than the one that produced it.", ""]
         # the plumbing check, printed rather than trusted
         nulls = []
         for k in sorted(dt):
