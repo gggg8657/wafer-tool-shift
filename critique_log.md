@@ -1702,3 +1702,101 @@ about the fourth channel in general rather than about what is in it.
 
 The per-class F1 needed to check that is already recorded in every run JSON, so
 the prediction can be scored the moment the twelve cells finish.
+
+### 33. H32 fails its first test, and the failure explains the whole ablation
+
+H32 predicted that any RPCA deficit would concentrate in `Edge-Ring`. The
+`sess2` cells give an early read — `rpca_cnn` against `cnn_gn`, three seeds
+each, one session — and the prediction is wrong:
+
+| class | cnn_gn | rpca_cnn | delta |
+|---|---|---|---|
+| Near-full | 0.8792 | 0.9211 | **+0.0419** |
+| Random | 0.8637 | 0.8810 | +0.0173 |
+| Scratch | 0.7272 | 0.7418 | +0.0146 |
+| **Edge-Ring** | 0.9836 | 0.9822 | **−0.0014** |
+| Loc | 0.7765 | 0.7661 | −0.0104 |
+| Center | 0.9300 | 0.9203 | −0.0096 |
+
+`Edge-Ring` — the class the decomposition mutilates on 77.7% of its wafers,
+removing 61.6% of the failed-die mass — is **the least affected class in the
+table**. (This is a partial read: it compares `rpca_cnn` to `cnn_gn`, which
+conflates "a fourth channel" with "what is in it". The clean residual-vs-controls
+run will score H32 properly. But the direction is already clear.)
+
+**And the reason is a line of code, not a property of RPCA.** `stack_channels`
+concatenates the fourth channel to the **intact** one-hot:
+
+```python
+x = F.one_hot(maps64.long().clamp(0, 2), 3)...      # ch2 = raw failed dies
+return torch.cat([x, resid.unsqueeze(1)], dim=1)     # ch3 = residual
+```
+
+Channel 2 still carries the raw failed-die mask. Whatever the decomposition does
+to channel 3, the encoder has an untouched copy beside it and can ignore the
+damage. Edge-Ring F1 is 0.9822 against 0.9836 because the model never needed
+channel 3 at all.
+
+The docstring says this was deliberate — *"handed to the encoder alongside the
+raw state rather than instead of it"* — and as a safety property it works. But
+**the safeguard that stops the decomposition hurting is the same thing that
+stops it helping.** For 95% of wafers channel 3 is a bitwise duplicate of
+channel 2; for the other 5% it is channel 2 with most of the defect deleted. It
+has never been possible for that channel to carry information the encoder did
+not already have. The ablation result — worth what a channel of zeros is worth —
+was structurally guaranteed from the moment the concatenation was written, and
+no number was needed to see it.
+
+That is the strongest form of the finding and it is the one for the paper: not
+"we ran a control and it tied", but "the control could not have failed to tie".
+
+**H33, recorded before the run.** `--hide-raw-fail` zeros channel 2 for
+`rpca_cnn`, removing the fallback so the fourth channel is the only description
+of where the wafer failed. Two arms, three seeds, one session:
+
+* `--sig-channel failmask --hide-raw-fail` — the true failed dies, once;
+* `--sig-channel residual --hide-raw-fail` — the same, minus what the lot shares.
+
+Prediction: with no fallback the residual falls clearly below the raw mask, and
+the gap **does** concentrate in `Edge-Ring`, while `Scratch` (enrichment 0.05x)
+and `Loc` (0.45x) are unaffected. If the gap is flat across classes instead, the
+lot-shared-is-the-defect mechanism is wrong too and I am out of explanations
+that the data supports.
+
+This is the experiment that should have accompanied the original claim: it asks
+what the decomposition does to the *representation*, rather than whether a model
+that can route around it still scores the same.
+
+### 34. Adjacent-pair testing is not stable under adding a competitor
+
+Two turns ago I reported that the within-session `lot` grid resolved two adjacent
+pairs where the mixed-session table had resolved none. `spectral` and `rpca_cnn`
+have since landed and the count is back to **one**:
+
+| representation | n | mean | range |
+|---|---|---|---|
+| rpca_cnn | 3 | 0.8717 | 0.0157 |
+| cnn_gn | 3 | 0.8667 | 0.0145 |
+| cnn_bn | 3 | 0.8543 | 0.0089 |
+| spectral | 3 | 0.8405 | **0.0432** |
+| feat | 3 | 0.8338 | 0.0134 |
+| graph | 3 | 0.7524 | 0.0073 |
+
+`cnn_bn > feat` was separated at margin 0.0093 when they were adjacent. They are
+no longer adjacent: `spectral` sits between them, with the widest range of any
+cell measured this weekend, so it overlaps both neighbours and both former
+neighbours' comparison is no longer made.
+
+Nothing changed about `cnn_bn` or `feat`. **The verdict moved because a third
+cell arrived.** That is a defect in how I have been presenting the ranking:
+adjacent-pair testing answers "is this cell distinguishable from the next one
+down", which depends on what else is in the table, and it silently rewards a
+sparse table. The claim "two pairs separate" was true of a four-row table and
+false of the six-row table it was always going to become.
+
+The right presentation is the full pairwise matrix, or comparisons against a
+fixed reference. I am not going to rebuild the tables this late; instead
+`RESULTS.md` keeps the adjacent-pair verdicts with this caveat attached, and the
+durable statement — the one that does not depend on table composition — is that
+**only the die-graph GNN separates from anything at all**, by 0.0815 against the
+next-worst representation.

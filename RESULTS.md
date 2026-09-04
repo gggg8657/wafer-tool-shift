@@ -52,6 +52,8 @@ Three caveats on the last four columns, all of which came out of reading this ta
 
 ### Is that ordering resolvable?
 
+**A caveat on reading this table.** Adjacent-pair testing asks whether a cell is distinguishable from the next one *down*, which depends on what else is in the table: inserting a representation between two others stops their comparison being made at all. That happened here -- `cnn_bn > feat` separated at margin 0.0093 while they were adjacent, and stopped being an adjacent pair when `spectral` landed between them. Nothing about either cell changed. The statement that does not depend on table composition is that only the die-graph GNN separates from anything.
+
 Each adjacent pair in the ranking above, per protocol, with the verdict from whether the observed seed ranges overlap. This is deliberately non-parametric: three seeds do not support a p-value, but whether one cell's worst seed beat the other's best is a fact about what was seen. The run-to-run floor -- two identical invocations of one cell -- is 5.42e-03, so a margin near that is not a separation.
 
 | protocol | higher | lower | gap | seeds | verdict |
@@ -278,10 +280,12 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot_time | CNN on resized 64x64 (BatchNorm) | erm/sess2 | ema | 0.6458 | 0.6552 | +0.0094 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | tent | 0.6935 | 0.5933 | -0.1003 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | ema | 0.6935 | 0.7086 | +0.0151 |
+| lot_time | CNN on resized 64x64 (GroupNorm) | erm/sess2 | ema | 0.6997 | 0.7078 | +0.0080 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm/sslinit | ema | 0.6120 | 0.6211 | +0.0092 |
 | lot_time | size-invariant descriptors + MLP | anchor | ema | 0.6487 | 0.6441 | -0.0045 |
 | lot_time | size-invariant descriptors + MLP | erm | ema | 0.6496 | 0.6502 | +0.0006 |
 | lot_time | size-invariant descriptors + MLP | erm/rpcafeat | ema | 0.6394 | 0.6467 | +0.0073 |
+| lot_time | size-invariant descriptors + MLP | erm/sess2 | ema | 0.6496 | 0.6502 | +0.0006 |
 | lot_time | die-graph GNN (wafer-only subgraph) | erm | ema | 0.5501 | 0.5656 | +0.0155 |
 | lot_time | CNN + RPCA lot-signature channel | erm | ema | 0.7020 | 0.6887 | -0.0132 |
 | lot_time | CNN + RPCA lot-signature channel | erm/failmask | ema | 0.6905 | 0.6797 | -0.0109 |
@@ -374,8 +378,10 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN + RPCA lot-signature channel | 4th channel = zeros (RPCA control) | 0.8772 | -0.0041 | 0.5000 | +0.0000 |
 | lot | spectral operator, native resolution | sess2 | 0.8551 | +0.0012 | 0.4898 | +0.0000 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | sess2 | 0.6458 | +0.0019 | 0.4898 | +0.0000 |
+| lot_time | CNN on resized 64x64 (GroupNorm) | sess2 | 0.6997 | +0.0062 | 0.4898 | +0.0000 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | + lot-adversarial SSL initialization | 0.6120 | -0.0816 | 0.4898 | +0.0000 |
 | lot_time | size-invariant descriptors + MLP | + RPCA lot signature as features | 0.6394 | -0.0101 | 0.4898 | +0.0000 |
+| lot_time | size-invariant descriptors + MLP | sess2 | 0.6496 | +0.0000 | 0.4898 | +0.0000 |
 | lot_time | CNN + RPCA lot-signature channel | 4th channel = raw failed-die mask (RPCA control) | 0.6905 | -0.0114 | 0.4898 | +0.0000 |
 | lot_time | CNN + RPCA lot-signature channel | 4th channel = zeros (RPCA control) | 0.6991 | -0.0028 | 0.4898 | +0.0000 |
 | size | CNN on resized 64x64 (BatchNorm) | + Fourier amplitude swap augmentation | 0.7572 | -0.0110 | 0.5605 | +0.0006 |
@@ -431,9 +437,11 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot | CNN + RPCA lot-signature channel | erm | sess2 | 3 | 0.8717 | +/-0.0079 | 0.8819, 0.8662, 0.8669 |
 | lot | CNN + RPCA lot-signature channel | erm | 4th channel = zeros (RPCA control) | 3 | 0.8689 | +/-0.0075 | 0.8772, 0.8673, 0.8622 |
 | lot | spectral operator, native resolution | erm | sess2 | 3 | 0.8405 | +/-0.0216 | 0.8551, 0.8118, 0.8547 |
-| lot_time | CNN on resized 64x64 (BatchNorm) | erm | sess2 | 2 | 0.6441 | +/-0.0017 | 0.6458, 0.6423 |
+| lot_time | CNN on resized 64x64 (BatchNorm) | erm | sess2 | 3 | 0.6438 | +/-0.0017 | 0.6458, 0.6423, 0.6434 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.6985 | +/-0.0045 | 0.6935, 0.6993, 0.7026 |
+| lot_time | CNN on resized 64x64 (GroupNorm) | erm | sess2 | 3 | 0.7002 | +/-0.0043 | 0.6997, 0.7047, 0.6961 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | + lot-adversarial SSL initialization | 3 | 0.6345 | +/-0.0225 | 0.6120, 0.6569, 0.6345 |
+| lot_time | size-invariant descriptors + MLP | erm | sess2 | 3 | 0.6511 | +/-0.0020 | 0.6496, 0.6503, 0.6535 |
 | lot_time | CNN + RPCA lot-signature channel | erm | - | 3 | 0.7088 | +/-0.0070 | 0.7020, 0.7159, 0.7084 |
 | lot_time | CNN + RPCA lot-signature channel | erm | 4th channel = raw failed-die mask (RPCA control) | 3 | 0.7004 | +/-0.0096 | 0.6905, 0.7008, 0.7098 |
 | lot_time | CNN + RPCA lot-signature channel | erm | 4th channel = zeros (RPCA control) | 3 | 0.7018 | +/-0.0030 | 0.6991, 0.7011, 0.7051 |
@@ -512,6 +520,8 @@ Both columns are averaged over only the classes present in the restricted subset
 | `lot` | CNN + RPCA lot-signature channel | sess2 | 0.8819 | 0.8819 | 0.8032 | -0.0787 | 9/9 | 11,908 |
 | `lot` | spectral operator, native resolution | sess2 | 0.8551 | 0.8551 | 0.7901 | -0.0650 | 9/9 | 11,908 |
 | `lot_time` | CNN on resized 64x64 (BatchNorm) | sess2 | 0.6458 | 0.6458 | 0.6458 | +0.0000 | 9/9 | 43,237 |
+| `lot_time` | CNN on resized 64x64 (GroupNorm) | sess2 | 0.6997 | 0.6997 | 0.6997 | +0.0000 | 9/9 | 43,237 |
+| `lot_time` | size-invariant descriptors + MLP | sess2 | 0.6496 | 0.6496 | 0.6496 | +0.0000 | 9/9 | 43,237 |
 
 **A large part of the forward-only drop is not temporal.** On a random split, with every one of those geometries seen in training, restricting the test set to them costs several points on its own -- many times the 0.0054 reproducibility floor. Whatever `lot_time` measures, it measures this first and the passage of time second.
 
@@ -556,6 +566,8 @@ Both macro-F1 columns are averaged over **only the classes present in both halve
 | lot | CNN + RPCA lot-signature channel | erm/sess2 | 0.8819 | 0.8685 | 0.9230 | -0.0545 | 8 | 43,121 | 131 |
 | lot | spectral operator, native resolution | erm/sess2 | 0.8551 | 0.8437 | 0.8246 | +0.0191 | 8 | 43,121 | 131 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | erm/sess2 | 0.6458 | 0.6646 | 0.6802 | -0.0155 | 8 | 35,607 | 7,630 |
+| lot_time | CNN on resized 64x64 (GroupNorm) | erm/sess2 | 0.6997 | 0.7046 | 0.7312 | -0.0266 | 8 | 35,607 | 7,630 |
+| lot_time | size-invariant descriptors + MLP | erm/sess2 | 0.6496 | 0.6330 | 0.6435 | -0.0105 | 8 | 35,607 | 7,630 |
 
 ## Does the domain definition explain the ERM-equivalence?
 

@@ -291,6 +291,16 @@ def main():
                              f"{len(xa)}/{len(xb)}", verdict])
     if res_rows:
         L += ["### Is that ordering resolvable?", "",
+              "**A caveat on reading this table.** Adjacent-pair testing asks "
+              "whether a cell is distinguishable from the next one *down*, "
+              "which depends on what else is in the table: inserting a "
+              "representation between two others stops their comparison being "
+              "made at all. That happened here -- `cnn_bn > feat` separated at "
+              "margin 0.0093 while they were adjacent, and stopped being an "
+              "adjacent pair when `spectral` landed between them. Nothing about "
+              "either cell changed. The statement that does not depend on table "
+              "composition is that only the die-graph GNN separates from "
+              "anything.", "",
               "Each adjacent pair in the ranking above, per protocol, with the "
               "verdict from whether the observed seed ranges overlap. This is "
               "deliberately non-parametric: three seeds do not support a "

@@ -204,6 +204,19 @@ class Runner:
         if self.a.encoder == "rpca_cnn":
             # the lot's shared signature has been moved into its own channel
             x = stack_channels(maps, self.resid_dev[sd])
+            if self.a.hide_raw_fail:
+                # `stack_channels` concatenates the fourth channel to the
+                # *intact* one-hot, so channel 2 still carries the raw
+                # failed-die mask and the encoder can simply ignore whatever is
+                # in channel 3. That is why the RPCA residual neither helps nor
+                # hurts: the decomposition removes 61.6% of the failed-die mass
+                # on the Edge-Ring wafers it fires on, and the model reads the
+                # untouched copy beside it. Zeroing channel 2 removes that
+                # fallback, so the fourth channel becomes the *only* description
+                # of where the wafer failed -- which is the condition under
+                # which "residual vs raw mask" is actually a question.
+                x = x.clone()
+                x[:, 2] = 0.0
         else:
             x = onehot_maps(maps)
         if self.a.encoder == "graph":
@@ -335,7 +348,7 @@ class Runner:
             "tag": a.tag, "sig_channel": a.sig_channel,
             "domain_def": a.domain_def, "n_invariance_domains": self.n_dom,
             "focal_gamma": a.focal_gamma, "class_weight": a.class_weight,
-            "pool": a.pool,
+            "pool": a.pool, "hide_raw_fail": a.hide_raw_fail,
             "ot_lambda": a.ot_lambda,
             "seed": a.seed, "epochs": a.epochs,
             "n_train": len(self.tr), "n_val": len(self.va), "n_test": len(self.te),
@@ -552,6 +565,10 @@ def main():
                    help="what the group-aware objectives treat as a domain; "
                         "hash32 is the original and is nearly shift-free on the "
                         "lot protocol, so it is the control, not the answer")
+    p.add_argument("--hide-raw-fail", action="store_true",
+                   help="zero the one-hot failed-die plane for rpca_cnn, so the "
+                        "fourth channel is the only description of where the "
+                        "wafer failed")
     p.add_argument("--sig-channel", default="residual",
                    choices=["residual", "failmask", "zeros"],
                    help="what the rpca_cnn fourth channel carries; failmask and "

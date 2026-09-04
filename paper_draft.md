@@ -249,8 +249,11 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN + 4th channel | `erm` | sess2 | 3 | 0.8717 | ±0.0079 |
 | `lot` | CNN + 4th channel | `erm` | zerochan | 3 | 0.8689 | ±0.0075 |
 | `lot` | spectral operator | `erm` | sess2 | 3 | 0.8405 | ±0.0216 |
+| `lot_time` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.6438 | ±0.0017 |
 | `lot_time` | CNN (GroupNorm) | `erm` | — | 3 | 0.6985 | ±0.0045 |
+| `lot_time` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.7002 | ±0.0043 |
 | `lot_time` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.6345 | ±0.0225 |
+| `lot_time` | descriptors + MLP | `erm` | sess2 | 3 | 0.6511 | ±0.0020 |
 | `lot_time` | CNN + 4th channel | `erm` | — | 3 | 0.7088 | ±0.0070 |
 | `lot_time` | CNN + 4th channel | `erm` | failmask | 3 | 0.7004 | ±0.0096 |
 | `lot_time` | CNN + 4th channel | `erm` | zerochan | 3 | 0.7018 | ±0.0030 |
