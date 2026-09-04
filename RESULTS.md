@@ -176,6 +176,8 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn | adabn | 0.1026 | 0.1026 | +0.0000 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn | tent | 0.1026 | 0.1026 | +0.0000 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn | ema | 0.1026 | 0.1026 | +0.0000 |
+| lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.0 | ema | 0.8609 | 0.8592 | -0.0017 |
+| lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.003 | ema | 0.8591 | 0.8552 | -0.0039 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | tent | 0.8671 | 0.8538 | -0.0133 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | ema | 0.8671 | 0.8759 | +0.0087 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm/sslinit | ema | 0.8134 | 0.8053 | -0.0081 |
@@ -258,6 +260,8 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | protocol | representation | variant | macro-F1 | vs plain | p10 domain F1 | vs plain |
 |---|---|---|---|---|---|---|
 | lot | CNN on resized 64x64 (BatchNorm) | + Fourier amplitude swap augmentation | 0.8566 | -0.0021 | 0.4898 | +0.0000 |
+| lot | CNN on resized 64x64 (BatchNorm) | ot0.0 | 0.8609 | +0.7583 | 0.4898 | +0.2558 |
+| lot | CNN on resized 64x64 (BatchNorm) | ot0.003 | 0.8591 | +0.7565 | 0.4898 | +0.2558 |
 | lot | CNN on resized 64x64 (GroupNorm) | + lot-adversarial SSL initialization | 0.8134 | -0.0537 | 0.4898 | -0.0102 |
 | lot | size-invariant descriptors + MLP | + RPCA lot signature as features | 0.8461 | +0.0044 | 0.4898 | +0.0000 |
 | lot | CNN + RPCA lot-signature channel | 4th channel = raw failed-die mask (RPCA control) | 0.8765 | -0.0049 | 0.5000 | +0.0000 |
