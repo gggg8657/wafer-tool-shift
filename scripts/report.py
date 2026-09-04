@@ -525,6 +525,48 @@ def main():
                      "`scripts/backfill_metrics.sh` refuses to overwrite "
                      "measured cells while that is true."), ""]
 
+    # ---- is the forward-only test set hard because it is *narrow*?
+    lt_rows = []
+    for (p_, e, o, tg), r in sorted(R.items()):
+        lt = r.get("test_in_lot_time_geometries")
+        # untagged ERM only: the tagged variants answer other questions and
+        # only add rows here
+        if not lt or o != "erm" or tg not in ("", "sess2"):
+            continue
+        shared = lt.get("classes_present") or []
+        full = r["test"]["per_class_f1"]
+        if not shared or not all(c in full for c in shared):
+            continue
+        fm = sum(full[c] for c in shared) / len(shared)
+        lm = sum(lt["per_class_f1"][c] for c in shared) / len(shared)
+        lt_rows.append([f"`{p_}`", ENC_LABEL.get(e, e), tg or "original",
+                        f(r["test"]["macro_f1"]), f(fm), f(lm),
+                        f"{lm - fm:+.4f}", f"{len(shared)}/{len(CLASSES)}",
+                        f"{r['n_test_in_lot_time_geometries']:,}"])
+    if lt_rows:
+        L += ["## Is the forward-only test set hard because it is *narrow*?", "",
+              "`lot_time` tests on 19 geometries against 338 in training, so a "
+              "competing explanation for its drop is that a narrow slice of "
+              "geometry space is simply a harder test set, with no temporal "
+              "component at all. The control needs no new training: score each "
+              "protocol's own test wafers restricted to those same 19 "
+              "geometries. On `iid` in particular the model has trained on all "
+              "of them and there is no temporal structure whatever, so any "
+              "drop there is the slice alone.", "",
+              "Both columns are averaged over only the classes present in the "
+              "restricted subset, so the comparison is like-for-like.", "",
+              table(lt_rows, ["protocol", "representation", "variant",
+                              "full test macro-F1", "full, matched classes",
+                              "restricted to those geometries",
+                              "cost of the restriction", "shared classes",
+                              "n wafers"]), "",
+              "**A large part of the forward-only drop is not temporal.** On a "
+              "random split, with every one of those geometries seen in "
+              "training, restricting the test set to them costs several points "
+              "on its own -- many times the 0.0054 reproducibility floor. "
+              "Whatever `lot_time` measures, it measures this first and the "
+              "passage of time second.", ""]
+
     # ---- seen / unseen geometry, wherever a cell carries it
     def matched_macro(sgy, ugy):
         """macro-F1 of each half over the classes *both* halves contain.

@@ -227,10 +227,12 @@ class Runner:
         elif self.a.encoder == "graph":
             m = DieGraphNet(n, width=self.a.width, n_layers=4)
         elif self.a.encoder == "rpca_cnn":
-            m = CnnResized(n, width=self.a.width, norm="gn", in_ch=4)
+            m = CnnResized(n, width=self.a.width, norm="gn", in_ch=4,
+                           pool=self.a.pool)
         else:
             m = CnnResized(n, width=self.a.width,
-                           norm="bn" if self.a.encoder == "cnn_bn" else "gn")
+                           norm="bn" if self.a.encoder == "cnn_bn" else "gn",
+                           pool=self.a.pool)
         return m.to(self.dev)
 
     def run(self):
@@ -333,6 +335,7 @@ class Runner:
             "tag": a.tag, "sig_channel": a.sig_channel,
             "domain_def": a.domain_def, "n_invariance_domains": self.n_dom,
             "focal_gamma": a.focal_gamma, "class_weight": a.class_weight,
+            "pool": a.pool,
             "ot_lambda": a.ot_lambda,
             "seed": a.seed, "epochs": a.epochs,
             "n_train": len(self.tr), "n_val": len(self.va), "n_test": len(self.te),
@@ -558,6 +561,11 @@ def main():
     p.add_argument("--hsic-lambda", type=float, default=1.0)
     p.add_argument("--ot-lambda", type=float, default=1.0)
     p.add_argument("--anchor-gamma", type=float, default=4.0)
+    p.add_argument("--pool", default="mean",
+                   choices=["mean", "meanmax", "meanmean"],
+                   help="how the CNN reduces its feature map. meanmax is the "
+                        "long-tail hypothesis; meanmean is its capacity control "
+                        "with the same parameter count and no extra signal")
     p.add_argument("--focal-gamma", type=float, default=2.0,
                    help="focal loss exponent; 0 is exactly cross-entropy and is "
                         "the control the sweep must reproduce ERM with")

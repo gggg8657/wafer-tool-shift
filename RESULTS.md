@@ -471,6 +471,21 @@ Geometry and failed-die rate drift with lot number; the defect-class mix does no
 
 The stored value for that cell is 0.8671, which is **outside** the range of the repeats, 0.0052 from the nearest one, and every repeat lands above it. That is not symmetric noise: something about the environment or the code changed between when that cell was measured and now. `scripts/backfill_metrics.sh` refuses to overwrite measured cells while that is true.
 
+## Is the forward-only test set hard because it is *narrow*?
+
+`lot_time` tests on 19 geometries against 338 in training, so a competing explanation for its drop is that a narrow slice of geometry space is simply a harder test set, with no temporal component at all. The control needs no new training: score each protocol's own test wafers restricted to those same 19 geometries. On `iid` in particular the model has trained on all of them and there is no temporal structure whatever, so any drop there is the slice alone.
+
+Both columns are averaged over only the classes present in the restricted subset, so the comparison is like-for-like.
+
+| protocol | representation | variant | full test macro-F1 | full, matched classes | restricted to those geometries | cost of the restriction | shared classes | n wafers |
+|---|---|---|---|---|---|---|---|---|
+| `iid` | CNN on resized 64x64 (BatchNorm) | sess2 | 0.8623 | 0.8623 | 0.8040 | -0.0583 | 9/9 | 11,521 |
+| `iid` | CNN on resized 64x64 (GroupNorm) | sess2 | 0.8820 | 0.8820 | 0.8356 | -0.0464 | 9/9 | 11,521 |
+| `iid` | size-invariant descriptors + MLP | sess2 | 0.8532 | 0.8532 | 0.7673 | -0.0859 | 9/9 | 11,521 |
+| `iid` | spectral operator, native resolution | sess2 | 0.8578 | 0.8578 | 0.7872 | -0.0706 | 9/9 | 11,521 |
+
+**A large part of the forward-only drop is not temporal.** On a random split, with every one of those geometries seen in training, restricting the test set to them costs several points on its own -- many times the 0.0054 reproducibility floor. Whatever `lot_time` measures, it measures this first and the passage of time second.
+
 ## Test macro-F1 split by whether the geometry was seen in training
 
 How much of a protocol's difficulty is *unseen geometry* rather than whatever else it holds out. This matters most for `lot_time`, whose test side is a narrow slice of geometry space (see above), and it is the difference between "forward-only time costs 20 points" and "forward-only deployment costs 20 points, part of it for meeting new products".

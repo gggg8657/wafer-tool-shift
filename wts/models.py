@@ -32,9 +32,27 @@ def _norm(kind: str, ch: int):
 
 
 class CnnResized(nn.Module):
-    """Conventional baseline: 3 conv blocks on a resampled 64x64 map."""
+    """Conventional baseline: 3 conv blocks on a resampled 64x64 map.
 
-    def __init__(self, n_classes=9, width=32, norm="bn", in_ch=3):
+    `pool` selects how the final feature map is reduced to a vector, and it is a
+    switch because it is a hypothesis about this corpus's long tail. Global
+    average pooling turns a `Scratch` -- a thin connected line of failed dies --
+    into a mean over the whole wafer, which is close to indistinguishable from a
+    slightly elevated background failure rate. Max pooling keeps the extreme
+    that a thin structure produces.
+
+      mean      the original: global average pooling
+      meanmax   concatenate mean and max; the treatment
+      meanmean  concatenate mean with itself; **the control**
+
+    `meanmean` has exactly the parameter count of `meanmax` and carries no extra
+    information, so it separates "max pooling helps" from "a wider head helps".
+    The RPCA fourth channel looked like a win until it was run against a channel
+    of zeros; this is the same control applied before the claim rather than
+    after.
+    """
+
+    def __init__(self, n_classes=9, width=32, norm="bn", in_ch=3, pool="mean"):
         super().__init__()
         chs = [in_ch, width, width * 2, width * 4]
         blocks = []
@@ -43,11 +61,18 @@ class CnnResized(nn.Module):
                        nn.Conv2d(b, b, 3, padding=1), _norm(norm, b), nn.ReLU(),
                        nn.MaxPool2d(2)]
         self.body = nn.Sequential(*blocks)
-        self.head = nn.Linear(chs[-1], n_classes)
-        self.feat_dim = chs[-1]
+        self.pool = pool
+        self.feat_dim = chs[-1] * (2 if pool in ("meanmax", "meanmean") else 1)
+        self.head = nn.Linear(self.feat_dim, n_classes)
 
     def embed(self, x):
-        return self.body(x).mean(dim=(-2, -1))
+        h = self.body(x)
+        m = h.mean(dim=(-2, -1))
+        if self.pool == "meanmax":
+            return torch.cat([m, h.amax(dim=(-2, -1))], dim=1)
+        if self.pool == "meanmean":
+            return torch.cat([m, m], dim=1)
+        return m
 
     def forward(self, x):
         return self.head(self.embed(x))

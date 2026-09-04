@@ -1286,3 +1286,81 @@ sibling repository measured directly as Loc/Scratch leaking into `none` rather
 than into each other; and simply too few examples of a thin, high-variance
 pattern. Only the first is cheap to test and it is a real architectural
 hypothesis rather than a tuning one.
+
+### 23. A quarter of the forward-only drop is the test set being narrow, not time
+
+H12 has its first clean answer, and it did not need a new protocol — only a
+different subset of an existing test set. `run_bench.py` now scores every cell
+on the 19 geometries that `lot_time` tests on, and the `iid` cells from the
+single-session grid are the cleanest possible control: a random split, every one
+of those geometries seen in training, only 28 of 43,209 test wafers of an unseen
+geometry, and no temporal structure whatever.
+
+| representation | full test | restricted to `lot_time`'s 19 geometries | cost |
+|---|---|---|---|
+| CNN (GroupNorm) | 0.8820 | 0.8356 | **−0.0464** |
+| CNN (BatchNorm) | 0.8623 | 0.8040 | **−0.0583** |
+| spectral operator | 0.8578 | 0.7872 | **−0.0706** |
+| descriptors + MLP | 0.8532 | 0.7673 | **−0.0859** |
+
+All nine classes are present in the restricted subset, so the matched and
+unmatched averages are identical and the comparison is exactly like-for-like —
+the trap I built the class-matching for did not fire here, which is worth
+knowing.
+
+**That slice is intrinsically hard, by 0.046 to 0.086, with no time and no
+unseen geometry involved.** Every one of those is many times the 0.0054
+reproducibility floor. For the GroupNorm CNN the full drop from `iid` to
+`lot_time` is about 0.18, so **roughly a quarter of it is accounted for before
+the forward-only ordering does anything at all**. The same restriction on the
+`lot` protocol costs 0.048 to 0.101, so the effect is a property of the
+geometries, not of a protocol.
+
+The corrected claim, which I will not sharpen further until the single-session
+`lot_time` cells land: forward-only deployment costs about 0.18, of which a
+quarter is that the wafers you meet later are of geometries that are harder to
+classify, an unmeasured further share is that some of them were never trained
+on, and the remainder is drift. "Forward-only time costs 20 points" was never
+what the experiment measured.
+
+### 24. What is left of the long tail, and the one hypothesis still standing
+
+Two explanations have now been measured and discarded:
+
+* **class imbalance** — focal over gamma in {0, 0.5, 1, 2, 5} against its own
+  bit-exact `gamma = 0` control: every range overlaps. Class-balanced weights:
+  overlaps. Positive weighting on the multi-label task: clearly worse. Three
+  corrections, none of which moves `Scratch`.
+* **input resolution** — refuted in §22; 97.7% of wafers are upsampled to reach
+  64x64, so there is nothing for a finer grid to recover.
+
+The hypothesis still standing is architectural, and it is the one the encoder
+makes most obviously. `CnnResized.embed` is a global average over the final
+feature map. A `Scratch` is a thin *connected line* of failed dies; averaged
+over the wafer it is nearly indistinguishable from a slightly elevated
+background failure rate, because the mean is exactly the statistic that discards
+the fact that the failures form a line. `Near-full` and `Edge-Ring`, which are
+the classes the model is best at, are precisely the ones a mean describes well.
+
+> **H24:** replacing global average pooling with something that preserves the
+> extreme a thin structure produces will move `Scratch` and `Loc` specifically,
+> and will do little to macro-F1, because seven of the nine classes are already
+> well served by a mean.
+
+`scripts/pooling_sweep.sh` runs `cnn_gn` on `lot` at three seeds each for:
+
+* `mean` — the original;
+* `meanmax` — concatenate mean and max, the treatment;
+* `meanmean` — concatenate the mean with itself: **identical parameter count,
+  no extra information**.
+
+The control is the whole design. The RPCA fourth channel read as +0.0142 until
+it was run against a channel of zeros and turned out to be worth exactly what
+nothing was worth; `meanmean` asks that question before the claim rather than
+after it. `tests/test_smoke.py` asserts the control matches the treatment in
+parameter count and that its two halves are identical, so it cannot quietly stop
+being a control.
+
+Read `Scratch` and `Loc` F1, not macro-F1 — a nine-class macro average is mostly
+about the other seven, and if the hypothesis is right macro-F1 is the wrong
+place to look for it. Queued behind the single-session grid.

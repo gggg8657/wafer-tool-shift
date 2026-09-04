@@ -265,3 +265,29 @@ def test_rank_correlation_helpers_match_a_known_answer():
     # tv is a proper total-variation distance on distributions
     assert abs(tpc.tv(np.array([1.0, 0]), np.array([0.0, 1]))) == 1.0
     assert tpc.tv(np.array([0.5, 0.5]), np.array([0.5, 0.5])) == 0.0
+
+
+def test_pooling_control_matches_the_treatment_in_capacity():
+    """`meanmean` exists to be indistinguishable from `meanmax` except in
+    information. If it ever stops matching in parameter count, it stops being a
+    control and any win for `meanmax` becomes a win for a wider head.
+    """
+    from wts.models import CnnResized
+
+    mean = CnnResized(len(CLASSES), pool="mean")
+    treat = CnnResized(len(CLASSES), pool="meanmax")
+    ctrl = CnnResized(len(CLASSES), pool="meanmean")
+
+    n = lambda m: sum(p.numel() for p in m.parameters())
+    assert n(treat) == n(ctrl)
+    assert treat.feat_dim == ctrl.feat_dim == 2 * mean.feat_dim
+
+    torch.manual_seed(0)
+    x = torch.randn(6, 3, 64, 64)
+    # the control must carry no information the mean does not already carry
+    e = ctrl.embed(x)
+    half = e.shape[1] // 2
+    assert torch.allclose(e[:, :half], e[:, half:])
+    # the treatment must carry something the mean does not
+    et = treat.embed(x)
+    assert not torch.allclose(et[:, :half], et[:, half:])
