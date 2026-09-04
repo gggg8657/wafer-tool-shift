@@ -216,6 +216,65 @@ def main():
           "`scripts/domain_def_sweep.sh` is queued.")
     W("")
 
+    W("### 2.5 The forward-only result is a compound, not pure temporal drift")
+    W("")
+    tp = Path(a.runs) / "time_proxy.json"
+    if tp.exists():
+        d = json.loads(tp.read_text())
+        sg = d.get("split_geometry", {})
+        if sg:
+            W(table([[f"`{k}`", v["n_geometries_train"], v["n_geometries_test"],
+                      f"{v['frac_test_wafers_unseen_geometry']:.2%}"]
+                     for k, v in sg.items()],
+                    ["protocol", "geometries in train", "in test",
+                     "test wafers of unseen geometry"]))
+            W("")
+            lt, lo = sg.get("lot_time", {}), sg.get("lot", {})
+            W(f"`lot_time` tests on **{lt.get('n_geometries_test','?')} "
+              f"geometries** against {lt.get('n_geometries_train','?')} in "
+              f"training, and "
+              f"{lt.get('frac_test_wafers_unseen_geometry',0):.2%} of its test "
+              "wafers are of a geometry never trained on — against "
+              f"{lo.get('frac_test_wafers_unseen_geometry',0):.2%} for `lot`. "
+              "The forward-only drop is therefore part temporal drift and part "
+              "the `size` protocol arriving through the back door. The split "
+              "between the two is not yet measured and is not guessed; "
+              "`run_bench.py` now evaluates the seen- and unseen-geometry "
+              "halves of every test set and the backfill is the next stage to "
+              "run.")
+            W("")
+        tv = d.get("variables", {})
+        if tv:
+            W("Separately, the lot numbering is **not** arbitrary: bucketing "
+              "lots into deciles of lot number and correlating decile gap "
+              "against distributional distance, against a null of "
+              f"{d['null_draws']} reassignments of numbers to lots, gives "
+              f"Spearman {tv['geometry']['spearman_gap_vs_tv']:+.4f} for "
+              f"geometry (p {tv['geometry']['p_value_one_sided']:.3f}) and "
+              f"{tv['failed_die_rate_ventile']['spearman_gap_vs_tv']:+.4f} for "
+              "failed-die rate (p "
+              f"{tv['failed_die_rate_ventile']['p_value_one_sided']:.3f}). The "
+              "defect-class mix does *not* drift (p "
+              f"{tv['defect_class']['p_value_one_sided']:.3f}). This kills the "
+              "\"those are just arbitrary IDs\" objection but cannot separate "
+              "production order from product blocking; both give this "
+              "signature.")
+            W("")
+
+    det = Path(a.runs) / "determinism.json"
+    if det.exists():
+        dd = json.loads(det.read_text())
+        W("### 2.6 Run-to-run reproducibility floor")
+        W("")
+        W(f"The same cell run twice under identical arguments differs by "
+          f"**{dd['run_to_run_abs_diff']:.2e}** in test macro-F1 "
+          f"({dd['run_a_macro_f1']:.4f} vs {dd['run_b_macro_f1']:.4f}"
+          + ("; bit-reproducible" if dd["bit_reproducible"] else
+             ", so the pipeline is not bit-reproducible on this GPU") + "). "
+          "Two cells closer together than this have not been shown to differ "
+          "at all, whatever their arguments.")
+        W("")
+
     # ---------------------------------------------------------------- decisions
     W("## 3. Three things that need a human decision")
     W("")

@@ -228,3 +228,40 @@ def test_focal_at_gamma_zero_is_exactly_cross_entropy():
     loss2, aux = methods.focal(Identity(), batch, {"focal_gamma": 2.0})
     assert not torch.allclose(loss2, loss0, atol=1e-4)
     assert 0.0 <= aux["focal_pt"] <= 1.0
+
+
+def test_rank_correlation_helpers_match_a_known_answer():
+    """`time_proxy_check` rolls its own Spearman because scipy is not in this
+    environment. A bug there would move a p-value silently, and that p-value is
+    the only evidence offered for the lot-numbering-is-ordered claim.
+    """
+    import importlib.util
+    from pathlib import Path as _Path
+
+    spec = importlib.util.spec_from_file_location(
+        "tpc", _Path(__file__).resolve().parents[1] / "scripts"
+        / "time_proxy_check.py")
+    tpc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(tpc)
+
+    # perfectly monotone, and perfectly anti-monotone
+    x = np.array([1.0, 2, 3, 4, 5])
+    assert abs(tpc.spearman(x, np.array([2.0, 4, 6, 8, 10])) - 1.0) < 1e-12
+    assert abs(tpc.spearman(x, np.array([10.0, 8, 6, 4, 2])) + 1.0) < 1e-12
+
+    # ties must be averaged, not broken by argsort order: a constant vector has
+    # no ordering and must correlate with nothing
+    assert abs(tpc.spearman(x, np.ones(5))) < 1e-12
+    # 0-based ranks with ties averaged: 1 -> 0, the two 5s share (1+2)/2
+    assert list(tpc.rankdata(np.array([5.0, 5, 1, 9]))) == [1.5, 1.5, 0.0, 3.0]
+
+    # against a hand-computed case: Pearson of the ranks
+    a = np.array([1.0, 2, 3, 4, 5, 6])
+    b = np.array([2.0, 1, 4, 3, 6, 5])
+    ra, rb = tpc.rankdata(a) - 2.5, tpc.rankdata(b) - 2.5
+    expected = (ra * rb).sum() / np.sqrt((ra ** 2).sum() * (rb ** 2).sum())
+    assert abs(tpc.spearman(a, b) - expected) < 1e-12
+
+    # tv is a proper total-variation distance on distributions
+    assert abs(tpc.tv(np.array([1.0, 0]), np.array([0.0, 1]))) == 1.0
+    assert tpc.tv(np.array([0.5, 0.5]), np.array([0.5, 0.5])) == 0.0
