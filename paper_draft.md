@@ -210,12 +210,18 @@ What was left is that `CnnResized.embed` is a global average over the final feat
 | `iid` | `meanmean` (**control**) | +0.0003 | overlaps | -0.0061 | overlaps |
 | `size` | `meanmax` (treatment) | -0.0590 | below the floor (0.0068) | -0.0777 | below the floor (0.0087) |
 | `size` | `meanmean` (**control**) | +0.0022 | overlaps | -0.0044 | overlaps |
-| `lot_time` | `meanmax` (treatment) | [not measured] | [not measured] | [not measured] | [not measured] |
-| `lot_time` | `meanmean` (**control**) | [not measured] | [not measured] | [not measured] | [not measured] |
+| `lot_time` | `meanmax` (treatment) | +0.0051 | overlaps | +0.0291 | overlaps |
+| `lot_time` | `meanmean` (**control**) | +0.0169 | overlaps | +0.0055 | overlaps |
 
 On `lot` the treatment clears the floor on both macro-F1 and `Scratch`, and the control clears neither — so the gain is max pooling and not a wider head. That is the question the RPCA fourth channel failed, asked here before the claim rather than after it.
 
-**The generalization is where it gets interesting, and it is not what we predicted.** We expected the effect to be largest on `iid`, where the test distribution matches training and a richer statistic should simply be better. It is *smaller* there and does not clear the floor. The benefit is larger under lot-disjoint shift than without it, which suggests max pooling is buying generalization rather than capacity — the opposite of the reading we went in with. `size` and `lot_time` are still running and the claim is stated at the strength the completed protocols support: **on a lot-disjoint split, replacing global average pooling moves the hardest class by 0.057, and its capacity control moves it by −0.001.**
+**And it does not generalize, which is the more useful finding.** The effect separates on `lot` and on no other protocol. On `iid` it is positive and does not clear the floor. On `lot_time` it is negligible. On `size` — the protocol that holds out whole geometries — its mean is **negative and large**, and also fails to clear that protocol's much wider floor.
+
+Two readings were proposed in advance and both are wrong. The first, that a richer statistic should help most where train and test match, predicts the largest effect on `iid`; it is smaller there than on `lot`. The second, formed after seeing `iid` — that max pooling buys generalization, so the benefit should grow with shift — predicts the largest effect on `size` and `lot_time`; `size` is the one place it is negative.
+
+What the four protocols do line up with is **how much geometry the test set shares with training**: 99.95% on `iid`, 99.7% on `lot`, 86% on `lot_time`, 0% on `size`, against effects of +0.009, +0.017, +0.005 and −0.059. A max over a resampled feature map depends on the die density of the wafer it came from, and a geometry the model has never seen resamples differently — so the statistic that helps when geometry is shared is the one that breaks when it is not. That is a story assembled after the fact from four points and it is offered as a hypothesis, not a result.
+
+The claim, at the strength the data supports: **on a lot-disjoint split, replacing global average pooling with mean-and-max moves the hardest class by 0.057 while its capacity control moves it by −0.001. On the other three protocols it is not established, and on geometry holdout its mean effect is negative.** An architectural change that reads as a general improvement turns out to be protocol-specific — which is the thing this benchmark was built to detect, applied for once to our own result.
 
 ## 5. Withdrawn: "active learning loses to random lot selection"
 
@@ -302,7 +308,9 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | spectral operator | `erm` | sess2 | 3 | 0.8405 | ±0.0216 |
 | `lot_time` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.6438 | ±0.0017 |
 | `lot_time` | CNN (GroupNorm) | `erm` | — | 3 | 0.6985 | ±0.0045 |
-| `lot_time` | CNN (GroupNorm) | `erm` | poolmean | 2 | 0.7074 | ±0.0117 |
+| `lot_time` | CNN (GroupNorm) | `erm` | poolmean | 3 | 0.7046 | ±0.0117 |
+| `lot_time` | CNN (GroupNorm) | `erm` | poolmeanmax | 3 | 0.7097 | ±0.0028 |
+| `lot_time` | CNN (GroupNorm) | `erm` | poolmeanmean | 3 | 0.7215 | ±0.0055 |
 | `lot_time` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.7002 | ±0.0043 |
 | `lot_time` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.6345 | ±0.0225 |
 | `lot_time` | descriptors + MLP | `erm` | sess2 | 3 | 0.6511 | ±0.0020 |

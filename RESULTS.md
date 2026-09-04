@@ -295,6 +295,8 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | tent | 0.6935 | 0.5933 | -0.1003 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | ema | 0.6935 | 0.7086 | +0.0151 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm/poolmean | ema | 0.6958 | 0.7061 | +0.0104 |
+| lot_time | CNN on resized 64x64 (GroupNorm) | erm/poolmeanmax | ema | 0.7093 | 0.7083 | -0.0010 |
+| lot_time | CNN on resized 64x64 (GroupNorm) | erm/poolmeanmean | ema | 0.7216 | 0.7044 | -0.0173 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm/sess2 | ema | 0.6997 | 0.7078 | +0.0080 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm/sslinit | ema | 0.6120 | 0.6211 | +0.0092 |
 | lot_time | size-invariant descriptors + MLP | anchor | ema | 0.6487 | 0.6441 | -0.0045 |
@@ -434,6 +436,8 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | spectral operator, native resolution | sess2 | 0.8551 | +0.0012 | 0.4898 | +0.0000 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | sess2 | 0.6458 | +0.0019 | 0.4898 | +0.0000 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | poolmean | 0.6958 | +0.0022 | 0.4898 | +0.0000 |
+| lot_time | CNN on resized 64x64 (GroupNorm) | poolmeanmax | 0.7093 | +0.0158 | 0.4898 | +0.0000 |
+| lot_time | CNN on resized 64x64 (GroupNorm) | poolmeanmean | 0.7216 | +0.0281 | 0.4898 | +0.0000 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | sess2 | 0.6997 | +0.0062 | 0.4898 | +0.0000 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | + lot-adversarial SSL initialization | 0.6120 | -0.0816 | 0.4898 | +0.0000 |
 | lot_time | size-invariant descriptors + MLP | + RPCA lot signature as features | 0.6394 | -0.0101 | 0.4898 | +0.0000 |
@@ -535,7 +539,9 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot | spectral operator, native resolution | erm | sess2 | 3 | 0.8405 | +/-0.0216 | 0.8551, 0.8118, 0.8547 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | erm | sess2 | 3 | 0.6438 | +/-0.0017 | 0.6458, 0.6423, 0.6434 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.6985 | +/-0.0045 | 0.6935, 0.6993, 0.7026 |
-| lot_time | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 2 | 0.7074 | +/-0.0117 | 0.6958, 0.7191 |
+| lot_time | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 3 | 0.7046 | +/-0.0117 | 0.6958, 0.7191, 0.6990 |
+| lot_time | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 3 | 0.7097 | +/-0.0028 | 0.7093, 0.7071, 0.7127 |
+| lot_time | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmean | 3 | 0.7215 | +/-0.0055 | 0.7216, 0.7269, 0.7160 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | sess2 | 3 | 0.7002 | +/-0.0043 | 0.6997, 0.7047, 0.6961 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | + lot-adversarial SSL initialization | 3 | 0.6345 | +/-0.0225 | 0.6120, 0.6569, 0.6345 |
 | lot_time | size-invariant descriptors + MLP | erm | sess2 | 3 | 0.6511 | +/-0.0020 | 0.6496, 0.6503, 0.6535 |
@@ -739,6 +745,8 @@ Both macro-F1 columns are averaged over **only the classes present in both halve
 | lot | spectral operator, native resolution | erm/sess2 | 0.8551 | 0.8437 | 0.8246 | +0.0191 | 8 | 43,121 | 131 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | erm/sess2 | 0.6458 | 0.6646 | 0.6802 | -0.0155 | 8 | 35,607 | 7,630 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm/poolmean | 0.6958 | 0.7067 | 0.7049 | +0.0018 | 8 | 35,607 | 7,630 |
+| lot_time | CNN on resized 64x64 (GroupNorm) | erm/poolmeanmax | 0.7093 | 0.7202 | 0.7298 | -0.0097 | 8 | 35,607 | 7,630 |
+| lot_time | CNN on resized 64x64 (GroupNorm) | erm/poolmeanmean | 0.7216 | 0.7312 | 0.7548 | -0.0235 | 8 | 35,607 | 7,630 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm/sess2 | 0.6997 | 0.7046 | 0.7312 | -0.0266 | 8 | 35,607 | 7,630 |
 | lot_time | size-invariant descriptors + MLP | erm/sess2 | 0.6496 | 0.6330 | 0.6435 | -0.0105 | 8 | 35,607 | 7,630 |
 | lot_time | die-graph GNN (wafer-only subgraph) | erm/sess2 | 0.5501 | 0.5909 | 0.5871 | +0.0037 | 8 | 35,607 | 7,630 |

@@ -2261,3 +2261,57 @@ Point 4 was the original finding and it is the least interesting of the four. It
 took until the last orphan to see that the method never had a setting at which
 it could have worked, and the evidence that said otherwise was forty lots chosen
 by a slice.
+
+### 47. H42 answered: the weekend's one positive result holds on one protocol out of four
+
+| protocol | baseline | `meanmax` | verdict | Scratch | verdict | control |
+|---|---|---|---|---|---|---|
+| `iid` | 0.8836 | +0.0090 | below floor | +0.0253 | overlaps | +0.0003 |
+| **`lot`** | 0.8666 | **+0.0173** | **separated** | **+0.0566** | **separated** | +0.0052 |
+| `lot_time` | 0.7046 | +0.0051 | overlaps | +0.0291 | overlaps | +0.0169 |
+| `size` | 0.8404 | **−0.0590** | below floor | −0.0777 | below floor | +0.0022 |
+
+The capacity control overlaps on every protocol, so the instrument is clean
+throughout; what varies is the treatment.
+
+**Both of my predictions were wrong, and they were wrong in opposite
+directions.** H42 said the effect would hold or grow on `iid` because a richer
+statistic should help most where train and test match — it is *smaller* there
+than on `lot`. Then, after seeing `iid`, I revised to "the benefit grows with
+shift, so `lot_time` should be largest" — and `size`, the protocol with the most
+shift of the four, is the one place the effect is negative. Two hypotheses, both
+recorded in advance, both falsified by the data they were written for. That is
+the system working, and it is worth noting that neither would have been
+falsifiable if I had waited to write them until after the cells landed.
+
+What the four protocols line up with is **how much geometry the test set shares
+with training** — 99.95%, 99.7%, 86%, 0% against +0.009, +0.017, +0.005, −0.059.
+A max over a resampled feature map depends on the die density of the wafer it
+came from, and an unseen geometry resamples differently, so the statistic that
+helps when geometry is shared may be the one that breaks when it is not. **That
+is a story assembled after the fact from four points and I am labelling it a
+hypothesis in the paper, not a result.** I have spent this weekend documenting
+what happens when a plausible mechanism is stated as though it were measured.
+
+**The claim that survives is narrow and it is the right size.** On a
+lot-disjoint split, mean-and-max pooling moves the hardest class by 0.057 while
+its capacity control moves it by −0.001. On the other three protocols it is not
+established, and on geometry holdout its mean is negative. An architectural
+change that read as a general improvement is protocol-specific — which is
+precisely what this benchmark was built to detect, turned for once on our own
+result rather than on a borrowed method.
+
+**One loose end, and it is the largest apparent effect in the sweep.** The
+`size` figure of −0.0590 does not clear that protocol's floor: the margin is
+0.0068 against 0.0133, because `size` seed ranges are enormous. So the biggest
+number in the table is also the least established, which is the shape of half
+the errors in this log. Three seeds cannot settle it — an exact permutation test
+with three per arm has 20 arrangements and a smallest attainable two-sided p of
+0.1, regardless of the data. `scripts/pooling_size_seeds.sh` takes both arms to
+eight seeds and reads them with the permutation test, the same instrument that
+resolved GroupNorm against BatchNorm when the range test could not.
+
+**H47, before the run:** the −0.059 is real and eight seeds give a permutation
+p below 0.05. If it does not, max pooling is simply unestablished either way on
+`size`, and the honest summary of the weekend's one positive finding is that it
+holds on one protocol out of four and is unmeasured on the rest.
