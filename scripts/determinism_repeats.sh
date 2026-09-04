@@ -19,41 +19,50 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 PY=${PY:-$HOME/miniforge3/envs/pdeno/bin/python}
 N=${1:-6}
+PROTO=${PROTO:-lot}
+ENC=${ENC:-cnn_gn}
 GPUS=(${GPUS:-0 1})
 LOG=logs/determinism_repeats.log
 mkdir -p logs runs
 say(){ echo "[$(date +%H:%M:%S)] $*" | tee -a "$LOG"; }
 
-REF="--encoder cnn_gn --objective erm --protocol lot --seed 0 --tta"
+REF="--encoder $ENC --objective erm --protocol $PROTO --seed 0 --tta"
+OUT="runs/determinism__${PROTO}__${ENC}.json"
+STORED="runs/${PROTO}__${ENC}__erm__s0.json"
 say "=== $N identical invocations of: $REF ==="
-rm -rf /tmp/det_rep; mkdir -p /tmp/det_rep
+WORK=/tmp/det_rep_${PROTO}_${ENC}
+rm -rf "$WORK"; mkdir -p "$WORK"
 pids=()
 for i in $(seq 1 "$N"); do
   g=${GPUS[$(( (i-1) % ${#GPUS[@]} ))]}
   CUDA_VISIBLE_DEVICES=$g $PY scripts/run_bench.py $REF --epochs 12 \
-    --out "/tmp/det_rep/r$i" >> "$LOG" 2>&1 &
+    --out "$WORK/r$i" >> "$LOG" 2>&1 &
   pids+=($!)
   if [ $(( i % ${#GPUS[@]} )) -eq 0 ]; then wait "${pids[@]}" || true; pids=(); say "  $i / $N"; fi
 done
 if [ ${#pids[@]} -gt 0 ]; then wait "${pids[@]}" || true; fi
 
-$PY - /tmp/det_rep runs/lot__cnn_gn__erm__s0.json runs/determinism.json <<'PYEOF'
+$PY - "$WORK" "$STORED" "$OUT" "$PROTO / $ENC" <<'PYEOF'
 import json, sys, glob, statistics
-d, stored_p, out = sys.argv[1:4]
+d, stored_p, out, cell = sys.argv[1:5]
 xs = sorted(json.load(open(p))["test"]["macro_f1"]
-            for p in glob.glob(f"{d}/r*/lot__cnn_gn__erm__s0.json"))
-stored = json.load(open(stored_p))["test"]["macro_f1"]
+            for p in glob.glob(f"{d}/r*/*__erm__s0.json"))
+import os
+stored = (json.load(open(stored_p))["test"]["macro_f1"]
+          if os.path.exists(stored_p) else None)
 rng = max(xs) - min(xs)
 rec = {
     "what": f"{len(xs)} identical invocations of one cell under the current code",
-    "cell": "lot / cnn_gn / erm / seed 0 --tta", "epochs": 12,
+    "cell": f"{cell} / erm / seed 0 --tta", "epochs": 12,
     "n_repeats": len(xs), "macro_f1_values": xs,
     "min": min(xs), "max": max(xs), "mean": sum(xs) / len(xs),
     "range": rng, "stdev": statistics.stdev(xs) if len(xs) > 1 else 0.0,
     "bit_reproducible": rng == 0.0,
     "stored_macro_f1": stored,
-    "stored_inside_repeat_range": bool(min(xs) <= stored <= max(xs)),
-    "stored_distance_to_nearest_repeat": min(abs(stored - v) for v in xs),
+    "stored_inside_repeat_range": (None if stored is None
+                                   else bool(min(xs) <= stored <= max(xs))),
+    "stored_distance_to_nearest_repeat": (None if stored is None else
+                                          min(abs(stored - v) for v in xs)),
     "note": ("The observed range over identical invocations bounds every "
              "same-seed comparison in this repository: two cells whose test "
              "macro-F1 differ by less than it have not been shown to differ at "

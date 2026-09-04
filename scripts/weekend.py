@@ -19,7 +19,8 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from scripts.report import load as load_cells  # noqa: E402,F401
+from scripts.report import (floor_for, floors,  # noqa: E402,F401
+                            load as load_cells)
 
 NM = "[not measured]"
 

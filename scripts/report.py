@@ -30,6 +30,39 @@ def f(x, n=4):
     return "-" if x is None else f"{x:.{n}f}"
 
 
+def floors(run_dir="runs"):
+    """Run-to-run spread per protocol, from `runs/determinism__<proto>__*.json`.
+
+    Applying one cell's floor to every cell is the same substitution this
+    function exists to prevent: `size` seed ranges are 0.069-0.072 against
+    `lot`'s 0.009-0.019, so a threshold measured on `lot` is roughly an order of
+    magnitude too permissive there. Where a protocol has its own measurement it
+    is used; where it does not, the fallback is the largest floor measured
+    anywhere, because being too strict withdraws a claim and being too lenient
+    publishes one.
+    """
+    out = {}
+    for p in Path(run_dir).glob("determinism__*.json"):
+        d = json.loads(p.read_text())
+        proto = p.stem.split("__")[1]
+        v = d.get("range", d.get("run_to_run_abs_diff"))
+        if v is not None:
+            out[proto] = v
+    legacy = Path(run_dir) / "determinism.json"
+    if not out and legacy.exists():
+        d = json.loads(legacy.read_text())
+        out["lot"] = d.get("range", d.get("run_to_run_abs_diff"))
+    out["_fallback"] = max(out.values()) if out else None
+    return out
+
+
+def floor_for(F, protocol):
+    """The floor to judge a comparison on `protocol` against."""
+    if not F:
+        return None
+    return F.get(protocol, F.get("_fallback"))
+
+
 def separation(xs, base, floor):
     """Verdict on whether two cells differ, given the reproducibility floor.
 
@@ -169,10 +202,12 @@ def main():
           "fixed while holding out groups, so the shift it induces is measured "
           "rather than ignored.", ""]
 
-    # the reproducibility floor, needed by every verdict below
+    # the reproducibility floor, needed by every verdict below. Per protocol
+    # where it has been measured, because it is not one number.
+    F = floors(args.runs)
     det_p = Path("runs/determinism.json")
     _d = json.loads(det_p.read_text()) if det_p.exists() else None
-    floor = (_d.get("range", _d.get("run_to_run_abs_diff")) if _d else None)
+    floor = F.get("_fallback")
 
     # ---- stage A
     encs = [e for e in ENC_LABEL if any(k[1] == e for k in R)]
@@ -248,7 +283,7 @@ def main():
         for a_, b_ in zip(order, order[1:]):
             xa, xb = vals[a_], vals[b_]
             gap = sum(xa) / len(xa) - sum(xb) / len(xb)
-            verdict = separation(xa, xb, floor)[0]
+            verdict = separation(xa, xb, floor_for(F, p))[0]
             if len(xa) == 1 or len(xb) == 1:
                 verdict = "no error bar (n=1)"
             res_rows.append([f"`{p}`", ENC_LABEL.get(a_, a_),
@@ -277,7 +312,7 @@ def main():
         xg = sorted(r["test"]["macro_f1"] for r in g.values())
         xb = sorted(r["test"]["macro_f1"] for r in b.values())
         gap = sum(xg) / len(xg) - sum(xb) / len(xb)
-        v = separation(xg, xb, floor)[0]
+        v = separation(xg, xb, floor_for(F, p))[0]
         if len(xg) == 1 or len(xb) == 1:
             v = "no error bar (n=1)"
         nrm.append([f"`{p}`", f"{sum(xg)/len(xg):.4f}", f"{sum(xb)/len(xb):.4f}",
@@ -640,7 +675,7 @@ def main():
             erm_d = vals(SEEDS.get((p_, e, "erm", "dtime")))
             xb = vals(dt[k])
             def verdict(x, base):
-                return separation(x, base, floor)[0]
+                return separation(x, base, floor_for(F, p_))[0]
             rows.append([
                 f"`{o}`", ENC_LABEL.get(e, e),
                 f"{a_[0]:.4f} ±{a_[1]:.4f}" if a_ else "-",

@@ -31,6 +31,14 @@ mkdir -p logs runs
 say(){ echo "[$(date +%H:%M:%S)] $*" | tee -a "$LOG"; }
 slug(){ echo "$*" | tr -cs 'A-Za-z0-9' '_' | sed 's/^_//;s/_$//' | cut -c1-90; }
 
+# First, this protocol's own run-to-run floor. The verdicts below are
+# meaningless without it: `size` seed ranges run 0.069-0.072 against `lot`'s
+# 0.009-0.019, so judging `size` deltas against a floor measured on `lot` is
+# roughly an order of magnitude too permissive -- and is exactly the
+# "spread measured somewhere else" substitution this sweep exists to correct.
+say "--- measuring the size-protocol run-to-run floor first ---"
+PROTO=size ENC=cnn_bn GPUS="${GPUS[*]}" bash scripts/determinism_repeats.sh 6   || say "  (floor measurement failed; verdicts will fall back)"
+
 jobs=()
 for enc in cnn_bn feat; do
   for obj in erm group_dro logit_adjust irm coral dann mixup_domain; do

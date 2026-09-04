@@ -1426,3 +1426,73 @@ Queued third, behind the representation grid and the pooling sweep.
 Writing the prediction down first is the point. If GroupDRO holds I want to have
 said so beforehand, and if it does not I want it on record that the weekend's
 most-quoted surviving number went the way of the others.
+
+### 27. The single-session grid does not reduce spread, and I should not have assumed it would
+
+Two turns ago I launched a 66-cell grid on the reasoning that mixing Friday's
+seed 0 with this weekend's seeds 1–2 folds a session offset into what is
+presented as seed variance. The `lot` cells have now landed for both encoders
+that have a mixed-session counterpart:
+
+| cell | mixed-session range (n=3) | one-session range (n=3) | ratio |
+|---|---|---|---|
+| `lot` / cnn_bn | 0.0139 | 0.0089 | 0.64 |
+| `lot` / cnn_gn | 0.0088 | 0.0145 | 1.64 |
+
+One went down, one went up, by almost reciprocal factors. **The design does not
+demonstrably reduce spread**, and with two cells at n=3 each the comparison
+cannot resolve it — a range from three samples is a very noisy statistic, which
+is the whole reason this weekend has been what it has been.
+
+What the offset argument still establishes is the *offset*, which is real and
+measured: the stored Friday cell sits outside all six repeats of itself. What it
+does not establish is that within-session seeds are tighter. The grid is still
+worth having, because an internally consistent table is worth having, but I have
+corrected the claim in the script's own header rather than leaving a rationale
+that the data does not support.
+
+### 28. My verdict criterion commits the error it was built to prevent
+
+In §26 I criticised myself for judging `size` deltas against a seed half-range
+measured on `cnn_gn` under ERM — "comparing against a spread measured somewhere
+else". The floor-based criterion introduced in §17 does exactly that, and I did
+not notice for four entries.
+
+The floor is **one number, 0.0054, measured on one cell** (`lot/cnn_gn/erm`),
+and it has been applied to every verdict on every protocol. Observed seed ranges
+by protocol, over cells with three seeds:
+
+| protocol | cells | seed range | median |
+|---|---|---|---|
+| `lot` | 6 | 0.0088 – 0.0192 | 0.0139 |
+| `lot_time` | 2 | 0.0090 – 0.0139 | 0.0139 |
+| `iid` | 4 | 0.0033 – 0.0285 | 0.0152 |
+| **`size`** | 2 | **0.0692 – 0.0718** | 0.0718 |
+
+`size` is an order of magnitude looser than `lot`, for a reason that is a
+property of the protocol rather than an accident: each seed holds out *different
+geometries*, and geometries are heterogeneous. Judging a `size` delta against a
+`lot` floor is roughly ten times too permissive, and `size` is precisely where
+the repository's largest surviving claims live — GroupDRO at −0.18 to −0.27.
+
+**Fixed rather than annotated.** `scripts/determinism_repeats.sh` now takes a
+protocol and encoder and writes `runs/determinism__<proto>__<enc>.json`;
+`report.floors()` loads whatever has been measured and `report.floor_for()`
+returns the protocol's own value, falling back to the **largest** measured
+floor where a protocol has none — because being too strict withdraws a claim and
+being too lenient publishes one, and only one of those errors is recoverable.
+All three generators now use it, and the paper states plainly that the floor is
+not one number.
+
+`scripts/size_objectives_seeds.sh` measures the `size` floor first, before
+running the 42-cell grid whose verdicts depend on it. That ordering matters: had
+the grid run first I would have had 42 cells judged against a `lot` floor and a
+strong temptation to keep the verdicts.
+
+**The pattern worth naming.** Three times now the same mistake has appeared in a
+different costume: seed spread standing in for run-to-run spread (§16), a
+baseline from another batch standing in for a within-batch control (§18), and a
+floor from another protocol standing in for this protocol's (here). Each time it
+made an effect look more real than it was. The general form is *borrowing a
+scale from a context that is not the one being measured*, and it is apparently
+the single most reliable way to manufacture a finding in this repository.

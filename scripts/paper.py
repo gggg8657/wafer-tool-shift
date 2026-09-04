@@ -19,6 +19,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from wts.data import CLASSES                                    # noqa: E402
+from scripts.report import floor_for, floors                    # noqa: E402
 
 NM = "[not measured]"
 
@@ -313,19 +314,29 @@ def main():
     # ---------------------------------------------------------------- result 2
     det = json.loads((Path(a.runs) / "determinism.json").read_text()) \
         if (Path(a.runs) / "determinism.json").exists() else None
-    floor = (det.get("range", det.get("run_to_run_abs_diff")) if det else None)
+    F = floors(a.runs)
+    floor = F.get("_fallback")
 
     W("## 3. Result: the invariance toolbox does not beat ERM — the first "
       "version of this experiment could not have shown otherwise, and the "
       "second reaches the same conclusion honestly")
     W("")
     if floor is not None:
-        W(f"Every verdict in this section requires two things: the two cells' "
-          f"seed ranges must not overlap, **and** the margin between them must "
-          f"exceed {floor:.4f} — the spread between "
-          f"{det.get('n_repeats', 2)} *identical* invocations of one cell. "
-          "Seeds are all run back to back on one pair of GPUs, so a seed range "
-          "measures the seed and not the pipeline.")
+        meas = {k: v for k, v in F.items() if k != "_fallback"}
+        W("Every verdict in this section requires two things: the two cells' "
+          "seed ranges must not overlap, **and** the margin between them must "
+          "exceed the run-to-run spread between *identical* invocations of one "
+          "cell — because seeds are run back to back on one pair of GPUs, so a "
+          "seed range measures the seed and not the pipeline.")
+        W("")
+        W("That spread is **not one number**. Measured per protocol where it "
+          "has been measured: "
+          + ", ".join(f"`{k}` {v:.4f}" for k, v in sorted(meas.items()))
+          + f". Protocols without their own measurement fall back to "
+          f"{floor:.4f}, the largest measured, since being too strict "
+          "withdraws a claim and being too lenient publishes one. Observed "
+          "*seed* ranges differ by protocol far more than that: 0.009–0.019 on "
+          "`lot` against 0.069–0.072 on `size`.")
         W("")
     objs = sorted({k[2] for k in C if k[2] != "erm"})
     for p in ["lot", "size"]:
@@ -340,7 +351,7 @@ def main():
                     continue
                 rows.append([ENC[e], f"`{o}`", fmt(s),
                              f"{s['mean'] - base['mean']:+.4f}",
-                             verdict(s, base, floor)])
+                             verdict(s, base, floor_for(F, p))])
         if rows:
             W(f"**Protocol `{p}`** (deltas against the same encoder under ERM):")
             W("")

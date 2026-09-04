@@ -59,7 +59,9 @@ The forward-only test side holds 19 geometries against 338 in training, and 14.1
 
 ## 3. Result: the invariance toolbox does not beat ERM — the first version of this experiment could not have shown otherwise, and the second reaches the same conclusion honestly
 
-Every verdict in this section requires two things: the two cells' seed ranges must not overlap, **and** the margin between them must exceed 0.0054 — the spread between 6 *identical* invocations of one cell. Seeds are all run back to back on one pair of GPUs, so a seed range measures the seed and not the pipeline.
+Every verdict in this section requires two things: the two cells' seed ranges must not overlap, **and** the margin between them must exceed the run-to-run spread between *identical* invocations of one cell — because seeds are run back to back on one pair of GPUs, so a seed range measures the seed and not the pipeline.
+
+That spread is **not one number**. Measured per protocol where it has been measured: `lot` 0.0054. Protocols without their own measurement fall back to 0.0054, the largest measured, since being too strict withdraws a claim and being too lenient publishes one. Observed *seed* ranges differ by protocol far more than that: 0.009–0.019 on `lot` against 0.069–0.072 on `size`.
 
 **Protocol `lot`** (deltas against the same encoder under ERM):
 
@@ -222,7 +224,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (GroupNorm) | `focal` | focal1.0 | 2 | 0.8729 | ±0.0019 |
 | `lot` | CNN (GroupNorm) | `focal` | focal2.0 | 2 | 0.8701 | ±0.0048 |
 | `lot` | CNN (GroupNorm) | `focal` | focal5.0 | 2 | 0.8745 | ±0.0051 |
-| `lot` | descriptors + MLP | `erm` | sess2 | 2 | 0.8350 | ±0.0067 |
+| `lot` | descriptors + MLP | `erm` | sess2 | 3 | 0.8338 | ±0.0067 |
 | `lot` | CNN + 4th channel | `erm` | — | 3 | 0.8696 | ±0.0096 |
 | `lot` | CNN + 4th channel | `erm` | failmask | 3 | 0.8692 | ±0.0065 |
 | `lot` | CNN + 4th channel | `erm` | zerochan | 3 | 0.8689 | ±0.0075 |
