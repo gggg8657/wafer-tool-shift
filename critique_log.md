@@ -1572,3 +1572,61 @@ seeds will give a permutation p below 0.05 while the range test still says
 "overlap". If instead the permutation test also fails to separate, the effect is
 smaller than this protocol can measure and the claim comes out of the README,
 where it currently sits as a design principle.
+
+### 31. The weekend's first withdrawal rests on an asymmetric comparison
+
+The RPCA fourth-channel ablation (§1, §5) is the withdrawal I have quoted most,
+and its conclusion — a channel of zeros buys what the decomposition buys — has
+been load-bearing since Saturday morning. Checking the file timestamps, the
+comparison is not symmetric:
+
+| arm | seeds and when they were measured |
+|---|---|
+| `cnn_gn` 3-channel | s0 **08:54 Friday**, s1 11:01, s2 11:02 |
+| RPCA residual | s0 **09:20 Friday**, s1 11:01, s2 11:02 |
+| raw fail mask | s0 11:03, s1 11:04, s2 11:05 |
+| zeros | s0 11:03, s1 11:04, s2 11:05 |
+
+**Two arms carry a Friday cell and two do not.** Given the measured session
+offset — §16 established that a Friday cell can sit outside all six repeats of
+itself — that is a systematic difference between the treatment arm and its
+controls, in a comparison whose whole purpose was to be symmetric.
+
+Restricted to within-session cells only:
+
+| arm | all seeds | within-session only | vs 3-channel (within-session) |
+|---|---|---|---|
+| `cnn_gn` 3-channel | 0.8647 (n=3) | 0.8635 (n=2) | — |
+| RPCA residual | 0.8696 (n=3) | **0.8638 (n=2)** | **+0.0002** |
+| raw fail mask | 0.8692 (n=3) | 0.8692 (n=3) | +0.0057 |
+| zeros | 0.8689 (n=3) | 0.8689 (n=3) | +0.0054 |
+
+The conclusion does not weaken; it sharpens, and in the direction least
+flattering to the method. Within one session the RPCA residual buys **+0.0002**
+over three channels while both controls buy about **+0.0055**, so the residual
+sits 0.0051–0.0055 *below* its own controls — right at the floor. The reading is
+no longer "the decomposition is worth what nothing is worth" but "a fourth
+channel is worth a little, and the RPCA residual is the worst thing to put in
+it".
+
+**I am not adopting that reading yet, and the reason matters.** It rests on n=2
+for the residual arm, and it was obtained by *selecting cells according to when
+they ran*. That is a subgroup choice, and this repository has spent three
+entries (§16, §18, §28) catching exactly this class of move — borrowing or
+carving a comparison so that the scale suits the conclusion. Doing it in my own
+favour would be no better for having a good reason.
+
+So `scripts/rpca_ablation_clean.sh` runs **all four arms, three seeds each,
+twelve cells, together**. No arm gets a cell the others do not. Queued last.
+
+**H31, before the run:** the four arms come out within the floor of one another,
+as the original ablation said, and the apparent −0.005 for the residual is n=2
+noise. If instead the residual lands clearly below both controls at three clean
+seeds, the finding upgrades from "the decomposition does nothing" to "the
+decomposition actively costs something", and the most likely mechanism is that
+the residual is a float channel with a different scale from the one-hot channels
+it is concatenated to, which would be a normalization bug rather than a fact
+about RPCA.
+
+That last clause is a prediction I want on record, because it is the sort of
+thing that is much easier to propose after seeing the number than before.
