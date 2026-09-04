@@ -57,49 +57,55 @@ The *model-side* decomposition — macro-F1 on the seen-geometry and unseen-geom
 
 The forward-only test side holds 19 geometries against 338 in training, and 14.15% of its test wafers are of a geometry that never appeared in training — against 0.28% for `lot`. So part of the forward-only drop, currently an unquantified part, is the `size` protocol arriving through the back door. The headline should not be read as pure temporal drift until the model-side decomposition lands.
 
-## 3. Result: the invariance toolbox does not beat ERM, and the reason is partly our own domain definition
+## 3. Result: the invariance toolbox does not beat ERM — the first version of this experiment could not have shown otherwise, and the second reaches the same conclusion honestly
+
+Every verdict in this section requires two things: the two cells' seed ranges must not overlap, **and** the margin between them must exceed 0.0054 — the spread between 6 *identical* invocations of one cell. Seeds are all run back to back on one pair of GPUs, so a seed range measures the seed and not the pipeline.
 
 **Protocol `lot`** (deltas against the same encoder under ERM):
 
-| representation | objective | macro-F1 | vs ERM |
-|---|---|---|---|
-| CNN (BatchNorm) | `anchor` | 0.8637 | +0.0115 |
-| CNN (BatchNorm) | `coral` | 0.8468 ±0.0090 (n=3) | -0.0053 |
-| CNN (BatchNorm) | `dann` | 0.8517 ±0.0080 (n=3) | -0.0005 |
-| CNN (BatchNorm) | `group_dro` | 0.8535 ±0.0063 (n=3) | +0.0013 |
-| CNN (BatchNorm) | `hsic` | 0.8527 ±0.0080 (n=3) | +0.0005 |
-| CNN (BatchNorm) | `irm` | 0.8418 ±0.0094 (n=3) | -0.0103 |
-| CNN (BatchNorm) | `logit_adjust` | 0.8170 | -0.0352 |
-| CNN (BatchNorm) | `mixup_domain` | 0.8398 ±0.0108 (n=3) | -0.0124 |
-| CNN (BatchNorm) | `sinkhorn` | 0.1026 | -0.7496 |
-| descriptors + MLP | `anchor` | 0.8395 | -0.0022 |
-| descriptors + MLP | `coral` | 0.8413 | -0.0004 |
-| descriptors + MLP | `dann` | 0.8443 | +0.0026 |
-| descriptors + MLP | `group_dro` | 0.8401 | -0.0016 |
-| descriptors + MLP | `hsic` | 0.8410 | -0.0007 |
-| descriptors + MLP | `irm` | 0.8431 | +0.0014 |
-| descriptors + MLP | `logit_adjust` | 0.7603 | -0.0814 |
-| descriptors + MLP | `mixup_domain` | 0.8379 | -0.0037 |
-| descriptors + MLP | `sinkhorn` | 0.3331 | -0.5086 |
+| representation | objective | macro-F1 | vs ERM | verdict |
+|---|---|---|---|---|
+| CNN (BatchNorm) | `anchor` | 0.8637 | +0.0115 | no error bar |
+| CNN (BatchNorm) | `coral` | 0.8468 ±0.0090 (n=3) | -0.0053 | overlaps ERM |
+| CNN (BatchNorm) | `dann` | 0.8517 ±0.0080 (n=3) | -0.0005 | overlaps ERM |
+| CNN (BatchNorm) | `group_dro` | 0.8535 ±0.0063 (n=3) | +0.0013 | overlaps ERM |
+| CNN (BatchNorm) | `hsic` | 0.8527 ±0.0080 (n=3) | +0.0005 | overlaps ERM |
+| CNN (BatchNorm) | `irm` | 0.8418 ±0.0094 (n=3) | -0.0103 | overlaps ERM |
+| CNN (BatchNorm) | `logit_adjust` | 0.8170 | -0.0352 | no error bar |
+| CNN (BatchNorm) | `mixup_domain` | 0.8398 ±0.0108 (n=3) | -0.0124 | overlaps ERM |
+| CNN (BatchNorm) | `sinkhorn` | 0.1026 | -0.7496 | no error bar |
+| descriptors + MLP | `anchor` | 0.8395 | -0.0022 | no error bar |
+| descriptors + MLP | `coral` | 0.8413 | -0.0004 | no error bar |
+| descriptors + MLP | `dann` | 0.8443 | +0.0026 | no error bar |
+| descriptors + MLP | `group_dro` | 0.8401 | -0.0016 | no error bar |
+| descriptors + MLP | `hsic` | 0.8410 | -0.0007 | no error bar |
+| descriptors + MLP | `irm` | 0.8431 | +0.0014 | no error bar |
+| descriptors + MLP | `logit_adjust` | 0.7603 | -0.0814 | no error bar |
+| descriptors + MLP | `mixup_domain` | 0.8379 | -0.0037 | no error bar |
+| descriptors + MLP | `sinkhorn` | 0.3331 | -0.5086 | no error bar |
 
-`sinkhorn` is not a result, it is a broken cell, and it is shown rather than dropped so the table is not quietly filtered. The entropic-OT penalty is minimized exactly by collapsing the embedding to a point; at the default weight the model converges smoothly to emitting the training class prior, with validation macro-F1 identical at every epoch from the first and training loss flat to four decimals for the last four. `scripts/sinkhorn_lambda.sh` sweeps the weight to establish whether any setting both trains and penalizes; if none does, the row is removed rather than left standing as evidence against optimal transport.
+Of the 6 cells on this protocol that have an error bar at all, **0** clear the floor. Rows reading *no error bar* are single-seed and establish nothing about ordering; on `size` in particular the measured seed half-range reaches 0.035, which is larger than most of the deltas in that table.
+
+`sinkhorn` is not a result, it is a broken cell, and it is shown rather than dropped so the table is not quietly filtered. The entropic-OT penalty is minimized exactly by collapsing the embedding to a point; at the default weight the model converges smoothly to emitting the training class prior, with validation macro-F1 identical at every epoch from the first and training loss flat to four decimals for the last four.
+
+**That sweep has since run and the row stays, with its answer attached.** Selecting the weight on the domain-disjoint validation split picks `--ot-lambda 0.003`, whose test macro-F1 is 0.8591 — and at that weight the OT penalty ends at 0.1699 against 0.1691 unpenalized, so it has not been reduced at all. The objective is not trading accuracy for invariance and landing at a wash; it is switched off. At the largest weight the penalty *is* driven to near zero and the representation collapses to the class prior. Across three orders of magnitude there is no weight at which the penalty falls and accuracy holds, so this is a negative result about entropic OT here rather than an untuned strawman.
 
 **Protocol `size`** (deltas against the same encoder under ERM):
 
-| representation | objective | macro-F1 | vs ERM |
-|---|---|---|---|
-| CNN (BatchNorm) | `coral` | 0.7672 | -0.0011 |
-| CNN (BatchNorm) | `dann` | 0.7298 | -0.0384 |
-| CNN (BatchNorm) | `group_dro` | 0.5927 | -0.1755 |
-| CNN (BatchNorm) | `irm` | 0.7480 | -0.0202 |
-| CNN (BatchNorm) | `logit_adjust` | 0.6725 | -0.0957 |
-| CNN (BatchNorm) | `mixup_domain` | 0.7565 | -0.0117 |
-| descriptors + MLP | `coral` | 0.7937 | -0.0049 |
-| descriptors + MLP | `dann` | 0.7800 | -0.0186 |
-| descriptors + MLP | `group_dro` | 0.5322 | -0.2664 |
-| descriptors + MLP | `irm` | 0.7670 | -0.0316 |
-| descriptors + MLP | `logit_adjust` | 0.7198 | -0.0788 |
-| descriptors + MLP | `mixup_domain` | 0.7987 | +0.0001 |
+| representation | objective | macro-F1 | vs ERM | verdict |
+|---|---|---|---|---|
+| CNN (BatchNorm) | `coral` | 0.7672 | -0.0011 | no error bar |
+| CNN (BatchNorm) | `dann` | 0.7298 | -0.0384 | no error bar |
+| CNN (BatchNorm) | `group_dro` | 0.5927 | -0.1755 | no error bar |
+| CNN (BatchNorm) | `irm` | 0.7480 | -0.0202 | no error bar |
+| CNN (BatchNorm) | `logit_adjust` | 0.6725 | -0.0957 | no error bar |
+| CNN (BatchNorm) | `mixup_domain` | 0.7565 | -0.0117 | no error bar |
+| descriptors + MLP | `coral` | 0.7937 | -0.0049 | no error bar |
+| descriptors + MLP | `dann` | 0.7800 | -0.0186 | no error bar |
+| descriptors + MLP | `group_dro` | 0.5322 | -0.2664 | no error bar |
+| descriptors + MLP | `irm` | 0.7670 | -0.0316 | no error bar |
+| descriptors + MLP | `logit_adjust` | 0.7198 | -0.0788 | no error bar |
+| descriptors + MLP | `mixup_domain` | 0.7987 | +0.0001 | no error bar |
 
 ### The domain definition was doing the work
 
@@ -185,12 +191,14 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `iid` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.8625 | ±0.0042 |
 | `iid` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.8837 | ±0.0016 |
 | `iid` | descriptors + MLP | `erm` | sess2 | 3 | 0.8443 | ±0.0076 |
+| `iid` | spectral operator | `erm` | sess2 | 3 | 0.8576 | ±0.0142 |
 | `lot` | CNN (BatchNorm) | `coral` | — | 3 | 0.8468 | ±0.0090 |
 | `lot` | CNN (BatchNorm) | `coral` | dtime | 3 | 0.8443 | ±0.0098 |
 | `lot` | CNN (BatchNorm) | `dann` | — | 3 | 0.8517 | ±0.0080 |
 | `lot` | CNN (BatchNorm) | `dann` | dtime | 3 | 0.8454 | ±0.0132 |
 | `lot` | CNN (BatchNorm) | `erm` | — | 3 | 0.8522 | ±0.0069 |
 | `lot` | CNN (BatchNorm) | `erm` | dtime | 3 | 0.8514 | ±0.0073 |
+| `lot` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.8543 | ±0.0045 |
 | `lot` | CNN (BatchNorm) | `group_dro` | — | 3 | 0.8535 | ±0.0063 |
 | `lot` | CNN (BatchNorm) | `group_dro` | dtime | 3 | 0.8257 | ±0.0139 |
 | `lot` | CNN (BatchNorm) | `hsic` | — | 3 | 0.8527 | ±0.0080 |
@@ -204,6 +212,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (GroupNorm) | `erm` | scratch_lr1e-3 | 2 | 0.8690 | ±0.0009 |
 | `lot` | CNN (GroupNorm) | `erm` | scratch_lr2e-4 | 2 | 0.7993 | ±0.0020 |
 | `lot` | CNN (GroupNorm) | `erm` | scratch_lr5e-4 | 2 | 0.8528 | ±0.0049 |
+| `lot` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.8667 | ±0.0073 |
 | `lot` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.8143 | ±0.0091 |
 | `lot` | CNN (GroupNorm) | `erm` | sslinit_lr1e-3 | 2 | 0.7755 | ±0.0022 |
 | `lot` | CNN (GroupNorm) | `erm` | sslinit_lr2e-4 | 2 | 0.6529 | ±0.0087 |
@@ -213,6 +222,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (GroupNorm) | `focal` | focal1.0 | 2 | 0.8729 | ±0.0019 |
 | `lot` | CNN (GroupNorm) | `focal` | focal2.0 | 2 | 0.8701 | ±0.0048 |
 | `lot` | CNN (GroupNorm) | `focal` | focal5.0 | 2 | 0.8745 | ±0.0051 |
+| `lot` | descriptors + MLP | `erm` | sess2 | 2 | 0.8350 | ±0.0067 |
 | `lot` | CNN + 4th channel | `erm` | — | 3 | 0.8696 | ±0.0096 |
 | `lot` | CNN + 4th channel | `erm` | failmask | 3 | 0.8692 | ±0.0065 |
 | `lot` | CNN + 4th channel | `erm` | zerochan | 3 | 0.8689 | ±0.0075 |

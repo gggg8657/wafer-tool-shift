@@ -1364,3 +1364,65 @@ being a control.
 Read `Scratch` and `Loc` F1, not macro-F1 — a nine-class macro average is mostly
 about the other seven, and if the hypothesis is right macro-F1 is the wrong
 place to look for it. Queued behind the single-session grid.
+
+### 25. The paper's headline table was still reporting deltas without verdicts
+
+`paper_draft.md` section 3 listed every objective's delta against ERM and left
+the reader to decide what counted. With a measured floor of 0.0054 in hand that
+is no longer a defensible way to present it, so the generator now attaches a
+verdict to every row — ranges disjoint *and* margin above the floor — and counts
+them:
+
+> *Of the 6 cells on this protocol that have an error bar at all, **0** clear
+> the floor.*
+
+That sentence is computed, not written, so it cannot go stale the way the three
+things I fixed alongside it had:
+
+* the section heading still said the ERM-equivalence was "partly an artefact of
+  our own domain definition", written before the sweep completed. It now says
+  the sharper thing: the first version of the experiment could not have shown
+  otherwise, and the second reaches the same conclusion honestly;
+* the `sinkhorn` note still said the weight sweep *would* run and the row
+  *would* be removed if nothing worked. The sweep ran two turns ago. The note
+  now carries its answer — validation picks `--ot-lambda 0.003`, at which the OT
+  penalty ends at 0.1699 against 0.1691 unpenalized, so the objective is not
+  trading accuracy for invariance, it is switched off;
+* the `anchor` and `logit_adjust` rows showed deltas of +0.0115 and −0.0352 with
+  nothing to indicate they are single-seed.
+
+### 26. The last claim in this repository with no error bar is also its largest
+
+Adding verdicts made a gap obvious that I had been quoting past all weekend.
+**Every objective cell on the `size` protocol is single-seed** — the whole table
+reads "no error bar" — and two of those cells are the biggest effects anywhere
+in this work: GroupDRO at −0.18 to −0.27 and logit adjustment at −0.08 to −0.10.
+
+I have leaned on them repeatedly. In §4 I wrote that the `size` half of the
+negative result "stands as measured" because the hash was not degenerate there;
+in §5 that GroupDRO's −0.18 to −0.27 is "five to eight times the seed half-range,
+so those remain real effects". That reasoning used the seed half-range measured
+on **`cnn_gn` under ERM**, not on the cells in question, which have no seeds at
+all. It is the same substitution that made `focal γ=0` look like a +0.0083 win:
+comparing against a spread measured somewhere else.
+
+And `size` is the worst protocol on which to do it. Its measured half-range is
+0.031–0.036, an order of magnitude above `lot`'s, because each seed holds out
+*different geometries* and geometries are heterogeneous. At n = 1 a −0.27 and a
+−0.03 are equally unfalsifiable; the first merely looks safer.
+
+> **H26:** the large negative effects on `size` survive three seeds. GroupDRO's
+> −0.27 is roughly eight times that protocol's half-range and I expect it to
+> hold; logit adjustment's −0.08 is between two and three times it and I am much
+> less confident. If either fails, the domain-generalization result loses its
+> last surviving *directional* claim and becomes uniformly "nothing separates
+> from ERM anywhere", which would be cleaner and duller.
+
+`scripts/size_objectives_seeds.sh` runs `{cnn_bn, feat} x {erm, group_dro,
+logit_adjust, irm, coral, dann, mixup_domain} x 3 seeds` — 42 cells, all in one
+session with ERM re-run alongside so every delta is internal to that session.
+Queued third, behind the representation grid and the pooling sweep.
+
+Writing the prediction down first is the point. If GroupDRO holds I want to have
+said so beforehand, and if it does not I want it on record that the weekend's
+most-quoted surviving number went the way of the others.

@@ -52,6 +52,24 @@ def stat(cells, key, field=("test", "macro_f1")):
             "n": len(xs), "vals": sorted(xs)}
 
 
+def verdict(s, base, floor):
+    """Does this cell differ from its baseline? Ranges disjoint AND margin
+    above the pipeline's own run-to-run floor. Anything else is not a result."""
+    if not s or not base or s["n"] < 2 or base["n"] < 2:
+        return "no error bar"
+    xs, bs = s["vals"], base["vals"]
+    if min(xs) > max(bs):
+        m = min(xs) - max(bs)
+    elif min(bs) > max(xs):
+        m = -(min(bs) - max(xs))
+    else:
+        return "overlaps ERM"
+    if floor is None:
+        return f"disjoint by {abs(m):.4f}"
+    return ("**clears the floor**" if abs(m) > floor
+            else f"below the floor ({abs(m):.4f} < {floor:.4f})")
+
+
 def fmt(s, n=4):
     if s is None:
         return NM
@@ -293,9 +311,22 @@ def main():
                 W("")
 
     # ---------------------------------------------------------------- result 2
-    W("## 3. Result: the invariance toolbox does not beat ERM, "
-      "and the reason is partly our own domain definition")
+    det = json.loads((Path(a.runs) / "determinism.json").read_text()) \
+        if (Path(a.runs) / "determinism.json").exists() else None
+    floor = (det.get("range", det.get("run_to_run_abs_diff")) if det else None)
+
+    W("## 3. Result: the invariance toolbox does not beat ERM — the first "
+      "version of this experiment could not have shown otherwise, and the "
+      "second reaches the same conclusion honestly")
     W("")
+    if floor is not None:
+        W(f"Every verdict in this section requires two things: the two cells' "
+          f"seed ranges must not overlap, **and** the margin between them must "
+          f"exceed {floor:.4f} — the spread between "
+          f"{det.get('n_repeats', 2)} *identical* invocations of one cell. "
+          "Seeds are all run back to back on one pair of GPUs, so a seed range "
+          "measures the seed and not the pipeline.")
+        W("")
     objs = sorted({k[2] for k in C if k[2] != "erm"})
     for p in ["lot", "size"]:
         rows = []
@@ -308,12 +339,24 @@ def main():
                 if not s:
                     continue
                 rows.append([ENC[e], f"`{o}`", fmt(s),
-                             f"{s['mean'] - base['mean']:+.4f}"])
+                             f"{s['mean'] - base['mean']:+.4f}",
+                             verdict(s, base, floor)])
         if rows:
             W(f"**Protocol `{p}`** (deltas against the same encoder under ERM):")
             W("")
-            W(table(rows, ["representation", "objective", "macro-F1", "vs ERM"]))
+            W(table(rows, ["representation", "objective", "macro-F1", "vs ERM",
+                           "verdict"]))
             W("")
+            n_clear = sum(1 for r in rows if "clears the floor" in r[4])
+            n_bar = sum(1 for r in rows if r[4] != "no error bar")
+            if n_bar:
+                W(f"Of the {n_bar} cells on this protocol that have an error "
+                  f"bar at all, **{n_clear}** clear the floor. Rows reading "
+                  "*no error bar* are single-seed and establish nothing about "
+                  "ordering; on `size` in particular the measured seed "
+                  "half-range reaches 0.035, which is larger than most of the "
+                  "deltas in that table.")
+                W("")
             if any(r[1] == "`sinkhorn`" for r in rows):
                 W("`sinkhorn` is not a result, it is a broken cell, and it is "
                   "shown rather than dropped so the table is not quietly "
@@ -322,11 +365,39 @@ def main():
                   "the model converges smoothly to emitting the training class "
                   "prior, with validation macro-F1 identical at every epoch "
                   "from the first and training loss flat to four decimals for "
-                  "the last four. `scripts/sinkhorn_lambda.sh` sweeps the "
-                  "weight to establish whether any setting both trains and "
-                  "penalizes; if none does, the row is removed rather than "
-                  "left standing as evidence against optimal transport.")
+                  "the last four.")
                 W("")
+                sk = {k: v for k, v in C.items()
+                      if k[2] == "sinkhorn" and k[3].startswith("ot")}
+                if sk:
+                    best = max(sk, key=lambda k: next(iter(sk[k].values()))
+                               ["val_macro_f1"])
+                    br = next(iter(sk[best].values()))
+                    zero = next((next(iter(v.values())) for k, v in sk.items()
+                                 if next(iter(v.values())).get("ot_lambda") == 0.0),
+                                None)
+                    bt = [h.get("ot") for h in br["history"]
+                          if h.get("ot") is not None]
+                    zt = ([h.get("ot") for h in zero["history"]
+                           if h.get("ot") is not None] if zero else [])
+                    W("**That sweep has since run and the row stays, with its "
+                      "answer attached.** Selecting the weight on the "
+                      "domain-disjoint validation split picks "
+                      f"`--ot-lambda {br.get('ot_lambda')}`, whose test "
+                      f"macro-F1 is {br['test']['macro_f1']:.4f} — and at that "
+                      "weight the OT penalty ends at "
+                      f"{bt[-1]:.4f}"
+                      + (f" against {zt[-1]:.4f} unpenalized, so it has not "
+                         "been reduced at all. " if zt else ". ")
+                      + "The objective is not trading accuracy for invariance "
+                      "and landing at a wash; it is switched off. At the "
+                      "largest weight the penalty *is* driven to near zero and "
+                      "the representation collapses to the class prior. Across "
+                      "three orders of magnitude there is no weight at which "
+                      "the penalty falls and accuracy holds, so this is a "
+                      "negative result about entropic OT here rather than an "
+                      "untuned strawman.")
+                    W("")
 
     dt = [(o, stat(C, ("lot", "cnn_bn", o, "dtime")),
            stat(C, ("lot", "cnn_bn", o, ""))) for o in ["erm"] + objs]
