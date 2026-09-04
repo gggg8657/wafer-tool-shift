@@ -4,7 +4,9 @@
 
 ## Abstract
 
-Wafer-map defect classification is usually reported on a random split of WM-811K. We rebuild it as a domain-generalization benchmark on the same 172,948 labelled wafers, 10,762 lots and 344 geometries, with four protocols that differ only in what is held out, and we find that the axis the literature worries about is not the expensive one. Holding out whole lots costs a GroupNorm CNN 0.8855 → 0.8647 ±0.0044 (n=3) macro-F1; holding out *future* lots under a purged, embargoed, forward-only split costs 0.6985 ±0.0045 (n=3). Nine borrowed invariance objectives fail to beat ERM — but we then show that on the lot protocol that finding is partly an artefact of how `domain` was defined in our own harness, so we withdraw it there and re-run it. Two methods we built for this corpus, an RPCA lot-signature channel and lot-adversarial self-supervised pretraining, do not survive their own controls: the first is matched by a channel of zeros, the second is worse than random initialization. We report seed spread throughout, because on one protocol it is larger than most published effects.
+Wafer-map defect classification is usually reported on a random split of WM-811K. We rebuild it as a domain-generalization benchmark on the same 172,948 labelled wafers, 10,762 lots and 344 geometries, with four protocols that differ only in what is held out, and we find that the axis the literature worries about is not the expensive one. Holding out whole lots costs a GroupNorm CNN 0.8855 → 0.8647 ±0.0044 (n=3) macro-F1; holding out *future* lots under a purged, embargoed, forward-only split costs 0.6985 ±0.0045 (n=3) — though we then show that split is not purely temporal, since its test side is a narrow geometry slice with a seventh of its wafers of geometries never trained on.
+
+The rest of the paper is a sequence of our own claims failing their own controls, and we think that is the contribution. Nine borrowed invariance objectives fail to beat ERM — but on the lot protocol that finding is an artefact of how `domain` was defined in our own harness, which bucketed 10,762 lots into 32 near-identical groups. So far 2 of them have been re-run against a domain vocabulary that carries real shift (group_dro, irm), and the ones that move, move *down* — which strengthens the negative result rather than rescuing the methods. Two methods we built for this corpus do not survive their controls: an RPCA lot-signature channel is matched by a fourth channel of zeros, and lot-adversarial self-supervised pretraining is worse than random initialization. Our active-learning result compared heuristics that had bought a fifth of the labels random had. And the representation ranking the benchmark exists to produce is not resolvable at three seeds: across the adjacent pairs on four protocols, only the die-graph GNN is clearly separated from anything. We report seed spread and a run-to-run reproducibility floor throughout, because both are larger than most of the effects the first version of this table reported.
 
 ## 1. Four protocols over one corpus
 
@@ -19,7 +21,7 @@ Wafer-map defect classification is usually reported on a random split of WM-811K
 
 Model selection for every cell uses a validation split carved from the *training* domains, never the test domains.
 
-## 2. Result: lot holdout is cheap, forward-only time is expensive
+## 2. Result: lot holdout is cheap, forward-only deployment is expensive
 
 | representation | `iid` | `lot` | `size` | `lot_time` | iid − lot |
 |---|---|---|---|---|---|
@@ -30,7 +32,7 @@ Model selection for every cell uses a validation split carved from the *training
 | die-graph GNN | [not measured] | 0.7557 | 0.6833 | 0.5501 | [not measured] |
 | CNN + 4th channel | [not measured] | 0.8696 ±0.0096 (n=3) | 0.8421 ±0.0359 (n=3) | 0.7088 ±0.0070 (n=3) | [not measured] |
 
-The `iid − lot` column is the part of a published random-split number that came from having seen the same lot in training. It is small. This was the surprise: the standard objection to random splits on WM-811K is that near-duplicate wafers from one lot land on both sides, and on this corpus that objection is worth little. The forward-only column is where the accuracy goes, and it is also the protocol with the largest label shift, so the drop is not purely covariate.
+The `iid − lot` column is the part of a published random-split number that came from having seen the same lot in training. It is small. This was the surprise: the standard objection to random splits on WM-811K is that near-duplicate wafers from one lot land on both sides, and on this corpus that objection is worth little. The forward-only column is where the accuracy goes, and it is also the protocol with the largest label shift, so the drop is not purely covariate. Section 2.1 shows it is not purely temporal either, which is why this section says *deployment* rather than *time*.
 
 ### 2.1 What the forward-only protocol actually holds out
 

@@ -104,15 +104,41 @@ def main():
       "axis the literature worries about is not the expensive one. Holding out "
       "whole lots costs a GroupNorm CNN "
       f"{fmt(iid)} → {fmt(lot)} macro-F1; holding out *future* lots under a "
-      f"purged, embargoed, forward-only split costs {fmt(lt)}. Nine borrowed "
-      "invariance objectives fail to beat ERM — but we then show that on the "
-      "lot protocol that finding is partly an artefact of how `domain` was "
-      "defined in our own harness, so we withdraw it there and re-run it. Two "
-      "methods we built for this corpus, an RPCA lot-signature channel and "
-      "lot-adversarial self-supervised pretraining, do not survive their own "
-      "controls: the first is matched by a channel of zeros, the second is "
-      "worse than random initialization. We report seed spread throughout, "
-      "because on one protocol it is larger than most published effects.")
+      f"purged, embargoed, forward-only split costs {fmt(lt)} — though we then "
+      "show that split is not purely temporal, since its test side is a narrow "
+      "geometry slice with a seventh of its wafers of geometries never trained "
+      "on.")
+    W("")
+    n_obj = len({k[2] for k in C if k[2] not in ("erm", "focal")})
+    words = {7: "Seven", 8: "Eight", 9: "Nine", 10: "Ten", 11: "Eleven"}
+    n_word = words.get(n_obj, str(n_obj))
+    # How many of the re-run objectives have actually landed, so the abstract
+    # cannot assert an outcome the sweep has not produced yet.
+    done = sorted({k[2] for k in C if k[3] == "dtime" and k[2] != "erm"})
+    redone = (f" So far {len(done)} of them have been re-run against a domain "
+              f"vocabulary that carries real shift ({', '.join(done)}), and "
+              "the ones that move, move *down* — which strengthens the "
+              "negative result rather than rescuing the methods."
+              if done else
+              " The re-run against a domain vocabulary that carries real shift "
+              "is in progress and no conclusion is drawn from it here.")
+    W("The rest of the paper is a sequence of our own claims failing their own "
+      f"controls, and we think that is the contribution. {n_word} borrowed "
+      "invariance objectives fail to beat ERM — but on the lot protocol that "
+      "finding is an artefact of how `domain` was defined in our own harness, "
+      "which bucketed 10,762 lots into 32 near-identical groups."
+      + redone +
+      " Two methods we built for this corpus do not survive their "
+      "controls: an RPCA lot-signature channel is matched by a fourth channel "
+      "of zeros, and lot-adversarial self-supervised pretraining is worse than "
+      "random initialization. Our active-learning result compared heuristics "
+      "that had bought a fifth of the labels random had. And the "
+      "representation ranking the benchmark exists to produce is not "
+      "resolvable at three seeds: across the adjacent pairs on four protocols, "
+      "only the die-graph GNN is clearly separated from anything. We report "
+      "seed spread and a run-to-run reproducibility floor throughout, because "
+      "both are larger than most of the effects the first version of this "
+      "table reported.")
     W("")
 
     # ---------------------------------------------------------------- protocols
@@ -141,7 +167,7 @@ def main():
     W("")
 
     # ---------------------------------------------------------------- result 1
-    W("## 2. Result: lot holdout is cheap, forward-only time is expensive")
+    W("## 2. Result: lot holdout is cheap, forward-only deployment is expensive")
     W("")
     rows = []
     for e in ENC:
@@ -161,7 +187,9 @@ def main():
       "that near-duplicate wafers from one lot land on both sides, and on this "
       "corpus that objection is worth little. The forward-only column is where "
       "the accuracy goes, and it is also the protocol with the largest label "
-      "shift, so the drop is not purely covariate.")
+      "shift, so the drop is not purely covariate. Section 2.1 shows it is not "
+      "purely temporal either, which is why this section says *deployment* "
+      "rather than *time*.")
     W("")
 
     # ------------------------------------------- what lot_time actually holds out
