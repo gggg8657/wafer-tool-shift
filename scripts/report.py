@@ -143,6 +143,15 @@ def main():
 
     # ---- stage A
     encs = [e for e in ENC_LABEL if any(k[1] == e for k in R)]
+
+    def seedstat(key):
+        """mean, half-range and count of test macro-F1 over the seeds present."""
+        v = SEEDS.get(key)
+        if not v:
+            return None
+        xs = sorted(r["test"]["macro_f1"] for r in v.values())
+        return sum(xs) / len(xs), (max(xs) - min(xs)) / 2, len(xs)
+
     rows = []
     for e in encs:
         for p in protos:
@@ -150,7 +159,11 @@ def main():
             if not r:
                 continue
             t = r["test"]
-            rows.append([ENC_LABEL[e], p, f(t["macro_f1"]), f(t["defect_macro_f1"]),
+            st = seedstat((p, e, "erm", ""))
+            rows.append([ENC_LABEL[e], p, f(t["macro_f1"]),
+                         (f"{st[0]:.4f} ±{st[1]:.4f} (n={st[2]})"
+                          if st and st[2] > 1 else f"n=1"),
+                         f(t["defect_macro_f1"]),
                          f(t.get("p10_domain_macro_f1")),
                          f(t.get("worst_domain_macro_f1")),
                          f(t["defect_auroc"]), f(t["ece"]),
@@ -158,9 +171,20 @@ def main():
                          f"{r['params_m']:.2f}M", f"{r['minutes']:.1f} min"])
     if rows:
         L += ["## Representations under plain ERM", "",
-              table(rows, ["representation", "protocol", "macro-F1", "defect macro-F1",
+              table(rows, ["representation", "protocol", "macro-F1 (seed 0)",
+                           "over seeds", "defect macro-F1",
                            "p10 domain F1", "worst domain F1", "defect AUROC",
                            "ECE", "conformal cov.", "params", "wall"]), "",
+              "The `macro-F1 (seed 0)` column is the original single-seed "
+              "measurement, kept so nothing silently changes value; `over "
+              "seeds` is the mean and half-range wherever more than one seed "
+              "exists. **Where it reads `n=1` the number has no error bar and "
+              "the ordering around it is not established.** Measured "
+              "half-ranges are 0.0044-0.0096 on `lot` and 0.031-0.036 on "
+              "`size`, which is the size of the gaps between the middle "
+              "representations, so those gaps are not resolvable until the "
+              "seeds exist. `scripts/backfill_metrics.sh` runs all 22 "
+              "(protocol, representation) pairs at three seeds.", "",
               "Three caveats on the last four columns, all of which came out of "
               "reading this table adversarially rather than from a new run:", "",
               "* `p10 domain F1` and `worst domain F1` are quantized on the "
@@ -178,6 +202,80 @@ def main():
               "`summarize` now also emits per-class coverage, the worst class, "
               "and the empty-prediction-set rate; cells measured before that "
               "change do not carry them.", ""]
+
+    # ---- is the representation ordering resolvable at the measured noise?
+    det_p = Path("runs/determinism.json")
+    floor = (json.loads(det_p.read_text())["run_to_run_abs_diff"]
+             if det_p.exists() else None)
+    res_rows = []
+    for p in protos:
+        vals = {}
+        for e in encs:
+            v = SEEDS.get((p, e, "erm", ""))
+            if v:
+                vals[e] = sorted(r["test"]["macro_f1"] for r in v.values())
+        order = sorted(vals, key=lambda e: -sum(vals[e]) / len(vals[e]))
+        for a_, b_ in zip(order, order[1:]):
+            xa, xb = vals[a_], vals[b_]
+            gap = sum(xa) / len(xa) - sum(xb) / len(xb)
+            if len(xa) == 1 or len(xb) == 1:
+                verdict = "no error bar (n=1)"
+            elif min(xa) > max(xb):
+                m = min(xa) - max(xb)
+                verdict = (f"ranges disjoint by {m:.4f}"
+                           + ("" if floor is None or m > 3 * floor
+                              else " -- below the run-to-run floor"))
+            else:
+                verdict = "ranges overlap"
+            res_rows.append([f"`{p}`", ENC_LABEL.get(a_, a_),
+                             ENC_LABEL.get(b_, b_), f"{gap:+.4f}",
+                             f"{len(xa)}/{len(xb)}", verdict])
+    if res_rows:
+        L += ["### Is that ordering resolvable?", "",
+              "Each adjacent pair in the ranking above, per protocol, with the "
+              "verdict from whether the observed seed ranges overlap. This is "
+              "deliberately non-parametric: three seeds do not support a "
+              "p-value, but whether one cell's worst seed beat the other's best "
+              "is a fact about what was seen."
+              + (f" The run-to-run floor -- two identical invocations of one "
+                 f"cell -- is {floor:.2e}, so a margin near that is not a "
+                 f"separation." if floor is not None else ""), "",
+              table(res_rows, ["protocol", "higher", "lower", "gap",
+                               "seeds", "verdict"]), ""]
+
+    # ---- "GroupNorm beats BatchNorm everywhere", checked as its own claim
+    nrm = []
+    for p in protos:
+        g = SEEDS.get((p, "cnn_gn", "erm", ""))
+        b = SEEDS.get((p, "cnn_bn", "erm", ""))
+        if not (g and b):
+            continue
+        xg = sorted(r["test"]["macro_f1"] for r in g.values())
+        xb = sorted(r["test"]["macro_f1"] for r in b.values())
+        gap = sum(xg) / len(xg) - sum(xb) / len(xb)
+        if len(xg) == 1 or len(xb) == 1:
+            v = "no error bar (n=1)"
+        elif min(xg) > max(xb):
+            m = min(xg) - max(xb)
+            v = (f"every GN seed above every BN seed, margin {m:.4f}"
+                 + ("" if floor is None or m > 3 * floor
+                    else f" -- below the {floor:.2e} run-to-run floor"))
+        elif min(xb) > max(xg):
+            v = "every BN seed above every GN seed"
+        else:
+            v = "ranges overlap"
+        nrm.append([f"`{p}`", f"{sum(xg)/len(xg):.4f}", f"{sum(xb)/len(xb):.4f}",
+                    f"{gap:+.4f}", f"{len(xg)}/{len(xb)}", v])
+    if nrm:
+        L += ["### GroupNorm against BatchNorm", "",
+              "A separate claim from the ranking, because BatchNorm mixes "
+              "statistics across whatever is in the batch and a batch here "
+              "spans lots -- so the normalization choice is a domain-leak "
+              "question, not a tuning one. `spectral` sits between the two in "
+              "the overall ranking, so this pair does not appear as adjacent "
+              "above and is checked directly.", "",
+              table(nrm, ["protocol", "GroupNorm", "BatchNorm", "GN - BN",
+                          "seeds", "verdict"]), ""]
 
     # ---- the headline gap
     gaps = []

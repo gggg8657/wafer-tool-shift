@@ -912,3 +912,82 @@ random" is withdrawn pending the wafer-budget run.
 
 I should have read `wafers_mean` the first time I looked at that table. It was
 in the file, in the same object as the number I was quoting.
+
+### 14. Partial: giving the objectives a real domain makes one of them move, downward
+
+`domain_def_sweep.sh` at 14/35 cells. `cnn_bn` on `lot`, deltas against ERM
+measured under the *same* domain definition so the comparison is internal:
+
+| objective | domain = `lot % 32` (label TV 0.021) | vs ERM | domain = production decile (TV 0.182) | vs ERM |
+|---|---|---|---|---|
+| `erm` | 0.8522 ±0.0069 (n=3) | — | 0.8514 ±0.0073 (n=3) | — |
+| `group_dro` | 0.8535 ±0.0063 (n=3) | +0.0013 | 0.8257 ±0.0139 (n=3) | **−0.0257** |
+| `irm` | 0.8418 ±0.0094 (n=3) | −0.0103 | 0.8476 ±0.0052 (n=2) | −0.0038 |
+
+`coral`, `dann`, `mixup_domain`, `hsic` pending.
+
+The null control holds: `erm` never reads the domain label and its two columns
+differ by 0.0008, inside the ~0.002 same-code-path floor, so the machinery did
+not change ERM and the other rows are differences in the objective.
+
+GroupDRO is the first objective to move once the domain means something, and it
+moves *down* by 0.0257 against a half-range of 0.0139 — roughly two half-ranges,
+so a real effect rather than noise. This is worth being precise about, because
+it is the opposite of a rescue: H4 asked whether the ERM-equivalence was an
+artefact of a degenerate domain definition, and the early answer is that the
+artefact was real *and* fixing it does not produce a method that beats ERM. It
+produces a method that loses. That is a considerably stronger negative result
+than the one it replaces — "these objectives tie with ERM because they were
+switched off" becomes "switched on, at least one of them is actively harmful" —
+and it is consistent with the `size` column, where the hash was never degenerate
+and GroupDRO was already −0.18 to −0.27.
+
+I will not write that conclusion until the remaining four objectives land.
+
+### 15. The representation table has no error bars, and almost none of its ordering is resolvable
+
+The paper's framing table — six representations across four protocols — was
+measured at one seed per cell. Where seeds have since been run the half-ranges
+are 0.0044–0.0096 on `lot`, 0.0045–0.0070 on `lot_time` and 0.031–0.036 on
+`size`. The gaps in the table are the same size.
+
+`report.py` now prints the verdict for every adjacent pair, non-parametrically:
+three seeds do not support a p-value, but whether one cell's worst seed beat the
+other's best is a fact about what was observed. Of **18 adjacent pairs across
+the four protocols, not one is resolved**: three have overlapping seed ranges and
+fifteen have no error bar at all. On `lot`, the entire ordering
+`rpca_cnn > cnn_gn > spectral > cnn_bn > feat` sits inside the noise; only the
+die-graph GNN, 0.086 below the next cell, is clearly last.
+
+Two claims from the project summary are directly affected:
+
+* **"spectral 0.8538, CNN+BatchNorm 0.8587"** — the two are 0.0017 apart on the
+  three-seed mean, against a `cnn_bn` half-range of 0.0069. Not a ranking.
+* **"GroupNorm beats BatchNorm everywhere"** — checked as its own claim, since
+  `spectral` sits between them and it never appears as an adjacent pair. On
+  `lot` every GroupNorm seed does beat every BatchNorm seed, which is the right
+  test, but the two ranges are separated by **0.0004** — below the run-to-run
+  floor of two identical invocations. So the direction is consistent and the
+  margin is not meaningful. On `size` and `lot_time` the gap is much larger
+  (+0.0784, +0.0545) but BatchNorm is single-seed there, so those are unbarred
+  too.
+
+The mechanism argument for GroupNorm remains good independent of the numbers —
+BatchNorm mixes statistics across whatever is in the batch and a batch here
+spans lots, which is a domain leak by construction. But a mechanism is a reason
+to expect an effect, not evidence of one, and the table was being read as
+evidence.
+
+**Change made.** `scripts/backfill_metrics.sh` now runs all 22
+(protocol, representation) pairs at three seeds rather than only re-running the
+seeds that happen to exist — 66 cells, about 35 minutes on two GPUs, estimated
+from the stored per-cell wall times. It was already queued as the next stage
+after the domain-definition sweep, so this costs no extra scheduling.
+
+**What I expect, written down now.** Most of these gaps will stay unresolved,
+because 0.01 gaps against 0.007 half-ranges do not separate at three seeds. The
+useful outcome is not a cleaner ranking; it is being able to say which
+comparisons this corpus can support at all, and the honest answer is likely to
+be "the GNN is worse, and nothing else is distinguishable". A benchmark that
+cannot rank its own baselines is a finding about the benchmark, and a more
+useful one than a leaderboard.

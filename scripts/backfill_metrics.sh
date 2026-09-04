@@ -77,19 +77,33 @@ if [ $gate -ne 0 ]; then
 fi
 say "stored values reproduce within the measured floor; proceeding"
 
-# every untagged ERM cell, at every seed already present. Tagged variants are
-# excluded: their flags (--rpca-features, --fda-aug, --tta) are not recoverable
-# from the JSON without guessing, and a guessed argument makes a cell a
-# different experiment wearing the same filename.
+# Every untagged ERM (protocol, encoder) pair, at THREE seeds -- not only at
+# the seeds that happen to exist.
+#
+# The representation table is the paper's framing claim and it was measured at
+# one seed per cell. Where seeds have since been run, the half-range is 0.0044
+# to 0.0069 on `lot` and 0.031 to 0.036 on `size`; the gaps between the top
+# representations are the same size or smaller. `feat`, `spectral` and `graph`
+# are single-seed on every protocol, so the ordering among them is currently
+# unfalsifiable. 22 pairs x 3 seeds is about 35 minutes on two GPUs, which is
+# cheap for finding out whether a table anyone would quote is resolvable at all.
+#
+# Tagged variants are excluded: their flags (--rpca-features, --fda-aug) are not
+# recoverable from the JSON without guessing, and a guessed argument makes a
+# cell a different experiment wearing the same filename.
 jobs=()
+seen_pairs=""
 for f in runs/*__erm__s*.json; do
   b=$(basename "$f" .json)
   [ "$(echo "$b" | awk -F'__' '{print NF}')" -eq 4 ] || continue
   proto=$(echo "$b" | awk -F'__' '{print $1}')
   enc=$(echo "$b"   | awk -F'__' '{print $2}')
-  seed=$(echo "$b"  | awk -F'__' '{print $4}' | tr -d 's')
+  case " $seen_pairs " in *" $proto:$enc "*) continue;; esac
+  seen_pairs="$seen_pairs $proto:$enc"
   tta=""; [[ "$enc" == cnn_* ]] && tta="--tta"
-  jobs+=("--encoder $enc --objective erm --protocol $proto --seed $seed $tta")
+  for seed in 0 1 2; do
+    jobs+=("--encoder $enc --objective erm --protocol $proto --seed $seed $tta")
+  done
 done
 
 say "=== backfill: ${#jobs[@]} cells on GPUs ${GPUS[*]} ==="

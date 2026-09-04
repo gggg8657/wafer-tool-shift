@@ -109,6 +109,7 @@ On `size` the same hash is far less degenerate — 344 geometries into 32 bucket
 |---|---|---|---|
 | `erm` | 0.8522 ±0.0069 (n=3) | 0.8514 ±0.0073 (n=3) | -0.0008 |
 | `group_dro` | 0.8535 ±0.0063 (n=3) | 0.8257 ±0.0139 (n=3) | -0.0277 |
+| `irm` | 0.8418 ±0.0094 (n=3) | 0.8465 ±0.0052 (n=3) | +0.0047 |
 
 `erm` never reads the domain label, so its two columns must agree exactly; it is included as the null control on the plumbing.
 
@@ -180,6 +181,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (BatchNorm) | `group_dro` | — | 3 | 0.8535 | ±0.0063 |
 | `lot` | CNN (BatchNorm) | `group_dro` | dtime | 3 | 0.8257 | ±0.0139 |
 | `lot` | CNN (BatchNorm) | `irm` | — | 3 | 0.8418 | ±0.0094 |
+| `lot` | CNN (BatchNorm) | `irm` | dtime | 3 | 0.8465 | ±0.0052 |
 | `lot` | CNN (GroupNorm) | `erm` | — | 3 | 0.8647 | ±0.0044 |
 | `lot` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.8143 | ±0.0091 |
 | `lot` | CNN + 4th channel | `erm` | — | 3 | 0.8696 | ±0.0096 |
