@@ -442,6 +442,59 @@ def main():
                            "unseen geom. (matched)", "seen - unseen",
                            "shared classes", "n seen", "n unseen"]), ""]
 
+    # ---- does the DG negative result survive a domain that carries shift?
+    dt = {k: v for k, v in SEEDS.items() if k[3] == "dtime"}
+    if dt:
+        def ms(v):
+            """mean and half-range of test macro-F1 over the seeds present."""
+            if not v:
+                return None
+            xs = sorted(r["test"]["macro_f1"] for r in v.values())
+            return (sum(xs) / len(xs), (max(xs) - min(xs)) / 2, len(xs))
+
+        rows = []
+        for k in sorted(dt):
+            p_, e, o, _ = k
+            a_ = ms(SEEDS.get((p_, e, o, "")))
+            b_ = ms(dt[k])
+            rows.append([
+                f"`{o}`", ENC_LABEL.get(e, e),
+                f"{a_[0]:.4f} ±{a_[1]:.4f} (n={a_[2]})" if a_ else "-",
+                f"{b_[0]:.4f} ±{b_[1]:.4f} (n={b_[2]})",
+                f"{b_[0] - a_[0]:+.4f}" if a_ else "-",
+                next(iter(dt[k].values())).get("n_invariance_domains", "-")])
+        L += ["## Does the domain definition explain the ERM-equivalence?", "",
+              "Every group-aware objective was originally handed `lot % 32` as "
+              "its domain: 10,762 lots averaged into 32 buckets whose mean "
+              "pairwise label total-variation is 0.0208, against 0.1666 between "
+              "real lots. An invariance penalty asked to equalize distributions "
+              "that are already equal is satisfied by doing nothing, so "
+              "ERM-equivalence on `lot` was close to guaranteed by construction "
+              "rather than discovered. `time_decile` replaces it with ten "
+              "fixed, ordered, lot-level production-order groups carrying a "
+              "label TV of 0.1822. One change; everything else fixed.", "",
+              table(rows, ["objective", "representation",
+                           "domain = `lot % 32`", "domain = production decile",
+                           "difference", "n domains"]), ""]
+        # the plumbing check, printed rather than trusted
+        nulls = []
+        for k in sorted(dt):
+            if k[2] != "erm":
+                continue
+            base = SEEDS.get((k[0], k[1], "erm", "")) or {}
+            for sd, r in dt[k].items():
+                if sd in base:      # compare seed to seed, not mean to mean
+                    nulls.append(abs(r["test"]["macro_f1"]
+                                     - base[sd]["test"]["macro_f1"]))
+        if nulls:
+            L += [f"**Null control.** `erm` never reads the domain label, so "
+                  f"its two columns must agree; they differ by at most "
+                  f"{max(nulls):.4f}, against a measured same-code-path floor "
+                  f"of about 0.002. The domain machinery did not change ERM, so "
+                  f"the other rows are differences in the objective and not in "
+                  f"the plumbing. If this line ever exceeds the floor, nothing "
+                  f"else in the table can be read.", ""]
+
     # ---- the OT weight sweep: is the collapsed cell a broken method or a
     #      badly chosen default?
     sk = {k: v for k, v in R.items() if k[2] == "sinkhorn" and k[3].startswith("ot")}

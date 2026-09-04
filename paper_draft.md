@@ -105,7 +105,11 @@ Every group-aware objective above received `lot % 32` as its domain label: 10,76
 
 On `size` the same hash is far less degenerate — 344 geometries into 32 buckets, TV 0.2592 — which is why that protocol shows large, real and mostly negative effects. The `size` half of the negative result stands as measured; the `lot` half needed re-running.
 
-Re-run under a domain vocabulary that carries real shift: [not measured]. `scripts/domain_def_sweep.sh` is queued. Until it lands, the claim "borrowed domain-generalization objectives do not beat ERM on the `lot` protocol" is **withdrawn** — not contradicted, withdrawn, because the experiment as run could not have shown otherwise.
+| objective | domain = `lot % 32` | domain = production decile | difference |
+|---|---|---|---|
+| `erm` | 0.8522 ±0.0069 (n=3) | 0.8511 ±0.0073 (n=2) | -0.0011 |
+
+`erm` never reads the domain label, so its two columns must agree exactly; it is included as the null control on the plumbing.
 
 ## 4. Result: our own two contributions fail their own controls
 
@@ -158,6 +162,7 @@ Budgets spent in whole lots out of 8116 available, seeded with 20 random lots, 3
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range |
 |---|---|---|---|---|---|---|
 | `lot` | CNN (BatchNorm) | `erm` | — | 3 | 0.8522 | ±0.0069 |
+| `lot` | CNN (BatchNorm) | `erm` | dtime | 2 | 0.8511 | ±0.0073 |
 | `lot` | CNN (GroupNorm) | `erm` | — | 3 | 0.8647 | ±0.0044 |
 | `lot` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.8143 | ±0.0091 |
 | `lot` | CNN + 4th channel | `erm` | — | 3 | 0.8696 | ±0.0096 |

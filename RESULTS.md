@@ -155,6 +155,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN on resized 64x64 (BatchNorm) | erm | adabn | 0.8587 | 0.8139 | -0.0448 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm | tent | 0.8587 | 0.8313 | -0.0274 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm | ema | 0.8587 | 0.8575 | -0.0012 |
+| lot | CNN on resized 64x64 (BatchNorm) | erm/dtime | ema | 0.8583 | 0.8551 | -0.0032 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm/fda | adabn | 0.8566 | 0.8117 | -0.0449 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm/fda | tent | 0.8566 | 0.8327 | -0.0239 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm/fda | ema | 0.8566 | 0.8592 | +0.0026 |
@@ -264,6 +265,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 
 | protocol | representation | variant | macro-F1 | vs plain | p10 domain F1 | vs plain |
 |---|---|---|---|---|---|---|
+| lot | CNN on resized 64x64 (BatchNorm) | dtime | 0.8583 | -0.0004 | 0.4898 | +0.0000 |
 | lot | CNN on resized 64x64 (BatchNorm) | + Fourier amplitude swap augmentation | 0.8566 | -0.0021 | 0.4898 | +0.0000 |
 | lot | CNN on resized 64x64 (BatchNorm) | ot0.0 | 0.8609 | +0.7583 | 0.4898 | +0.2558 |
 | lot | CNN on resized 64x64 (BatchNorm) | ot0.003 | 0.8591 | +0.7565 | 0.4898 | +0.2558 |
@@ -292,6 +294,8 @@ Each seed reshuffles the model init *and* which training domains become the inne
 
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range | per seed |
 |---|---|---|---|---|---|---|---|
+| lot | CNN on resized 64x64 (BatchNorm) | erm | - | 3 | 0.8522 | +/-0.0069 | 0.8587, 0.8448, 0.8530 |
+| lot | CNN on resized 64x64 (BatchNorm) | erm | dtime | 2 | 0.8511 | +/-0.0073 | 0.8583, 0.8438 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.8647 | +/-0.0044 | 0.8671, 0.8680, 0.8591 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | + lot-adversarial SSL initialization | 3 | 0.8143 | +/-0.0091 | 0.8134, 0.8239, 0.8056 |
 | lot | CNN + RPCA lot-signature channel | erm | - | 3 | 0.8696 | +/-0.0096 | 0.8813, 0.8654, 0.8621 |
@@ -360,9 +364,20 @@ Both macro-F1 columns are averaged over **only the classes present in both halve
 
 | protocol | representation | objective | macro-F1 all | seen geom. (matched) | unseen geom. (matched) | seen - unseen | shared classes | n seen | n unseen |
 |---|---|---|---|---|---|---|---|---|---|
+| lot | CNN on resized 64x64 (BatchNorm) | erm/dtime | 0.8583 | 0.8438 | 0.8605 | -0.0166 | 8 | 43,121 | 131 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.1 | 0.8485 | 0.8434 | 0.7310 | +0.1124 | 8 | 43,121 | 131 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.3 | 0.8352 | 0.8240 | 0.7192 | +0.1048 | 8 | 43,121 | 131 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot1.0 | 0.1026 | 0.1155 | 0.0618 | +0.0537 | 8 | 43,121 | 131 |
+
+## Does the domain definition explain the ERM-equivalence?
+
+Every group-aware objective was originally handed `lot % 32` as its domain: 10,762 lots averaged into 32 buckets whose mean pairwise label total-variation is 0.0208, against 0.1666 between real lots. An invariance penalty asked to equalize distributions that are already equal is satisfied by doing nothing, so ERM-equivalence on `lot` was close to guaranteed by construction rather than discovered. `time_decile` replaces it with ten fixed, ordered, lot-level production-order groups carrying a label TV of 0.1822. One change; everything else fixed.
+
+| objective | representation | domain = `lot % 32` | domain = production decile | difference | n domains |
+|---|---|---|---|---|---|
+| `erm` | CNN on resized 64x64 (BatchNorm) | 0.8522 ±0.0069 (n=3) | 0.8511 ±0.0073 (n=2) | -0.0011 | 10 |
+
+**Null control.** `erm` never reads the domain label, so its two columns must agree; they differ by at most 0.0010, against a measured same-code-path floor of about 0.002. The domain machinery did not change ERM, so the other rows are differences in the objective and not in the plumbing. If this line ever exceeds the floor, nothing else in the table can be read.
 
 ## The entropic-OT objective: a broken method, or a bad default?
 
