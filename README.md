@@ -163,7 +163,16 @@ scripts/
   run_bench.py  one cell: (representation, objective, protocol)
   sweep.sh      the matrix across two GPUs
   report.py     regenerates RESULTS.md
+  ablate_sigchannel.sh  is the rpca_cnn fourth channel information or capacity?
+  domain_def_sweep.sh   do the DG objectives change once "domain" means anything?
+  sinkhorn_lambda.sh    why the OT objective collapsed, and at which weight
+  ssl_init_cells.sh     the lot-adversarial pretrained initialization
+  make_mixed.py         builds MIXED-SYNTH: overlaid WM-811K, clearly synthetic
+  run_mixed.py          multi-label training on MIXED-SYNTH only
 ```
+
+Run the tests with `python tests/run_tests.py` (pytest is deliberately not a
+dependency; the env this runs in is shared).
 
 ## What this demonstrates
 
@@ -176,5 +185,20 @@ scripts/
 - **Evaluation discipline** — domain-disjoint model selection, label shift
   measured instead of ignored, worst-group before average, calibration under
   shift, and a rejected split design documented rather than hidden.
+- **Ablating its own best idea until it fails.** The RPCA lot-signature channel
+  was this repo's own contribution and the best `lot` cell. Running it against a
+  fourth channel of *zeros* showed the two are indistinguishable at three seeds.
+  The withdrawal, the evidence and the reasoning are in
+  [`critique_log.md`](critique_log.md); `RESULTS.md` carries the table.
+
+### Two things that are not WM-811K, and are labelled so everywhere
+
+WM-811K is single-label over nine classes, so a multi-label F1 on it is not a
+defined quantity. `make_mixed.py` builds **MIXED-SYNTH**, mixed-type wafers made
+by OR-ing the failed dies of two same-geometry WM-811K wafers, and every artefact
+it writes carries `"synthetic": true`. Overlaid patterns do not interact the way
+real compound defects do, so MIXED-SYNTH is an *upper bound* on the real
+mixed-type task. The real benchmark is MixedWM38, which is not currently
+obtainable from this machine — see `WEEKEND.md`.
 
 MIT licensed. Data: WM-811K (MIR Lab), used under its original terms.

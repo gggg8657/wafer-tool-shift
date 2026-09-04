@@ -1,0 +1,39 @@
+{
+  "name": "MIXED-SYNTH",
+  "synthetic": true,
+  "protocol": "iid",
+  "n_train": 160757,
+  "n_test": 53855,
+  "n_train_mixed": 31046,
+  "n_test_mixed": 10618,
+  "train_label_cardinality_0_1_2": [
+    110597,
+    19114,
+    31046
+  ],
+  "test_label_cardinality_0_1_2": [
+    36832,
+    6405,
+    10618
+  ],
+  "train_positives_per_class": {
+    "Center": 15142,
+    "Donut": 2252,
+    "Edge-Loc": 21540,
+    "Edge-Ring": 15227,
+    "Loc": 16138,
+    "Near-full": 1007,
+    "Random": 4425,
+    "Scratch": 5475
+  },
+  "test_positives_per_class": {
+    "Center": 5427,
+    "Donut": 749,
+    "Edge-Loc": 7508,
+    "Edge-Ring": 4940,
+    "Loc": 5193,
+    "Near-full": 291,
+    "Random": 1866,
+    "Scratch": 1667
+  }
+}

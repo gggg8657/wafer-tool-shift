@@ -40,7 +40,12 @@ def load(run_dir):
     out = {}
     for p in sorted(Path(run_dir).glob("*.json")):
         r = json.loads(p.read_text())
-        if not isinstance(r, dict) or "protocol" not in r:
+        # a cell is identified by having all three axes, not by "protocol"
+        # alone: runs/ also holds the MIXED-SYNTH dataset summary and the
+        # MIXED-SYNTH training results, which carry a protocol and nothing else
+        # a benchmark table can use
+        if not isinstance(r, dict) or not {"protocol", "encoder",
+                                           "objective"} <= set(r):
             continue
         out[(r["protocol"], r["encoder"], r["objective"], r.get("tag", ""),
              r.get("seed", 0))] = r

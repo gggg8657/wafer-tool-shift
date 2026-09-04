@@ -321,3 +321,69 @@ ERM-in-disguise cell.
 
 Score for the exercise: one finding that changes a headline claim, one that is
 real but mis-named and needs measuring, one latent bug worth a guard. Cheap.
+
+### 5. The fourth-channel ablation, completed: the RPCA claim does not survive
+
+30 cells, 12 epochs, 3 seeds each, `scripts/ablate_sigchannel.sh`, regenerated
+into `RESULTS.md` by `report.py`:
+
+| protocol | fourth channel | seeds | per-seed test macro-F1 | mean | half-range | vs `cnn_gn` |
+|---|---|---|---|---|---|---|
+| `lot` | none (`cnn_gn`) | 3 | 0.8671, 0.8680, 0.8591 | 0.8647 | ±0.0044 | — |
+| `lot` | RPCA residual | 3 | 0.8813, 0.8654, 0.8621 | 0.8696 | ±0.0096 | +0.0049 |
+| `lot` | raw fail mask | 3 | 0.8765, 0.8678, 0.8634 | 0.8692 | ±0.0065 | +0.0045 |
+| `lot` | **zeros** | 3 | 0.8772, 0.8673, 0.8622 | 0.8689 | ±0.0075 | +0.0042 |
+| `lot_time` | none | 3 | 0.6935, 0.6993, 0.7026 | 0.6985 | ±0.0045 | — |
+| `lot_time` | RPCA residual | 3 | 0.7020, 0.7159, 0.7084 | 0.7088 | ±0.0070 | +0.0103 |
+| `lot_time` | raw fail mask | 3 | 0.6905, 0.7008, 0.7098 | 0.7004 | ±0.0096 | +0.0019 |
+| `lot_time` | zeros | 3 | 0.6991, 0.7011, 0.7051 | 0.7018 | ±0.0030 | +0.0033 |
+| `size` | none | 3 | 0.8203, 0.8301, 0.8895 | 0.8467 | ±0.0346 | — |
+| `size` | RPCA residual | 3 | 0.8254, 0.8146, 0.8863 | 0.8421 | ±0.0359 | −0.0046 |
+| `size` | raw fail mask | 3 | 0.8287, 0.8145, 0.8832 | 0.8421 | ±0.0343 | −0.0045 |
+| `size` | zeros | 3 | 0.8236, 0.8167, 0.8790 | 0.8398 | ±0.0312 | −0.0069 |
+
+**Verdict on `lot`, which is where the claim was made.** The three fourth-channel
+variants land at +0.0049, +0.0045 and +0.0042 over the 3-channel baseline. They
+are separated from each other by 0.0007 — two orders of magnitude below the
+effect anyone would report — and every one of them is inside its own seed
+half-range of the baseline. **A channel containing nothing but zeros buys as
+much as the RPCA decomposition does.** Whatever the fourth channel is worth on
+this protocol, it is worth it as extra first-layer capacity and a different
+initialization, not as information about the lot's tool signature. The
+prediction from §1 (rank 0 on 94.8% of lots, residual bit-identical to the fail
+mask on 95.3% of wafers) is confirmed downstream.
+
+The published 0.8813 is the maximum of a three-seed range whose minimum is
+0.8621. Reporting it as "the best cell on `lot`, 0.8813" against "cnn_gn 0.8671"
+compared the top of one range against the middle of another.
+
+**Where I will not overclaim.** On `lot_time` the residual is nominally the
+highest of the three (+0.0103 vs +0.0019 and +0.0033) and it beats both controls
+at every seed. That is the one place the decomposition might be doing something,
+and the forward-only protocol is exactly where a genuine tool signature *should*
+matter most. But the separation is 0.007–0.008 against a control half-range of
+±0.0096, with n=3. It is a hypothesis worth another 5 seeds, not a result.
+Recorded as such and not written into any headline.
+
+**A second, larger finding that fell out of running seeds at all.** The `size`
+protocol has a seed half-range of **±0.031 to ±0.036** — seed 2 scores
+0.879–0.890 for all four variants while seeds 0 and 1 score 0.815–0.830. That is
+because `_stratified_group_split` reshuffles which *geometries* are held out,
+and geometries are wildly heterogeneous, so `size` seed spread is a property of
+the protocol rather than of any model. Consequences for what is already
+published:
+
+- Every `size`-protocol delta smaller than ~0.03 in `RESULTS.md` is noise. That
+  covers most of the objective comparisons on that protocol.
+- It does **not** rescue the large negatives: GroupDRO at −0.18 to −0.27 and
+  logit adjustment at −0.08 to −0.10 are five to eight times the seed
+  half-range, so those remain real effects.
+- `lot` (±0.004–0.010) and `lot_time` (±0.003–0.010) are far tighter, and
+  `lot_time` should be tighter still since its test set does not move with seed.
+
+**What this costs, stated plainly.** The claim "best cell on `lot`: CNN with an
+RPCA lot-signature channel, 0.8813" is withdrawn. The corrected statement is
+that on `lot`, `cnn_gn` with any fourth channel and `cnn_gn` without one are
+indistinguishable at three seeds, mean 0.865–0.870. This is a negative result
+about a method this repo invented for itself, which makes it the least
+convenient kind and the one most worth keeping.
