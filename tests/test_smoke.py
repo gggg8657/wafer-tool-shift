@@ -121,3 +121,81 @@ def test_rpca_only_separates_a_lot_that_shares_something():
     L2, S2 = rpca(sparse + shared, n_iter=60)
     assert torch.linalg.matrix_rank(L2, rtol=1e-3).item() >= 1
     assert L2[:, :40].mean() > 5 * L2[:, 40:].abs().mean()
+
+
+def _tiny_corpus(n_lots=640, per_lot=3):
+    """A synthetic corpus with a *known* domain structure.
+
+    Lot number carries the signal: the first half of production runs one class
+    mix and the second half another, so a production-order domain vocabulary
+    must see a difference and a modulo hash of the lot id must not.
+
+    `n_lots` has to be well above the 32 buckets for the point to exist at all:
+    the hash only erases the shift once each bucket averages many lots, which is
+    exactly the regime the real corpus is in (10,762 lots, ~336 per bucket).
+    """
+    from wts.data import Corpus
+
+    rng = np.random.default_rng(0)
+    lot, labels, maps64 = [], [], []
+    for l in range(n_lots):
+        late = l >= n_lots // 2
+        for _ in range(per_lot):
+            lot.append(l)
+            labels.append(int(rng.integers(0, 3) if late else 0))
+            m = np.ones((64, 64), dtype=np.uint8)
+            m[rng.random((64, 64)) < (0.3 if late else 0.05)] = 2
+            maps64.append(m)
+    n = len(lot)
+    return Corpus(
+        maps=[torch.from_numpy(m) for m in maps64],
+        maps64=torch.from_numpy(np.stack(maps64)),
+        labels=torch.tensor(labels), lot=torch.tensor(lot),
+        size_id=torch.tensor([i % 4 for i in range(n)]),
+        hw=torch.zeros(n, 2, dtype=torch.long),
+        lot_names=[f"lot{i}" for i in range(n_lots)],
+        size_names=["a", "b", "c", "d"])
+
+
+def test_hash32_domains_erase_a_shift_that_production_order_keeps():
+    """The bug that made every DG objective look like ERM on the `lot` protocol.
+
+    `batch_of` used to hand the group-aware objectives `lot % 32`. Averaging
+    hundreds of lots into each bucket makes the buckets near-identical, so an
+    invariance penalty is already satisfied and the objective degenerates to
+    ERM. This asserts the mechanism on a corpus where the shift is known by
+    construction, so a future refactor cannot quietly reintroduce it.
+    """
+    import importlib.util
+    from pathlib import Path as _Path
+
+    spec = importlib.util.spec_from_file_location(
+        "rb", _Path(__file__).resolve().parents[1] / "scripts" / "run_bench.py")
+    rb = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(rb)
+
+    c = _tiny_corpus()
+
+    def label_tv(dom):
+        d = dom.numpy()
+        p = []
+        for g in np.unique(d):
+            h = np.bincount(c.labels.numpy()[d == g], minlength=3).astype(float)
+            p.append(h / h.sum())
+        p = np.array(p)
+        return float(np.mean([0.5 * np.abs(p[i] - p[j]).sum()
+                              for i in range(len(p)) for j in range(i + 1, len(p))]))
+
+    hashed, n_hashed = rb.invariance_domain(c, "lot", "hash32")
+    timed, n_timed = rb.invariance_domain(c, "lot", "time_decile")
+
+    # hash32 must stay bit-identical to the expression it replaced, or every
+    # already-published cell silently changes meaning
+    assert torch.equal(hashed, c.lot % 32) and n_hashed == 32
+
+    assert n_timed == 10
+    assert label_tv(timed) > 5 * label_tv(hashed)
+
+    # domain ids must be dense, since they index GroupDRO's weights and DANN's head
+    for dom, n in ((hashed, n_hashed), (timed, n_timed)):
+        assert int(dom.min()) >= 0 and int(dom.max()) < n

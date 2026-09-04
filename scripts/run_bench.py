@@ -23,7 +23,8 @@ import torch.nn.functional as F
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from wts import metrics, methods, tta                                # noqa: E402
-from wts.data import CLASSES, Corpus, label_shift, split             # noqa: E402
+from wts.data import (CLASSES, Corpus, label_shift, lot_numbers,      # noqa: E402
+                      split)
 from wts.graph import DieGraphNet                                   # noqa: E402
 from wts.models import CnnResized, FeatMlp, SpectralNet, onehot_maps  # noqa: E402
 from wts.rpca import stack_channels                                  # noqa: E402
@@ -33,8 +34,66 @@ N_BUCKETS = 32          # domains are bucketed for the group-aware objectives
 
 
 def domain_vector(corpus, protocol):
-    """The domain label a protocol is defined by."""
+    """The group a *protocol* is defined by: what is held out, and what the
+    worst-domain metrics are computed over. Not the same thing as the domain
+    the invariance objectives are asked to equalize -- see `invariance_domain`.
+    """
     return corpus.size_id if protocol == "size" else corpus.lot
+
+
+def invariance_domain(corpus, protocol, kind):
+    """The domain label handed to the group-aware objectives, and its size.
+
+    This is a separate decision from the protocol's grouping and it was hidden
+    inside `batch_of` as `self.dom[sel] % N_BUCKETS`. On the `lot` protocol that
+    hashes 10,762 lots into 32 buckets of ~336 lots each, and averaging that
+    many lots per bucket washes out the very shift the objective exists to
+    remove: the mean pairwise label total-variation between those 32 buckets is
+    0.0208, against 0.1666 between real lots. GroupDRO, IRM, CORAL, DANN, HSIC
+    and domain-mixup were therefore asked to equalize 32 near-identical
+    distributions, which every one of them can do by doing nothing. The measured
+    "no borrowed objective beats ERM on `lot`" is not evidence about the
+    objectives until this is controlled for.
+
+    (On the `size` protocol the same hash is far less degenerate -- only 344
+    geometries go into 32 buckets, mean pairwise TV 0.2592 -- which is why the
+    `size` column showed real, and mostly negative, effects.)
+
+    The alternatives are all fixed, small, lot-level vocabularies, so DANN's
+    head and GroupDRO's per-group weights stay well defined across batches:
+
+    ==============  =======  ========================================
+    kind            groups   mean pairwise label TV (measured here)
+    ==============  =======  ========================================
+    hash32               32   0.0208   the original, kept as default
+    time_decile          10   0.1822   lot number decile = production order
+    fail_decile          10   0.1231   lot mean failed-die rate decile
+    geometry             58   0.4466   wafer geometry (>=200 wafers)
+    ==============  =======  ========================================
+    """
+    if kind == "hash32":
+        return domain_vector(corpus, protocol) % N_BUCKETS, N_BUCKETS
+    if kind == "geometry":
+        _, inv = torch.unique(corpus.size_id, return_inverse=True)
+        return inv, int(inv.max()) + 1
+    if kind in ("time_decile", "fail_decile"):
+        if kind == "time_decile":
+            v = lot_numbers(corpus).float()
+        else:
+            m = corpus.maps64
+            rate = ((m == 2).float().sum((1, 2))
+                    / (m > 0).float().sum((1, 2)).clamp_min(1))
+            # the decile is a property of the *lot*, not of the wafer, or the
+            # objective would be equalizing something the label itself causes
+            v = torch.zeros_like(rate)
+            uq, inv = torch.unique(corpus.lot, return_inverse=True)
+            means = torch.zeros(len(uq)).index_add_(0, inv, rate) \
+                / torch.zeros(len(uq)).index_add_(0, inv,
+                                                  torch.ones_like(rate)).clamp_min(1)
+            v = means[inv]
+        q = torch.quantile(v, torch.linspace(0, 1, 11)[1:-1])
+        return torch.bucketize(v, q), 10
+    raise ValueError(f"unknown domain definition {kind!r}")
 
 
 def make_loader_indices(idx, batch, shuffle, gen=None):
@@ -97,6 +156,8 @@ class Runner:
                     self.resid_dev = torch.zeros_like(self.maps64_dev,
                                                      dtype=torch.float32)
         self.dom = domain_vector(self.c, args.protocol)
+        self.inv_dom, self.n_dom = invariance_domain(self.c, args.protocol,
+                                                     args.domain_def)
         tr_all, te = split(self.c, args.protocol, seed=args.seed)
         # domain-disjoint validation carved out of the training domains
         self.tr, self.va = self._inner_split(tr_all, args.protocol, args.seed)
@@ -129,7 +190,7 @@ class Runner:
     # ---------------------------------------------------------------- batches
     def batch_of(self, sel):
         y = self.c.labels[sel].to(self.dev)
-        d = (self.dom[sel] % N_BUCKETS).to(self.dev)
+        d = self.inv_dom[sel].to(self.dev)
         if self.a.encoder == "feat":
             x = (self.feat_dev[sel.to(self.dev)] - self.mu) / self.sd
             return {"x": x, "y": y, "d": d, "mask": None}
@@ -201,19 +262,19 @@ class Runner:
             "cw": methods.class_weights(counts).to(self.dev) if a.class_weight else None,
             "log_prior": prior.log().to(self.dev),
             "tau": a.tau, "dro_eta": a.dro_eta,
-            "q": torch.ones(N_BUCKETS, device=self.dev) / N_BUCKETS,
+            "q": torch.ones(self.n_dom, device=self.dev) / self.n_dom,
             "irm_lambda": a.irm_lambda, "coral_lambda": a.coral_lambda,
             "mix_alpha": a.mix_alpha, "lamb": a.dann_lambda,
             "hsic_lambda": a.hsic_lambda, "ot_lambda": a.ot_lambda,
-            "anchor_gamma": a.anchor_gamma, "n_dom": N_BUCKETS,
+            "anchor_gamma": a.anchor_gamma, "n_dom": self.n_dom,
             "masked": a.encoder in ("spectral", "graph"),
-            "domain_index": torch.arange(N_BUCKETS, device=self.dev),
+            "domain_index": torch.arange(self.n_dom, device=self.dev),
             "dummy": torch.tensor(1.0, device=self.dev, requires_grad=True),
         }
         if a.objective == "dann":
             st["domain_head"] = nn.Sequential(
                 nn.Linear(model.feat_dim, 128), nn.ReLU(),
-                nn.Linear(128, N_BUCKETS)).to(self.dev)
+                nn.Linear(128, self.n_dom)).to(self.dev)
         params = list(model.parameters()) + (
             list(st["domain_head"].parameters()) if a.objective == "dann" else [])
         opt = torch.optim.AdamW(params, lr=a.lr, weight_decay=1e-4)
@@ -269,6 +330,7 @@ class Runner:
         res = {
             "encoder": a.encoder, "objective": a.objective, "protocol": a.protocol,
             "tag": a.tag, "sig_channel": a.sig_channel,
+            "domain_def": a.domain_def, "n_invariance_domains": self.n_dom,
             "ot_lambda": a.ot_lambda,
             "seed": a.seed, "epochs": a.epochs,
             "n_train": len(self.tr), "n_val": len(self.va), "n_test": len(self.te),
@@ -423,6 +485,11 @@ def main():
     p.add_argument("--ema-every", type=int, default=8)
     p.add_argument("--tta", action="store_true")
     p.add_argument("--rpca", default="data/rpca.pt")
+    p.add_argument("--domain-def", default="hash32",
+                   choices=["hash32", "time_decile", "fail_decile", "geometry"],
+                   help="what the group-aware objectives treat as a domain; "
+                        "hash32 is the original and is nearly shift-free on the "
+                        "lot protocol, so it is the control, not the answer")
     p.add_argument("--sig-channel", default="residual",
                    choices=["residual", "failmask", "zeros"],
                    help="what the rpca_cnn fourth channel carries; failmask and "
@@ -438,6 +505,20 @@ def main():
     p.add_argument("--init-from", default=None,
                    help="checkpoint from scripts/pretrain_ssl.py")
     args = p.parse_args()
+    # A spectral batch holds exactly one geometry (`size_bucketed_batches`), so
+    # on the `size` protocol -- where geometry *is* the domain -- every batch has
+    # a single domain and CORAL's penalty is identically zero, domain-mixup has
+    # nothing to mix across, and IRM and GroupDRO see one group. Such a cell
+    # would carry an objective's name while running ERM. No cell in runs/ is in
+    # this state; the guard is here so none quietly becomes so.
+    if (args.encoder == "spectral" and args.protocol == "size"
+            and args.objective in methods.NEEDS_DOMAIN
+            and args.domain_def in ("hash32", "geometry")):
+        raise SystemExit(
+            f"refusing {args.objective} on spectral/size: spectral batches hold "
+            f"one geometry each, so this cell would silently run ERM under "
+            f"another name. Pass --domain-def time_decile or fail_decile if you "
+            f"want a domain that varies inside a spectral batch.")
     label = f"{args.protocol} / {args.encoder} / {args.objective}"
     print(f"== {label}{' / ' + args.tag if args.tag else ''} ==", flush=True)
     Runner(args).run()
