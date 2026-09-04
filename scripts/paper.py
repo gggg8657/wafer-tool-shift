@@ -670,6 +670,42 @@ def main():
           "single-label task. Nothing about the multi-label framing changes "
           "which patterns are hard; a one-die-wide line is hard because it is a "
           "one-die-wide line.")
+        W("")
+        cs = Path(a.runs) / "corpus_stats.json"
+        if cs.exists():
+            nr = json.loads(cs.read_text()).get("native_resolution")
+            if nr:
+                W("### 7.2 One explanation for that tail, checked and discarded")
+                W("")
+                W("The obvious account is resolution: the CNN path resamples "
+                  "every wafer to a fixed 64x64 grid, and a scratch is a few "
+                  "dies wide, so the resize should blur it away. It is wrong "
+                  "on this corpus, and checking took one line:")
+                W("")
+                W(table([[c_, v["n"], v["median_max_dim"],
+                          f"{v['frac_downsampled_by_64']:.3f}"]
+                         for c_, v in sorted(
+                             nr["per_class"].items(),
+                             key=lambda kv: -kv[1]["frac_downsampled_by_64"])],
+                        ["class", "n", "median max dimension",
+                         "fraction downsampled by 64x64"]))
+                W("")
+                W(f"**{nr['frac_upsampled_by_64']:.1%} of wafers are "
+                  f"*upsampled* to reach 64x64**; only "
+                  f"{nr['frac_downsampled_by_64']:.1%} are downsampled. The "
+                  "median wafer's larger dimension is "
+                  f"{nr['percentiles_max_dim']['50']} dies. The resize is "
+                  "adding pixels, not removing detail, so raising the input "
+                  "resolution cannot recover information that was never "
+                  "discarded. `Scratch` is the most-downsampled class at "
+                  f"{nr['per_class']['Scratch']['frac_downsampled_by_64']:.1%}, "
+                  "which is still a small minority of it.")
+                W("")
+                W("A scratch is thin in units of *dies*, not pixels, and no "
+                  "resampling changes that. Whatever makes it hard, it is not "
+                  "the input grid — which rules out the cheapest remaining "
+                  "lever and leaves the backbone, the pooling, and real "
+                  "mixed-type data.")
     else:
         W(f"MIXED-SYNTH training results: {NM}. `scripts/mixed_sweep.sh` queued.")
     W("")

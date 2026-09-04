@@ -183,6 +183,8 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range |
 |---|---|---|---|---|---|---|
 | `iid` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.8625 | ±0.0042 |
+| `iid` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.8837 | ±0.0016 |
+| `iid` | descriptors + MLP | `erm` | sess2 | 3 | 0.8443 | ±0.0076 |
 | `lot` | CNN (BatchNorm) | `coral` | — | 3 | 0.8468 | ±0.0090 |
 | `lot` | CNN (BatchNorm) | `coral` | dtime | 3 | 0.8443 | ±0.0098 |
 | `lot` | CNN (BatchNorm) | `dann` | — | 3 | 0.8517 | ±0.0080 |
@@ -296,6 +298,26 @@ The shortfall is where it has been all along. Per-class F1 in the best lot-disjo
 | Edge-Ring | 0.9296 |
 
 `Scratch` and `Loc` are last here exactly as they are last on the single-label task. Nothing about the multi-label framing changes which patterns are hard; a one-die-wide line is hard because it is a one-die-wide line.
+
+### 7.2 One explanation for that tail, checked and discarded
+
+The obvious account is resolution: the CNN path resamples every wafer to a fixed 64x64 grid, and a scratch is a few dies wide, so the resize should blur it away. It is wrong on this corpus, and checking took one line:
+
+| class | n | median max dimension | fraction downsampled by 64x64 |
+|---|---|---|---|
+| Scratch | 1193 | 41 | 0.155 |
+| Edge-Ring | 9680 | 53 | 0.146 |
+| Loc | 3593 | 36 | 0.069 |
+| Donut | 555 | 42 | 0.061 |
+| Edge-Loc | 5189 | 39 | 0.038 |
+| Center | 4294 | 27 | 0.032 |
+| Random | 866 | 39 | 0.023 |
+| none | 147429 | 34 | 0.008 |
+| Near-full | 149 | 33 | 0.007 |
+
+**97.7% of wafers are *upsampled* to reach 64x64**; only 2.0% are downsampled. The median wafer's larger dimension is 34 dies. The resize is adding pixels, not removing detail, so raising the input resolution cannot recover information that was never discarded. `Scratch` is the most-downsampled class at 15.5%, which is still a small minority of it.
+
+A scratch is thin in units of *dies*, not pixels, and no resampling changes that. Whatever makes it hard, it is not the input grid — which rules out the cheapest remaining lever and leaves the backbone, the pooling, and real mixed-type data.
 
 ## 8. Threats to validity
 

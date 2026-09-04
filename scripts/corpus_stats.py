@@ -68,6 +68,27 @@ def main():
         "max_wafers_in_one_lot": int(np.bincount(c.lot.numpy()).max()),
     }
 
+    # --- is 64x64 losing anything? The CNN path resamples every wafer to a
+    # fixed 64x64 grid, and "a scratch is a few dies wide and 64x64 blurs it"
+    # is an appealing explanation for the long tail. It is checkable in one
+    # line and it is wrong on this corpus: almost every wafer is *up*sampled to
+    # reach 64x64, so the resize adds pixels rather than removing detail. A
+    # scratch is thin in units of dies, and no resampling changes that.
+    hw = c.hw.numpy()
+    mx = np.maximum(hw[:, 0], hw[:, 1])
+    out["native_resolution"] = {
+        "percentiles_max_dim": {str(q): int(np.percentile(mx, q))
+                                for q in (1, 25, 50, 75, 95, 99)},
+        "frac_downsampled_by_64": float((mx > 64).mean()),
+        "frac_upsampled_by_64": float((mx < 64).mean()),
+        "per_class": {
+            CLASSES[k]: {
+                "n": int((y == k).sum()),
+                "frac_downsampled_by_64": float((mx[y == k] > 64).mean()),
+                "median_max_dim": int(np.median(mx[y == k])),
+            } for k in range(len(CLASSES)) if (y == k).sum()},
+    }
+
     # --- the domain vocabularies, and how much shift each actually carries
     lot = c.lot.numpy()
     sid = c.size_id.numpy()

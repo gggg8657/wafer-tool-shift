@@ -1235,3 +1235,54 @@ positive weighting have all now been measured and none of them moves it. If
 a few dies wide and 64x64 blurs it), a larger backbone, and real MixedWM38 data.
 The first of those is the one this corpus most obviously invites and it has not
 been tried.
+
+### 22. I proposed a lever in the last commit and refuted it in this one
+
+The §21 write-up ended: *"the remaining honest levers are input resolution (a
+scratch is a few dies wide and 64x64 blurs it), a larger backbone, and real
+MixedWM38 data."* The parenthesis is a claim, it went into a commit message and
+into the paper's forward-looking text, and it is **false on this corpus**.
+Checking it cost one line:
+
+| class | n | median max dimension | fraction downsampled by 64x64 |
+|---|---|---|---|
+| Scratch | 1,193 | 41 | 0.155 |
+| Edge-Ring | 9,680 | 53 | 0.146 |
+| Loc | 3,593 | 36 | 0.069 |
+| Donut | 555 | 42 | 0.061 |
+| none | 147,429 | 34 | 0.008 |
+
+**97.73% of wafers are *upsampled* to reach 64x64**; 2.01% are downsampled. The
+median wafer's larger dimension is 34 dies. The resize adds pixels; it does not
+remove detail. Raising the input resolution to 128 would interpolate, not
+recover — there is nothing to recover for 49 wafers in 50.
+
+`Scratch` is the most-downsampled class at 15.5%, which is consistent with the
+intuition having *some* basis, and still leaves 84.5% of scratches upsampled. It
+is not the explanation for a per-class F1 of 0.69.
+
+**Where the claim came from, which is the part worth recording.** It is a
+near-quotation of the sibling repository's hand-off note, which lists "higher
+input resolution (a scratch is a few dies wide and 64x64 blurs it)" as its first
+candidate for closing the same gap. That repository resamples to 64x64 from the
+same corpus, so the statement is very likely wrong there too — but I have not
+measured it there and am not asserting it. What I did was carry a plausible
+mechanism across from a neighbouring document and restate it as if it were
+established here. That is exactly the failure mode the "no number unless a run
+produced it" rule exists to prevent, in its qualitative form: **no *mechanism*
+either, unless a measurement supports it.** A sentence does not become true by
+having been written down next door.
+
+Corrected in `paper_draft.md` §7.2, which now presents the check and the
+refutation rather than the intuition, and the measurement is in
+`runs/corpus_stats.json` so the table regenerates.
+
+**What this leaves.** The long tail is not explained by class imbalance (focal
+over five gammas against a bit-exact control: nothing; class-balanced weights:
+nothing; positive weighting: worse), and not by input resolution. The remaining
+candidates I would rank: global average pooling discarding the localization a
+thin structure needs; genuine label ambiguity in weak instances, which the
+sibling repository measured directly as Loc/Scratch leaking into `none` rather
+than into each other; and simply too few examples of a thin, high-variance
+pattern. Only the first is cheap to test and it is a real architectural
+hypothesis rather than a tuning one.

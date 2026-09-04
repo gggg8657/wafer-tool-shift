@@ -184,6 +184,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | iid | size-invariant descriptors + MLP | erm | ema | 0.8532 | 0.8537 | +0.0005 |
 | iid | size-invariant descriptors + MLP | erm/sess2 | ema | 0.8532 | 0.8537 | +0.0005 |
 | iid | spectral operator, native resolution | erm | ema | 0.8573 | 0.8484 | -0.0089 |
+| iid | spectral operator, native resolution | erm/sess2 | ema | 0.8578 | 0.8535 | -0.0044 |
 | lot | CNN on resized 64x64 (BatchNorm) | anchor | adabn | 0.8637 | 0.8166 | -0.0471 |
 | lot | CNN on resized 64x64 (BatchNorm) | anchor | tent | 0.8637 | 0.8414 | -0.0223 |
 | lot | CNN on resized 64x64 (BatchNorm) | anchor | ema | 0.8637 | 0.8612 | -0.0026 |
@@ -327,6 +328,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | iid | CNN on resized 64x64 (BatchNorm) | sess2 | 0.8623 | +0.0029 | 0.4907 | +0.0100 |
 | iid | CNN on resized 64x64 (GroupNorm) | sess2 | 0.8820 | -0.0035 | 0.6548 | +0.1640 |
 | iid | size-invariant descriptors + MLP | sess2 | 0.8532 | +0.0000 | 0.4791 | +0.0000 |
+| iid | spectral operator, native resolution | sess2 | 0.8578 | +0.0005 | 0.4783 | +0.0000 |
 | lot | CNN on resized 64x64 (BatchNorm) | dtime | 0.8569 | +0.0016 | 0.4898 | +0.0000 |
 | lot | CNN on resized 64x64 (BatchNorm) | dtime | 0.8583 | -0.0013 | 0.4898 | +0.0000 |
 | lot | CNN on resized 64x64 (BatchNorm) | dtime | 0.8583 | -0.0004 | 0.4898 | +0.0000 |
@@ -376,7 +378,7 @@ Each seed reshuffles the model init *and* which training domains become the inne
 |---|---|---|---|---|---|---|---|
 | iid | CNN on resized 64x64 (BatchNorm) | erm | sess2 | 3 | 0.8625 | +/-0.0042 | 0.8623, 0.8668, 0.8584 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm | sess2 | 3 | 0.8837 | +/-0.0016 | 0.8820, 0.8838, 0.8852 |
-| iid | size-invariant descriptors + MLP | erm | sess2 | 2 | 0.8474 | +/-0.0057 | 0.8532, 0.8417 |
+| iid | size-invariant descriptors + MLP | erm | sess2 | 3 | 0.8443 | +/-0.0076 | 0.8532, 0.8417, 0.8380 |
 | lot | CNN on resized 64x64 (BatchNorm) | coral | - | 3 | 0.8468 | +/-0.0090 | 0.8553, 0.8479, 0.8373 |
 | lot | CNN on resized 64x64 (BatchNorm) | coral | dtime | 3 | 0.8443 | +/-0.0098 | 0.8569, 0.8373, 0.8388 |
 | lot | CNN on resized 64x64 (BatchNorm) | dann | - | 3 | 0.8517 | +/-0.0080 | 0.8596, 0.8436, 0.8518 |
@@ -480,6 +482,7 @@ Both macro-F1 columns are averaged over **only the classes present in both halve
 | iid | CNN on resized 64x64 (BatchNorm) | erm/sess2 | 0.8623 | - | - | - | - | 43,209 | 28 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm/sess2 | 0.8820 | - | - | - | - | 43,209 | 28 |
 | iid | size-invariant descriptors + MLP | erm/sess2 | 0.8532 | - | - | - | - | 43,209 | 28 |
+| iid | spectral operator, native resolution | erm/sess2 | 0.8578 | - | - | - | - | 43,209 | 28 |
 | lot | CNN on resized 64x64 (BatchNorm) | coral/dtime | 0.8569 | 0.8448 | 0.8688 | -0.0240 | 8 | 43,121 | 131 |
 | lot | CNN on resized 64x64 (BatchNorm) | dann/dtime | 0.8583 | 0.8435 | 0.8242 | +0.0193 | 8 | 43,121 | 131 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm/dtime | 0.8583 | 0.8438 | 0.8605 | -0.0166 | 8 | 43,121 | 131 |
