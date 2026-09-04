@@ -291,3 +291,32 @@ def test_pooling_control_matches_the_treatment_in_capacity():
     # the treatment must carry something the mean does not
     et = treat.embed(x)
     assert not torch.allclose(et[:, :half], et[:, half:])
+
+
+def test_permutation_test_is_exact_and_symmetric():
+    """`gn_vs_bn.py` rolls its own permutation test because scipy is not in this
+    environment, and that p-value is the evidence for or against a named claim.
+    """
+    import importlib.util
+    from pathlib import Path as _Path
+
+    spec = importlib.util.spec_from_file_location(
+        "gnbn", _Path(__file__).resolve().parents[1] / "scripts" / "gn_vs_bn.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+
+    # identical arms cannot be distinguished from each other
+    p, n = m.perm_p([1.0, 2, 3], [1.0, 2, 3])
+    assert p == 1.0 and n == 20
+
+    # perfectly separated arms hit the smallest attainable p for that size
+    p, n = m.perm_p([5.0, 6, 7, 8], [1.0, 2, 3, 4])
+    assert abs(p - 2.0 / n) < 1e-12
+
+    # swapping the arms cannot change a two-sided p
+    a, b = [0.9, 1.1, 1.0], [0.5, 0.7, 0.6]
+    assert m.perm_p(a, b)[0] == m.perm_p(b, a)[0]
+
+    # and the reason this sweep needs eight seeds: at three per arm the
+    # smallest two-sided p is 0.1, so n=3 could never have settled it
+    assert 2.0 / m.perm_p([1.0, 2, 3], [4.0, 5, 6])[1] == 0.1

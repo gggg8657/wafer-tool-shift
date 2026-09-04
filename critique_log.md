@@ -1496,3 +1496,79 @@ floor from another protocol standing in for this protocol's (here). Each time it
 made an effect look more real than it was. The general form is *borrowing a
 scale from a context that is not the one being measured*, and it is apparently
 the single most reliable way to manufacture a finding in this repository.
+
+### 29. Two pairs finally separate, and the credit belongs to seeds rather than to the session control
+
+The `lot` cells of the single-session grid are in. First within-session
+representation ranking with three seeds on every cell:
+
+| representation | n | mean | range |
+|---|---|---|---|
+| cnn_gn | 3 | 0.8667 | [0.8597, 0.8742] |
+| cnn_bn | 3 | 0.8543 | [0.8510, 0.8600] |
+| feat | 3 | 0.8338 | [0.8283, 0.8417] |
+| graph | 3 | 0.7524 | [0.7484, 0.7557] |
+
+| adjacent pair | gap | verdict |
+|---|---|---|
+| cnn_gn > cnn_bn | +0.0124 | ranges overlap |
+| cnn_bn > feat | +0.0205 | **separated**, margin 0.0093 > floor 0.0054 |
+| feat > graph | +0.0815 | **separated**, margin 0.0727 |
+
+Two adjacent pairs separate. Across the whole mixed-session table, **zero of
+eighteen** did. That is the grid earning its keep — but not for the reason it
+was launched. `cnn_bn > feat` was previously unresolvable because `feat` was
+single-seed, not because its seeds were spread across sessions. The gain is from
+having error bars at all, exactly as §27 found the session control itself does
+nothing measurable. The script's header now says so.
+
+### 30. The one comparison that keeps landing on the resolution limit
+
+`cnn_gn` against `cnn_bn` has now been measured twice and landed on the boundary
+both times, from opposite sides:
+
+* mixed-session, three seeds: ranges **disjoint by 0.0004**, below the floor;
+* one session, three seeds: ranges **overlap by 0.0003**.
+
+Same verdict twice — not established — and the near-symmetry is what an effect
+the size of the measurement noise looks like. It is worth settling rather than
+leaving ambiguous, because "GroupNorm beats BatchNorm everywhere" is a named
+claim with a real mechanism behind it: BatchNorm mixes statistics across
+whatever is in the batch, and a batch here spans lots, so the choice is a
+domain-leak question rather than a tuning one. A mechanism is a reason to expect
+an effect, not evidence of one.
+
+**And it could not have been settled at three seeds, for a reason that is
+arithmetic rather than experimental.** Every verdict in this repository uses
+"do the observed ranges overlap, and is the margin above the run-to-run floor".
+That is the right conservative default for reading a table of many three-seed
+cells, and it has one property that makes it the wrong tool here: **the range of
+a sample grows with the sample size**, so running more seeds to answer a
+question makes non-overlap strictly harder to achieve. A sweep would be
+penalised for having more data.
+
+So `scripts/gn_vs_bn.sh` runs both encoders at **eight seeds each, together**,
+and `scripts/gn_vs_bn.py` reads it with an exact permutation test on the group
+labels — assumption-free, and indifferent to sample size in the right
+direction. The numbers that matter:
+
+* eight per arm gives C(16,8) = 12,870 arrangements, so the smallest attainable
+  two-sided p is 0.000155;
+* **three per arm gives 20 arrangements, and the smallest attainable two-sided
+  p is 0.100.**
+
+That second figure is worth sitting with. Every three-seed comparison in this
+repository, however carefully judged, was incapable of producing evidence
+stronger than p = 0.1 even in the most favourable case where the arms separate
+perfectly. The range criterion was not being conservative on top of a
+well-powered design; it was the only honest thing available given the design.
+
+Both readings are reported side by side, and if they disagree the disagreement
+is the result. `tests/test_smoke.py` pins the permutation test against identical
+arms, perfectly separated arms, arm-swapping, and the n=3 floor of 0.1.
+
+**H30, recorded before the run:** the effect is real and about +0.012, and eight
+seeds will give a permutation p below 0.05 while the range test still says
+"overlap". If instead the permutation test also fails to separate, the effect is
+smaller than this protocol can measure and the claim comes out of the README,
+where it currently sits as a design principle.

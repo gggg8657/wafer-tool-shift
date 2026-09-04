@@ -265,6 +265,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | die-graph GNN (wafer-only subgraph) | erm/sess2 | ema | 0.7557 | 0.7517 | -0.0039 |
 | lot | CNN + RPCA lot-signature channel | erm | ema | 0.8813 | 0.8771 | -0.0042 |
 | lot | CNN + RPCA lot-signature channel | erm/failmask | ema | 0.8765 | 0.8724 | -0.0041 |
+| lot | CNN + RPCA lot-signature channel | erm/sess2 | ema | 0.8819 | 0.8787 | -0.0032 |
 | lot | CNN + RPCA lot-signature channel | erm/zerochan | ema | 0.8772 | 0.8766 | -0.0007 |
 | lot | spectral operator, native resolution | erm | ema | 0.8538 | 0.8565 | +0.0026 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | anchor | adabn | 0.6449 | 0.5703 | -0.0746 |
@@ -367,6 +368,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | size-invariant descriptors + MLP | sess2 | 0.8417 | +0.0000 | 0.4898 | +0.0000 |
 | lot | die-graph GNN (wafer-only subgraph) | sess2 | 0.7557 | +0.0000 | 0.4898 | +0.0000 |
 | lot | CNN + RPCA lot-signature channel | 4th channel = raw failed-die mask (RPCA control) | 0.8765 | -0.0049 | 0.5000 | +0.0000 |
+| lot | CNN + RPCA lot-signature channel | sess2 | 0.8819 | +0.0006 | 0.5000 | +0.0000 |
 | lot | CNN + RPCA lot-signature channel | 4th channel = zeros (RPCA control) | 0.8772 | -0.0041 | 0.5000 | +0.0000 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | + lot-adversarial SSL initialization | 0.6120 | -0.0816 | 0.4898 | +0.0000 |
 | lot_time | size-invariant descriptors + MLP | + RPCA lot signature as features | 0.6394 | -0.0101 | 0.4898 | +0.0000 |
@@ -419,8 +421,10 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot | CNN on resized 64x64 (GroupNorm) | focal | focal2.0 | 2 | 0.8701 | +/-0.0048 | 0.8654, 0.8749 |
 | lot | CNN on resized 64x64 (GroupNorm) | focal | focal5.0 | 2 | 0.8745 | +/-0.0051 | 0.8694, 0.8795 |
 | lot | size-invariant descriptors + MLP | erm | sess2 | 3 | 0.8338 | +/-0.0067 | 0.8417, 0.8283, 0.8314 |
+| lot | die-graph GNN (wafer-only subgraph) | erm | sess2 | 3 | 0.7524 | +/-0.0036 | 0.7557, 0.7530, 0.7484 |
 | lot | CNN + RPCA lot-signature channel | erm | - | 3 | 0.8696 | +/-0.0096 | 0.8813, 0.8654, 0.8621 |
 | lot | CNN + RPCA lot-signature channel | erm | 4th channel = raw failed-die mask (RPCA control) | 3 | 0.8692 | +/-0.0065 | 0.8765, 0.8678, 0.8634 |
+| lot | CNN + RPCA lot-signature channel | erm | sess2 | 2 | 0.8740 | +/-0.0079 | 0.8819, 0.8662 |
 | lot | CNN + RPCA lot-signature channel | erm | 4th channel = zeros (RPCA control) | 3 | 0.8689 | +/-0.0075 | 0.8772, 0.8673, 0.8622 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.6985 | +/-0.0045 | 0.6935, 0.6993, 0.7026 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | + lot-adversarial SSL initialization | 3 | 0.6345 | +/-0.0225 | 0.6120, 0.6569, 0.6345 |
@@ -499,6 +503,7 @@ Both columns are averaged over only the classes present in the restricted subset
 | `lot` | CNN on resized 64x64 (GroupNorm) | sess2 | 0.8742 | 0.8742 | 0.8148 | -0.0594 | 9/9 | 11,908 |
 | `lot` | size-invariant descriptors + MLP | sess2 | 0.8417 | 0.8417 | 0.7589 | -0.0828 | 9/9 | 11,908 |
 | `lot` | die-graph GNN (wafer-only subgraph) | sess2 | 0.7557 | 0.7557 | 0.7082 | -0.0474 | 9/9 | 11,908 |
+| `lot` | CNN + RPCA lot-signature channel | sess2 | 0.8819 | 0.8819 | 0.8032 | -0.0787 | 9/9 | 11,908 |
 
 **A large part of the forward-only drop is not temporal.** On a random split, with every one of those geometries seen in training, restricting the test set to them costs several points on its own -- many times the 0.0054 reproducibility floor. Whatever `lot_time` measures, it measures this first and the passage of time second.
 
@@ -540,6 +545,7 @@ Both macro-F1 columns are averaged over **only the classes present in both halve
 | lot | CNN on resized 64x64 (GroupNorm) | focal/focal5.0 | 0.8694 | 0.8559 | 0.8347 | +0.0211 | 8 | 43,121 | 131 |
 | lot | size-invariant descriptors + MLP | erm/sess2 | 0.8417 | 0.8282 | 0.8470 | -0.0187 | 8 | 43,121 | 131 |
 | lot | die-graph GNN (wafer-only subgraph) | erm/sess2 | 0.7557 | 0.7409 | 0.5997 | +0.1411 | 8 | 43,121 | 131 |
+| lot | CNN + RPCA lot-signature channel | erm/sess2 | 0.8819 | 0.8685 | 0.9230 | -0.0545 | 8 | 43,121 | 131 |
 
 ## Does the domain definition explain the ERM-equivalence?
 
@@ -690,7 +696,7 @@ The nuisance CE rising toward chance is the signal that the embedding is losing 
 
 ## Per-class F1, best `lot` cell (CNN on resized 64x64 (GroupNorm), focal)
 
-Selected on validation macro-F1 (0.8984); its test macro-F1 is 0.8654. Selecting on *test* instead would have picked CNN + RPCA lot-signature channel / erm at 0.8813; that is selection on the test set across 59 cells and the number would be an artefact of it.
+Selected on validation macro-F1 (0.8984); its test macro-F1 is 0.8654. Selecting on *test* instead would have picked CNN + RPCA lot-signature channel / erm/sess2 at 0.8819; that is selection on the test set across 60 cells and the number would be an artefact of it.
 
 | class | F1 |
 |---|---|
