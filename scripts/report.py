@@ -158,7 +158,24 @@ def main():
         L += ["## Representations under plain ERM", "",
               table(rows, ["representation", "protocol", "macro-F1", "defect macro-F1",
                            "p10 domain F1", "worst domain F1", "defect AUROC",
-                           "ECE", "conformal cov.", "params", "wall"]), ""]
+                           "ECE", "conformal cov.", "params", "wall"]), "",
+              "Three caveats on the last four columns, all of which came out of "
+              "reading this table adversarially rather than from a new run:", "",
+              "* `p10 domain F1` and `worst domain F1` are quantized on the "
+              "`lot` protocol -- see the note under the objective tables. They "
+              "are informative on `size`, whose domains are large.",
+              "* `ECE` is top-1 expected calibration error, weighted by sample "
+              "count. 85% of this corpus is `none` and is predicted at high "
+              "confidence and high accuracy, so the statistic is dominated by "
+              "the easy majority and stays below 0.01 even where macro-F1 "
+              "collapses. It is not a metric a model cannot game; treat it as a "
+              "sanity check on the majority class only.",
+              "* `conformal cov.` is built from *class-conditional* thresholds "
+              "but reported as a single average over the test set, which turns "
+              "it back into a marginal number that `none` dominates. "
+              "`summarize` now also emits per-class coverage, the worst class, "
+              "and the empty-prediction-set rate; cells measured before that "
+              "change do not carry them.", ""]
 
     # ---- the headline gap
     gaps = []
@@ -206,7 +223,19 @@ def main():
             L += [f"## Borrowed objectives vs ERM -- protocol `{p}`", "",
                   table(rows, ["representation", "objective", "borrowed from",
                                "macro-F1", "vs ERM", "p10 domain F1",
-                               "vs ERM", "Scratch F1", "Near-full F1"]), ""]
+                               "vs ERM", "Scratch F1", "Near-full F1"]), "",
+                  "**Do not rank models by the `p10 domain F1` column.** A lot "
+                  "holds at most 25 wafers, so a per-lot macro-F1 takes very "
+                  "few distinct values -- a 25-wafer lot whose one defect is "
+                  "missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model "
+                  "missed it. Across the cells in `runs/`, 25 separate `lot` "
+                  "cells report that identical 0.4898 and 11 more report "
+                  "exactly 0.5000, so the column is a discretization artefact "
+                  "of lot size rather than a measure of domain robustness. "
+                  "`wts.metrics.summarize` now also emits "
+                  "`mean_domain_macro_f1` and `frac_domains_below_half`, which "
+                  "average over ~1,700 lots and therefore do separate models; "
+                  "cells measured before that change do not carry them.", ""]
 
     # ---- TTA
     rows = []

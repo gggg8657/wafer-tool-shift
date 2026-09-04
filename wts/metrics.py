@@ -55,6 +55,19 @@ def ece(probs, y_true, n_bins=15):
     return float(out)
 
 
+def domain_scores(y_true, y_pred, groups, min_n=12):
+    """Per-domain macro-F1 for every domain with at least `min_n` wafers."""
+    g = np.asarray(groups)
+    out = []
+    for u in np.unique(g):
+        m = g == u
+        if m.sum() < min_n:
+            continue
+        present = np.unique(y_true[m])
+        out.append(per_class_f1(y_true[m], y_pred[m])[present].mean())
+    return np.asarray(out, dtype=np.float64)
+
+
 def worst_group(y_true, y_pred, groups, min_n=12, quantile=0.0):
     """Macro-F1 of the worst test domain (optionally a low quantile).
 
@@ -124,12 +137,45 @@ def summarize(y_true, probs, groups=None, cal=None, alpha=0.1):
         out["p10_domain_macro_f1"] = worst_group(y_true, y_pred, groups,
                                                  quantile=0.10)[0]
         out["n_domains_scored"] = n
+        # `p10_domain_macro_f1` cannot rank models on the `lot` protocol and
+        # should not be read as if it could. A lot holds at most 25 wafers and
+        # most of them are `none`, so a per-lot macro-F1 takes very few distinct
+        # values: a 25-wafer lot whose single defect is missed scores exactly
+        # (48/49 + 0)/2 = 0.4898 regardless of which model missed it. Measured
+        # across runs/, 25 separate `lot` cells report that identical 0.4898 and
+        # 11 more report exactly 0.5000. Raising the size floor does not help --
+        # no lot has 64 wafers -- because the quantization is a property of the
+        # domain size, not of the threshold.
+        #
+        # The fix is a statistic that aggregates *across* domains, so that it
+        # moves continuously even though each domain's score does not. Both of
+        # these are means over ~1,700 lots and do separate models.
+        sc = domain_scores(y_true, y_pred, groups)
+        if len(sc):
+            out["mean_domain_macro_f1"] = float(sc.mean())
+            out["frac_domains_below_half"] = float((sc < 0.5).mean())
     if cal is not None:
         keep, _ = classwise_conformal(cal[0], cal[1], probs, alpha)
         hit = keep[np.arange(len(y_true)), y_true]
         out["conformal_coverage"] = float(hit.mean())
         out["conformal_set_size"] = float(keep.sum(1).mean())
         out["conformal_target"] = 1 - alpha
+        # `classwise_conformal` builds a per-class threshold, but averaging the
+        # hits over the test set turns it back into a *marginal* number, and on
+        # a corpus that is 85% `none` a marginal coverage is satisfied by
+        # covering `none` and abandoning `Near-full` -- the exact failure the
+        # class-conditional construction exists to prevent. The per-class
+        # coverage is what the claim actually needs, so it is reported, along
+        # with the worst class and the fraction of test wafers whose prediction
+        # set came back empty (mean set size below 1 means some did).
+        per = {}
+        for c in range(probs.shape[1]):
+            m = y_true == c
+            if m.sum():
+                per[CLASSES[c]] = float(hit[m].mean())
+        out["conformal_coverage_per_class"] = per
+        out["conformal_coverage_worst_class"] = float(min(per.values())) if per else None
+        out["conformal_empty_set_rate"] = float((keep.sum(1) == 0).mean())
     return out
 
 

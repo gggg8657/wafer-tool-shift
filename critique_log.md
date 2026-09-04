@@ -447,3 +447,129 @@ mismatch, the sslinit curve should be much flatter in LR than the from-scratch
 curve and should close most of the gap at 2e-4. If sslinit is below scratch at
 every LR, the representation is genuinely worse and the negative result stands
 as stated.
+
+### 7. Second opinion: `agy` on the documents rather than the code
+
+Prompt: *"Every claim in `RESULTS.md` and `README.md` must be backed by a run in
+`runs/*.json`. Find claims that are overstated, unsupported by the JSON, or that
+a peer reviewer would reject. Quote the exact sentence. Do not praise
+anything."* Six findings; three change something.
+
+#### upheld, and the best single catch of the session — the p10 column is quantized
+
+> *"In `RESULTS.md` (protocol `lot`), 16 distinct models/objectives report an
+> identical p10 domain F1 of 0.4898 [...] a 25-wafer lot containing 24 `none`
+> wafers and 1 defect wafer yields an exact macro-F1 of (48/49 + 0)/2 =
+> 0.4897959 whenever the single defect is missed. It is a discretization
+> artifact of lot size, not a discriminative measure of domain robustness."*
+
+Verified, and it is worse than agy said. Counting `p10_domain_macro_f1` over
+every `lot` cell in `runs/`:
+
+```
+  0.489796  x25        <- exactly 24/49
+  0.500000  x11
+  0.318841  x1
+  0.234043  x1
+  0.541063  x1
+```
+
+25 cells share one value and 36 of 39 share one of two values. `README.md` says
+*"A lot holds at most 25 wafers, so the single worst lot is noisy and the p10 is
+the headline"* — the reasoning is right about why the worst lot is noisy and
+wrong to conclude the p10 fixes it. Both statistics are quantized by the same
+cause, and no size floor rescues it, because no lot has enough wafers: the
+quantization is a property of the domain size, not of the threshold. My first
+attempt at a fix was `min_n=64`, which would have excluded every lot and
+returned an empty statistic — caught before it shipped.
+
+The fix that works is a statistic that aggregates *across* domains so it moves
+continuously even though each domain's score does not: `mean_domain_macro_f1`
+and `frac_domains_below_half`, both means over ~1,700 lots. Added to
+`wts.metrics.summarize`; cells measured before the change do not carry them and
+`RESULTS.md` says so rather than leaving blanks to be misread.
+
+This one stings because the p10 column was presented as the honest headline —
+the metric that was supposed to stop a model hiding a bad tool behind a good
+average — and it could not distinguish any two models on the protocol it
+mattered most for.
+
+#### upheld — ECE and conformal coverage are both marginal on an 85%-`none` corpus
+
+> *"Claiming ECE cannot be gamed under extreme class imbalance is false."*
+
+Correct. `ece()` weights each confidence bin by its share of samples, `none` is
+~85% of the corpus and is predicted confidently and correctly, so the statistic
+sits below 0.01 across every model regardless of what macro-F1 does. `README.md`
+lists it under *"metrics that a model cannot game"*, which is an overstatement.
+Annotated in `RESULTS.md`.
+
+> *"`hit.mean()` is a single scalar representing overall marginal coverage [...]
+> Class-conditional coverage is never stored in `runs/*.json`."*
+
+Half right, and the half that is right is the half that matters. The
+*construction* is class-conditional — `classwise_conformal` computes a separate
+quantile per class, exactly as `README.md` claims — so "never class-conditional"
+is wrong. But averaging the hits over the test set collapses it back to a
+marginal number that `none` dominates, which is the failure the class-conditional
+construction exists to prevent. The claim is defensible about the method and
+misleading about the reported number. `summarize` now emits
+`conformal_coverage_per_class`, `conformal_coverage_worst_class` and
+`conformal_empty_set_rate`; agy's observation that mean set size below 1.0
+implies empty prediction sets is what prompted the last of those.
+
+#### upheld, already in flight — the collapsed `sinkhorn` row
+
+> *"Presenting a collapsed run from an uncalibrated hyperparameter alongside
+> tuned baselines as evidence that optimal transport fails on this benchmark
+> would be dismissed as evaluating a strawman."*
+
+Agreed, and it is the same conclusion §2 reached independently.
+`scripts/sinkhorn_lambda.sh` is running. The row stays visible with its
+diagnosis attached rather than being quietly filtered, because a table that
+drops its embarrassments is worse than one that explains them.
+
+#### upheld — my own sentence about model selection was self-contradictory
+
+> *"Validation selection and test selection chose the exact same configuration
+> with the exact same test score. Labeling 0.8813 a 'selection artefact' under
+> test selection while asserting it is valid under validation selection is
+> contradictory."*
+
+Correct, and it is a sentence I wrote two hours earlier in this session. When the
+two selection rules coincide there is nothing to warn about, and printing the
+warning anyway reads as though a distinction was found where none was. To be
+fixed in `report.py`: say the two rules agreed, and only contrast them when they
+disagree.
+
+#### rejected — no test leakage in the active-learning loop
+
+> *"`scripts/active_learning.py:130` evaluates candidate models on `te[:2048]`
+> (test split data) during the active acquisition loop."*
+
+The line is real and the inference is wrong. `train_eval` trains for a fixed
+epoch count with no early stopping and no model selection, then returns
+`(model, predictions)`; the acquisition loop calls it as `model_now, _ =
+train_eval(..., te[:2048], ...)` and **discards the predictions**. Nothing
+derived from the test split reaches the acquisition scores, which come from
+`lot_scores` on the *pool*. The cost is 2,048 wasted forward passes per
+acquisition step, not a leak. Worth deleting for clarity; not worth a
+correction to any number.
+
+#### rejected on a detail — `min_per_class` is 1, not 5
+
+agy quotes `min_per_class` as 5 in `_stratified_group_split`; the default in the
+signature is 1. The substantive point about label-aware test-split construction
+is the same one codex raised and is logged in §4 as still needing a measurement.
+
+#### upheld as a wording problem — TTA is described as deployable, and it hurts
+
+> *"Framing them as viable production tools without acknowledging that they
+> degrade performance across shifted distributions is misleading."*
+
+`README.md` calls AdaBN/TENT *"what a fab could actually deploy"*, and the
+measured effect is negative on every shifted protocol. The sentence describes
+the *setting* correctly — these methods need only unlabelled target wafers —
+but reads as an endorsement. The finding that the deployable methods make things
+worse is one of this repo's better results and the README should lead with it
+rather than bury it.

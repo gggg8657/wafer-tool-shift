@@ -42,6 +42,12 @@ Unless a table says otherwise every cell below is **seed 0 only**. Seed spread i
 | CNN + RPCA lot-signature channel | lot_time | 0.7020 | 0.6660 | 0.4898 | 0.2222 | 0.9901 | 0.0072 | 0.894 | 0.29M | 0.8 min |
 | CNN + RPCA lot-signature channel | size | 0.8254 | 0.8057 | 0.6638 | 0.5075 | 0.9955 | 0.0055 | 0.849 | 0.29M | 0.9 min |
 
+Three caveats on the last four columns, all of which came out of reading this table adversarially rather than from a new run:
+
+* `p10 domain F1` and `worst domain F1` are quantized on the `lot` protocol -- see the note under the objective tables. They are informative on `size`, whose domains are large.
+* `ECE` is top-1 expected calibration error, weighted by sample count. 85% of this corpus is `none` and is predicted at high confidence and high accuracy, so the statistic is dominated by the easy majority and stays below 0.01 even where macro-F1 collapses. It is not a metric a model cannot game; treat it as a sanity check on the majority class only.
+* `conformal cov.` is built from *class-conditional* thresholds but reported as a single average over the test set, which turns it back into a marginal number that `none` dominates. `summarize` now also emits per-class coverage, the worst class, and the empty-prediction-set rate; cells measured before that change do not carry them.
+
 ### How much of the reported accuracy was leakage
 
 The gap between a random wafer split and a lot-disjoint split is the part of a published number that came from having seen the same lot in training.
@@ -82,6 +88,8 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | die-graph GNN (wafer-only subgraph) | erm | - | 0.7557 | - | 0.4898 | - | 0.1269 | 0.8889 |
 | CNN + RPCA lot-signature channel | erm | - | 0.8813 | - | 0.5000 | - | 0.7466 | 0.9315 |
 
+**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the cells in `runs/`, 25 separate `lot` cells report that identical 0.4898 and 11 more report exactly 0.5000, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them.
+
 ## Borrowed objectives vs ERM -- protocol `lot_time`
 
 | representation | objective | borrowed from | macro-F1 | vs ERM | p10 domain F1 | vs ERM | Scratch F1 | Near-full F1 |
@@ -94,6 +102,8 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | spectral operator, native resolution | erm | - | 0.6796 | - | 0.4898 | - | 0.4108 | 0.9730 |
 | die-graph GNN (wafer-only subgraph) | erm | - | 0.5501 | - | 0.4894 | - | 0.1297 | 0.9730 |
 | CNN + RPCA lot-signature channel | erm | - | 0.7020 | - | 0.4898 | - | 0.6011 | 0.9730 |
+
+**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the cells in `runs/`, 25 separate `lot` cells report that identical 0.4898 and 11 more report exactly 0.5000, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them.
 
 ## Borrowed objectives vs ERM -- protocol `size`
 
@@ -117,6 +127,8 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | spectral operator, native resolution | erm | - | 0.7197 | - | 0.5438 | - | 0.3983 | 0.9600 |
 | die-graph GNN (wafer-only subgraph) | erm | - | 0.6833 | - | 0.5038 | - | 0.2489 | 0.9333 |
 | CNN + RPCA lot-signature channel | erm | - | 0.8254 | - | 0.6638 | - | 0.7099 | 0.9268 |
+
+**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the cells in `runs/`, 25 separate `lot` cells report that identical 0.4898 and 11 more report exactly 0.5000, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them.
 
 ## Test-time adaptation and weight averaging
 
