@@ -2121,3 +2121,66 @@ whose thesis is that results move when the protocol changes has no business
 reporting a single-protocol win. 27 cells across `iid`, `size` and `lot_time`
 are in flight with the prediction recorded — holds or grows on `iid`, shrinks or
 reverses on `lot_time`.
+
+### 44. H42's first half is falsified, in the direction that makes the result more interesting
+
+The `iid` cells of the protocol sweep are in. My prediction was that the pooling
+effect would *hold or grow* on `iid`, because max pooling is a strictly richer
+statistic and the test distribution matches training.
+
+| protocol | `meanmax` vs `mean` | verdict | Scratch | verdict |
+|---|---|---|---|---|
+| `lot` | **+0.0173** | clears the floor | **+0.0566** | clears the floor |
+| `iid` | +0.0090 | below the floor (0.0041) | +0.0253 | overlaps |
+
+It shrinks, and it stops clearing the floor. The control behaves in both cases
+(`iid` −0.0003, `lot` +0.0052, both overlapping), so this is not the control
+failing — it is the treatment being genuinely smaller where there is no shift.
+
+**The benefit is larger under lot-disjoint shift than without it.** That is the
+reverse of the reasoning I recorded, and it points somewhere more interesting
+than "a richer statistic is better": max pooling appears to be buying
+*generalization* rather than capacity. A mean over the wafer is a statistic that
+a new lot can move — change the background failure rate and the mean of every
+class moves with it — while the max of a thin structure is comparatively
+invariant to that. If that is what is happening, the effect should be largest on
+the protocols with the most shift.
+
+Which means **my prediction for `lot_time` is probably wrong too, and in the
+same direction.** I said max pooling would shrink or reverse there, because
+forward-only shift is where extremes move. The `iid` result argues the opposite:
+if the benefit grows with shift, `lot_time` should show the largest effect of
+the four. I am recording that revision now, before those cells land, so that
+whichever way it goes it is scored against a prediction made in advance rather
+than a story assembled afterwards.
+
+I want to be careful about one alternative reading. `iid`'s baseline is 0.8836
+against `lot`'s 0.8666, so there is less headroom and a ceiling effect could
+produce a smaller absolute gain without any generalization story. Two things
+would distinguish them: a ceiling effect should compress `Scratch` (0.72
+baseline, far from ceiling) much less than macro-F1, and it does not — `Scratch`
+also drops from +0.0566 to +0.0253. And if the shift story is right, `size` and
+`lot_time`, whose baselines are *lower* than `lot`'s, should show effects at
+least as large. Both are testable when the sweep finishes and neither requires a
+new run.
+
+### 45. The paper had the same omission the hand-off did
+
+`paper_draft.md` did not contain the pooling result. Its only mentions of
+"pooling" were in §7.2, listing it as an untried lever — written before the
+experiment existed and never updated once it did.
+
+This is the second document in two turns found to be missing the weekend's only
+positive finding, and the two omissions have the same cause: every generated
+section was written in the turn that produced its result, and a result that
+arrived after a section was written does not retroactively appear in it. The
+generators regenerate *numbers* faithfully and do not regenerate *structure* at
+all. That is a real limitation of the "prose in the script, numbers from JSON"
+design, and it is worth stating in the hand-off rather than leaving for someone
+to trip over: **the tables cannot go stale; the section list can.**
+
+Added as §4.3, placed immediately after the two contributions that failed their
+controls, which is where it reads best — here is what did not work, here is what
+did, and here is the control that makes the difference between the two claims.
+It carries the `iid` result and states the claim at the strength the completed
+protocols support rather than at the strength `lot` alone would allow.

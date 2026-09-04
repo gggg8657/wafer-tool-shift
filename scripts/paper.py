@@ -567,6 +567,87 @@ def main():
       "one-shot-control.")
     W("")
 
+    # ---------------------------------------------------------------- pooling
+    def pstat(proto, tg):
+        v = C.get((proto, "cnn_gn", "erm", tg))
+        if not v or len(v) < 2:
+            return None
+        return {
+            "f1": sorted(r["test"]["macro_f1"] for r in v.values()),
+            "sc": sorted(r["test"]["per_class_f1"]["Scratch"] for r in v.values()),
+        }
+
+    def vsep(x, b, fl):
+        if not x or not b:
+            return "—"
+        if min(x) > max(b):
+            m = min(x) - max(b)
+        elif min(b) > max(x):
+            m = -(min(b) - max(x))
+        else:
+            return "overlaps"
+        return ("**clears the floor**" if fl and abs(m) > fl
+                else f"below the floor ({abs(m):.4f})")
+
+    rows = []
+    for proto in ("lot", "iid", "size", "lot_time"):
+        base = pstat(proto, "poolmean")
+        if not base:
+            continue
+        fl = floor_for(F, proto)
+        for tg, lab in (("poolmeanmax", "`meanmax` (treatment)"),
+                        ("poolmeanmean", "`meanmean` (**control**)")):
+            v = pstat(proto, tg)
+            if not v:
+                rows.append([f"`{proto}`", lab, NM, NM, NM, NM])
+                continue
+            mean = lambda z: sum(z) / len(z)
+            rows.append([
+                f"`{proto}`", lab,
+                f"{mean(v['f1']) - mean(base['f1']):+.4f}",
+                vsep(v["f1"], base["f1"], fl),
+                f"{mean(v['sc']) - mean(base['sc']):+.4f}",
+                vsep(v["sc"], base["sc"], fl)])
+    if rows:
+        W("## 4.3 And one intervention that does work: what the encoder pools")
+        W("")
+        W("Three explanations for the long tail were measured and discarded "
+          "first. Class imbalance: focal loss over five values of gamma "
+          "against its own bit-exact `gamma = 0` control, class-balanced "
+          "weighting, and positive weighting on the multi-label task — nothing, "
+          "nothing, and worse. Input resolution: refuted outright, since 97.7% "
+          "of wafers are *upsampled* to reach 64x64 and a finer grid has "
+          "nothing to recover.")
+        W("")
+        W("What was left is that `CnnResized.embed` is a global average over "
+          "the final feature map. A `Scratch` is a thin connected line; "
+          "averaged over the wafer it is close to a slightly elevated "
+          "background failure rate, and the mean is exactly the statistic that "
+          "discards the fact that the failures form a line. `meanmax` "
+          "concatenates the max; `meanmean` concatenates the mean with itself "
+          "and has **identical parameter count and no extra information**.")
+        W("")
+        W(table(rows, ["protocol", "pooling", "macro-F1 vs `mean`", "verdict",
+                       "Scratch F1 vs `mean`", "verdict"]))
+        W("")
+        W("On `lot` the treatment clears the floor on both macro-F1 and "
+          "`Scratch`, and the control clears neither — so the gain is max "
+          "pooling and not a wider head. That is the question the RPCA fourth "
+          "channel failed, asked here before the claim rather than after it.")
+        W("")
+        W("**The generalization is where it gets interesting, and it is not "
+          "what we predicted.** We expected the effect to be largest on `iid`, "
+          "where the test distribution matches training and a richer statistic "
+          "should simply be better. It is *smaller* there and does not clear "
+          "the floor. The benefit is larger under lot-disjoint shift than "
+          "without it, which suggests max pooling is buying generalization "
+          "rather than capacity — the opposite of the reading we went in with. "
+          "`size` and `lot_time` are still running and the claim is stated at "
+          "the strength the completed protocols support: **on a lot-disjoint "
+          "split, replacing global average pooling moves the hardest class by "
+          "0.057, and its capacity control moves it by −0.001.**")
+        W("")
+
     # ---------------------------------------------------------------- AL
     al = Path(a.runs) / "active_learning.json"
     W("## 5. Withdrawn: \"active learning loses to random lot selection\"")

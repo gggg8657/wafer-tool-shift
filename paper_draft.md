@@ -180,6 +180,23 @@ Masked-die modelling on 638,506 unlabelled wafers with a gradient-reversed nuisa
 
 The obvious alternative explanation is that the fine-tuning recipe is tuned for a random initialization: the pretrained weights are not at random-init scale (mean |w| of the deepest conv is 0.0852 in the checkpoint against 0.0147 for a fresh encoder, a factor of 5.8), and every cell above uses one LR on a OneCycle schedule. `scripts/ssl_lr_sweep.sh` runs both arms at four learning rates so the comparison is made LR by LR rather than best-of-treatment against one-shot-control.
 
+## 4.3 And one intervention that does work: what the encoder pools
+
+Three explanations for the long tail were measured and discarded first. Class imbalance: focal loss over five values of gamma against its own bit-exact `gamma = 0` control, class-balanced weighting, and positive weighting on the multi-label task — nothing, nothing, and worse. Input resolution: refuted outright, since 97.7% of wafers are *upsampled* to reach 64x64 and a finer grid has nothing to recover.
+
+What was left is that `CnnResized.embed` is a global average over the final feature map. A `Scratch` is a thin connected line; averaged over the wafer it is close to a slightly elevated background failure rate, and the mean is exactly the statistic that discards the fact that the failures form a line. `meanmax` concatenates the max; `meanmean` concatenates the mean with itself and has **identical parameter count and no extra information**.
+
+| protocol | pooling | macro-F1 vs `mean` | verdict | Scratch F1 vs `mean` | verdict |
+|---|---|---|---|---|---|
+| `lot` | `meanmax` (treatment) | +0.0173 | **clears the floor** | +0.0566 | **clears the floor** |
+| `lot` | `meanmean` (**control**) | +0.0052 | overlaps | -0.0006 | overlaps |
+| `iid` | `meanmax` (treatment) | +0.0090 | below the floor (0.0041) | +0.0253 | overlaps |
+| `iid` | `meanmean` (**control**) | -0.0003 | overlaps | +0.0023 | overlaps |
+
+On `lot` the treatment clears the floor on both macro-F1 and `Scratch`, and the control clears neither — so the gain is max pooling and not a wider head. That is the question the RPCA fourth channel failed, asked here before the claim rather than after it.
+
+**The generalization is where it gets interesting, and it is not what we predicted.** We expected the effect to be largest on `iid`, where the test distribution matches training and a richer statistic should simply be better. It is *smaller* there and does not clear the floor. The benefit is larger under lot-disjoint shift than without it, which suggests max pooling is buying generalization rather than capacity — the opposite of the reading we went in with. `size` and `lot_time` are still running and the claim is stated at the strength the completed protocols support: **on a lot-disjoint split, replacing global average pooling moves the hardest class by 0.057, and its capacity control moves it by −0.001.**
+
 ## 5. Withdrawn: "active learning loses to random lot selection"
 
 | strategy | 20 lots | 50 lots | 100 lots | 200 lots | 400 lots | 800 lots |
@@ -211,6 +228,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `iid` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.8625 | ±0.0042 |
 | `iid` | CNN (GroupNorm) | `erm` | poolmean | 3 | 0.8836 | ±0.0032 |
 | `iid` | CNN (GroupNorm) | `erm` | poolmeanmax | 3 | 0.8926 | ±0.0023 |
+| `iid` | CNN (GroupNorm) | `erm` | poolmeanmean | 2 | 0.8833 | ±0.0051 |
 | `iid` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.8837 | ±0.0016 |
 | `iid` | descriptors + MLP | `erm` | sess2 | 3 | 0.8443 | ±0.0076 |
 | `iid` | spectral operator | `erm` | sess2 | 3 | 0.8576 | ±0.0142 |

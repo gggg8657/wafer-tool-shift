@@ -184,6 +184,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | iid | CNN on resized 64x64 (GroupNorm) | erm | ema | 0.8855 | 0.8851 | -0.0004 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm/poolmean | ema | 0.8855 | 0.8837 | -0.0018 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm/poolmeanmax | ema | 0.8933 | 0.8943 | +0.0010 |
+| iid | CNN on resized 64x64 (GroupNorm) | erm/poolmeanmean | ema | 0.8782 | 0.8738 | -0.0044 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm/sess2 | ema | 0.8820 | 0.8801 | -0.0019 |
 | iid | size-invariant descriptors + MLP | erm | ema | 0.8532 | 0.8537 | +0.0005 |
 | iid | size-invariant descriptors + MLP | erm/sess2 | ema | 0.8532 | 0.8537 | +0.0005 |
@@ -341,6 +342,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | size | CNN on resized 64x64 (BatchNorm) | mixup_domain/sizeseed | ema | 0.7643 | 0.7560 | -0.0084 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | tent | 0.8203 | 0.7906 | -0.0297 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | ema | 0.8203 | 0.8175 | -0.0028 |
+| size | CNN on resized 64x64 (GroupNorm) | erm/poolmean | ema | 0.8231 | 0.8207 | -0.0024 |
 | size | CNN on resized 64x64 (GroupNorm) | erm/sess2 | ema | 0.8274 | 0.8243 | -0.0031 |
 | size | CNN on resized 64x64 (GroupNorm) | erm/sslinit | ema | 0.7602 | 0.7520 | -0.0082 |
 | size | size-invariant descriptors + MLP | coral | ema | 0.7937 | 0.7964 | +0.0027 |
@@ -375,6 +377,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | iid | CNN on resized 64x64 (BatchNorm) | sess2 | 0.8623 | +0.0029 | 0.4907 | +0.0100 |
 | iid | CNN on resized 64x64 (GroupNorm) | poolmean | 0.8855 | -0.0000 | 0.8412 | +0.3505 |
 | iid | CNN on resized 64x64 (GroupNorm) | poolmeanmax | 0.8933 | +0.0078 | 0.5000 | +0.0093 |
+| iid | CNN on resized 64x64 (GroupNorm) | poolmeanmean | 0.8782 | -0.0073 | 0.5000 | +0.0093 |
 | iid | CNN on resized 64x64 (GroupNorm) | sess2 | 0.8820 | -0.0035 | 0.6548 | +0.1640 |
 | iid | size-invariant descriptors + MLP | sess2 | 0.8532 | +0.0000 | 0.4791 | +0.0000 |
 | iid | spectral operator, native resolution | sess2 | 0.8578 | +0.0005 | 0.4783 | +0.0000 |
@@ -445,6 +448,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | size | CNN on resized 64x64 (BatchNorm) | sizeseed | 0.7482 | +0.0002 | 0.5476 | +0.0398 |
 | size | CNN on resized 64x64 (BatchNorm) | sizeseed | 0.6567 | -0.0158 | 0.3542 | +0.0085 |
 | size | CNN on resized 64x64 (BatchNorm) | sizeseed | 0.7643 | +0.0079 | 0.5353 | +0.0126 |
+| size | CNN on resized 64x64 (GroupNorm) | poolmean | 0.8231 | +0.0028 | 0.6830 | +0.0249 |
 | size | CNN on resized 64x64 (GroupNorm) | sess2 | 0.8274 | +0.0071 | 0.6901 | +0.0320 |
 | size | CNN on resized 64x64 (GroupNorm) | + lot-adversarial SSL initialization | 0.7602 | -0.0601 | 0.5377 | -0.1205 |
 | size | size-invariant descriptors + MLP | sizeseed | 0.7937 | +0.0000 | 0.5085 | +0.0000 |
@@ -471,6 +475,7 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | iid | CNN on resized 64x64 (BatchNorm) | erm | sess2 | 3 | 0.8625 | +/-0.0042 | 0.8623, 0.8668, 0.8584 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 3 | 0.8836 | +/-0.0032 | 0.8855, 0.8795, 0.8858 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 3 | 0.8926 | +/-0.0023 | 0.8933, 0.8946, 0.8899 |
+| iid | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmean | 3 | 0.8839 | +/-0.0051 | 0.8782, 0.8884, 0.8852 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm | sess2 | 3 | 0.8837 | +/-0.0016 | 0.8820, 0.8838, 0.8852 |
 | iid | size-invariant descriptors + MLP | erm | sess2 | 3 | 0.8443 | +/-0.0076 | 0.8532, 0.8417, 0.8380 |
 | iid | spectral operator, native resolution | erm | sess2 | 3 | 0.8576 | +/-0.0142 | 0.8578, 0.8433, 0.8718 |
@@ -679,6 +684,7 @@ Both macro-F1 columns are averaged over **only the classes present in both halve
 | iid | CNN on resized 64x64 (BatchNorm) | erm/sess2 | 0.8623 | - | - | - | - | 43,209 | 28 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm/poolmean | 0.8855 | - | - | - | - | 43,209 | 28 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm/poolmeanmax | 0.8933 | - | - | - | - | 43,209 | 28 |
+| iid | CNN on resized 64x64 (GroupNorm) | erm/poolmeanmean | 0.8782 | - | - | - | - | 43,209 | 28 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm/sess2 | 0.8820 | - | - | - | - | 43,209 | 28 |
 | iid | size-invariant descriptors + MLP | erm/sess2 | 0.8532 | - | - | - | - | 43,209 | 28 |
 | iid | spectral operator, native resolution | erm/sess2 | 0.8578 | - | - | - | - | 43,209 | 28 |
@@ -735,6 +741,7 @@ Both macro-F1 columns are averaged over **only the classes present in both halve
 | size | CNN on resized 64x64 (BatchNorm) | irm/sizeseed | 0.7482 | - | - | - | - | 0 | 44,908 |
 | size | CNN on resized 64x64 (BatchNorm) | logit_adjust/sizeseed | 0.6567 | - | - | - | - | 0 | 44,908 |
 | size | CNN on resized 64x64 (BatchNorm) | mixup_domain/sizeseed | 0.7643 | - | - | - | - | 0 | 44,908 |
+| size | CNN on resized 64x64 (GroupNorm) | erm/poolmean | 0.8231 | - | - | - | - | 0 | 44,908 |
 | size | CNN on resized 64x64 (GroupNorm) | erm/sess2 | 0.8274 | - | - | - | - | 0 | 44,908 |
 | size | size-invariant descriptors + MLP | coral/sizeseed | 0.7937 | - | - | - | - | 0 | 44,908 |
 | size | size-invariant descriptors + MLP | dann/sizeseed | 0.7800 | - | - | - | - | 0 | 44,908 |
