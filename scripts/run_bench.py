@@ -322,15 +322,18 @@ class Runner:
         that probe -- which is why both numbers are reported side by side.
         """
         with torch.no_grad():
-            ev = self.embed_all(model, self.va)
-            et = self.embed_all(model, self.te)
+            ev = self.embed_all(model, self.va)      # every calibration point
+            et = self.embed_all(model, self.te)      # every test point
         Xp = torch.cat([ev, et]).to(self.dev)
         yp = torch.cat([torch.zeros(len(ev)), torch.ones(len(et))]).to(self.dev)
         Xp = (Xp - Xp.mean(0, keepdim=True)) / Xp.std(0, keepdim=True).clamp_min(1e-6)
         probe = nn.Linear(Xp.shape[1], 1).to(self.dev)
         po = torch.optim.Adam(probe.parameters(), lr=1e-2)
+        # the probe trains on a capped subsample; it predicts on everything
+        sub = torch.randperm(Xp.shape[0], device=self.dev)[:20000]
         for _ in range(300):
-            l = F.binary_cross_entropy_with_logits(probe(Xp).squeeze(1), yp)
+            l = F.binary_cross_entropy_with_logits(probe(Xp[sub]).squeeze(1),
+                                                   yp[sub])
             po.zero_grad(set_to_none=True); l.backward(); po.step()
         with torch.no_grad():
             # odds of "belongs to the test domain" is the likelihood ratio
@@ -346,19 +349,20 @@ class Runner:
                     np.concatenate([np.zeros(len(w_cal)), np.ones(len(w_te))])))}
 
     @torch.no_grad()
-    def embed_all(self, model, idx, cap=6000):
-        """Pooled embeddings for a capped subsample, used by the shift probes."""
+    def embed_all(self, model, idx):
+        """Pooled embeddings for every wafer in `idx`, in loader order.
+
+        Loader order matters: the calibration probabilities and these embeddings
+        must line up row for row, which an earlier version broke by capping the
+        subsample here but not there.
+        """
         model.eval()
         out = []
-        got = 0
         for sel in self.loaders(idx, False, batch=max(self.a.batch, 512)):
             b = self.batch_of(sel)
             e = (model.embed(b["x"], b["mask"])
                  if self.a.encoder in ("spectral", "graph") else model.embed(b["x"]))
             out.append(e.float().cpu())
-            got += len(sel)
-            if got >= cap:
-                break
         return torch.cat(out)
 
     def calibration(self, model):

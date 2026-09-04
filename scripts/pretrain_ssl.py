@@ -10,14 +10,27 @@ Two objectives at once:
   which needs no labels and no negative sampling, and which forces the encoder
   to learn how failure propagates spatially because that is the only way to fill
   a hole.
-* **lot-adversarial head** -- a gradient-reversed classifier that tries to name
-  the lot from the pooled embedding. Making the representation *unable* to
-  identify its own lot is domain invariance built during pretraining rather than
-  bolted on during fine-tuning, and it costs one extra head.
+* **adversarial nuisance heads** -- gradient-reversed classifiers that try to
+  recover *properties of the lot* from the pooled embedding. Making the
+  representation unable to recover them is domain invariance built during
+  pretraining rather than bolted on during fine-tuning.
 
-Why this combination is worth trying here specifically: labels cover a fifth of
-the corpus, but lot membership is free for every wafer, so the nuisance variable
-is fully observed exactly where the labels are missing.
+  The first version of this asked the adversary to name the lot itself, hashed
+  into 64 buckets. Its loss sat at chance from the first epoch: 41,608 lots
+  modulo 64 is a meaningless label, so there was no signal to remove and
+  gradient reversal had nothing to reverse. A vacuous adversary is worse than
+  none, because it looks like invariance in the logs. The nuisances used now are
+  both genuinely predictable from a wafer map and both genuinely irrelevant to
+  the defect class:
+
+  - the **lot's failure-rate decile** -- a lot running hot is a lot property, not
+    a defect pattern;
+  - the **wafer geometry bucket** -- the product, which the benchmark holds out
+    as its second shift axis.
+
+Why this fits here: labels cover a fifth of the corpus, but lot membership and
+geometry are free for every wafer, so the nuisance variables are fully observed
+exactly where the labels are missing.
 """
 from __future__ import annotations
 
@@ -36,13 +49,13 @@ from wts.data import CLASSES, build_unlabeled                    # noqa: E402
 from wts.methods import grad_reverse                             # noqa: E402
 from wts.models import CnnResized, onehot_maps                   # noqa: E402
 
-N_BUCKETS = 64
+N_GEOM = 32          # top geometries, everything else pooled into one bucket
 
 
 class MaskedDieModel(nn.Module):
-    """Encoder plus a per-die decoder, and a lot head behind a reversal layer."""
+    """Encoder, per-die decoder, and two nuisance heads behind a reversal layer."""
 
-    def __init__(self, width=32, n_buckets=N_BUCKETS):
+    def __init__(self, width=32, n_rate=10, n_geom=N_GEOM):
         super().__init__()
         self.enc = CnnResized(len(CLASSES), width=width, norm="gn")
         w = width * 4
@@ -51,15 +64,17 @@ class MaskedDieModel(nn.Module):
             nn.Upsample(scale_factor=2), nn.Conv2d(w, w // 2, 3, padding=1), nn.GELU(),
             nn.Upsample(scale_factor=2), nn.Conv2d(w // 2, w // 4, 3, padding=1), nn.GELU(),
             nn.Upsample(scale_factor=2), nn.Conv2d(w // 4, 3, 1))
-        self.lot_head = nn.Sequential(nn.Linear(w, 128), nn.GELU(),
-                                      nn.Linear(128, n_buckets))
+        self.rate_head = nn.Sequential(nn.Linear(w, 128), nn.GELU(),
+                                       nn.Linear(128, n_rate))
+        self.geom_head = nn.Sequential(nn.Linear(w, 128), nn.GELU(),
+                                       nn.Linear(128, n_geom))
 
     def forward(self, x, lamb=0.3):
         h = self.enc.body(x)
         recon = self.dec(h)
         pooled = h.mean(dim=(-2, -1))
-        lot = self.lot_head(grad_reverse(pooled, lamb))
-        return recon, lot
+        rev = grad_reverse(pooled, lamb)
+        return recon, self.rate_head(rev), self.geom_head(rev)
 
 
 def mask_patches(x, n_patches=6, size=12):
@@ -95,9 +110,30 @@ def main():
         build_unlabeled(cache=str(path), limit=args.limit)
     blob = torch.load(path, map_location="cpu", weights_only=False)
     maps = blob["maps64"].to(dev)
-    lot = (blob["lot"] % N_BUCKETS).to(dev)
     n = maps.shape[0]
-    print(f"unlabelled wafers: {n}, lots: {len(blob['lot_names'])}", flush=True)
+
+    # nuisance 1: the lot's failure-rate decile
+    fail = (maps == 2).float().sum(dim=(-2, -1))
+    inside = (maps > 0).float().sum(dim=(-2, -1)).clamp_min(1)
+    rate = (fail / inside).cpu()
+    lot = blob["lot"]
+    lot_rate = torch.zeros(int(lot.max()) + 1)
+    lot_rate.scatter_reduce_(0, lot, rate, reduce="mean", include_self=False)
+    per_wafer_rate = lot_rate[lot]
+    edges = torch.quantile(per_wafer_rate, torch.linspace(0, 1, 11)[1:-1])
+    rate_bucket = torch.bucketize(per_wafer_rate, edges).clamp(0, 9).to(dev)
+
+    # nuisance 2: the wafer geometry, top-31 shapes plus an "other" bucket
+    hw = blob["hw"]
+    key = hw[:, 0] * 1000 + hw[:, 1]
+    uniq, counts = key.unique(return_counts=True)
+    top = uniq[counts.argsort(descending=True)[: N_GEOM - 1]]
+    geom = torch.full_like(key, N_GEOM - 1)
+    for i, u in enumerate(top):
+        geom[key == u] = i
+    geom = geom.to(dev)
+    print(f"unlabelled wafers: {n}, lots: {len(blob['lot_names'])}, "
+          f"geometries kept: {len(top)} + other", flush=True)
 
     model = MaskedDieModel(width=args.width).to(dev)
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
@@ -115,12 +151,12 @@ def main():
             x = onehot_maps(raw)
             target = raw.long().clamp(0, 2)
             xm, m = mask_patches(x)
-            recon, lot_logits = model(xm, args.lot_lambda)
+            recon, rate_logits, geom_logits = model(xm, args.lot_lambda)
             # score only the dies that were hidden
-            rl = F.cross_entropy(recon.permute(0, 2, 3, 1)[m],
-                                 target[m])
-            ll = F.cross_entropy(lot_logits, lot[sel])
-            loss = rl + ll
+            rl = F.cross_entropy(recon.permute(0, 2, 3, 1)[m], target[m])
+            nl = (F.cross_entropy(rate_logits, rate_bucket[sel])
+                  + F.cross_entropy(geom_logits, geom[sel]))
+            loss = rl + nl
             opt.zero_grad(set_to_none=True)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
@@ -128,13 +164,15 @@ def main():
             if gstep + 1 < steps:
                 sched.step()
             gstep += 1
-            rec_sum += float(rl.detach()); lot_sum += float(ll.detach()); nb += 1
-        chance = -torch.log(torch.tensor(1.0 / N_BUCKETS)).item()
+            rec_sum += float(rl.detach()); lot_sum += float(nl.detach()); nb += 1
+        import math
+        chance = math.log(10) + math.log(N_GEOM)
         hist.append({"epoch": ep + 1, "recon_ce": rec_sum / nb,
-                     "lot_ce": lot_sum / nb, "lot_ce_chance": chance})
+                     "nuisance_ce": lot_sum / nb, "nuisance_ce_chance": chance})
         print(f"  ep {ep+1}/{args.epochs} recon CE {rec_sum/nb:.4f}  "
-              f"lot CE {lot_sum/nb:.4f} (chance {chance:.4f}; higher = the "
-              f"embedding hides the lot better)", flush=True)
+              f"nuisance CE {lot_sum/nb:.4f} (chance {chance:.4f}; rising "
+              f"toward chance = the embedding is losing the nuisance)",
+              flush=True)
 
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     torch.save({"model": model.enc.state_dict(), "history": hist,

@@ -1,0 +1,64 @@
+{
+  "history": [
+    {
+      "epoch": 1,
+      "recon_ce": 0.2790598502829253,
+      "nuisance_ce": 5.088866547765785,
+      "nuisance_ce_chance": 5.768320995793772
+    },
+    {
+      "epoch": 2,
+      "recon_ce": 0.2581752553140056,
+      "nuisance_ce": 4.957045648417285,
+      "nuisance_ce_chance": 5.768320995793772
+    },
+    {
+      "epoch": 3,
+      "recon_ce": 0.2332658076654364,
+      "nuisance_ce": 4.893942888392958,
+      "nuisance_ce_chance": 5.768320995793772
+    },
+    {
+      "epoch": 4,
+      "recon_ce": 0.22258496555740964,
+      "nuisance_ce": 4.887682439043891,
+      "nuisance_ce_chance": 5.768320995793772
+    },
+    {
+      "epoch": 5,
+      "recon_ce": 0.2509904713657443,
+      "nuisance_ce": 4.990220579990121,
+      "nuisance_ce_chance": 5.768320995793772
+    },
+    {
+      "epoch": 6,
+      "recon_ce": 0.2522839435406848,
+      "nuisance_ce": 5.228540765063324,
+      "nuisance_ce_chance": 5.768320995793772
+    },
+    {
+      "epoch": 7,
+      "recon_ce": 0.23733562876342676,
+      "nuisance_ce": 4.959762976660954,
+      "nuisance_ce_chance": 5.768320995793772
+    },
+    {
+      "epoch": 8,
+      "recon_ce": 0.23402582418469303,
+      "nuisance_ce": 5.037381123616969,
+      "nuisance_ce_chance": 5.768320995793772
+    }
+  ],
+  "args": {
+    "unlabeled": "data/unlabeled.pt",
+    "out": "runs/ssl_pretrain.pt",
+    "epochs": 8,
+    "batch": 512,
+    "lr": 0.002,
+    "width": 32,
+    "lot_lambda": 0.3,
+    "limit": null
+  },
+  "minutes": 31.77,
+  "n_unlabeled": 638506
+}

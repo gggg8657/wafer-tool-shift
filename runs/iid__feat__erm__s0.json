@@ -2,6 +2,7 @@
   "encoder": "feat",
   "objective": "erm",
   "protocol": "iid",
+  "tag": "",
   "seed": 0,
   "epochs": 12,
   "n_train": 110254,
@@ -9,7 +10,7 @@
   "n_test": 43237,
   "label_shift_tv": 0.0028058746829628944,
   "params_m": 0.050953,
-  "minutes": 0.93,
+  "minutes": 0.24,
   "history": [
     {
       "epoch": 1,
@@ -95,7 +96,10 @@
     "n_domains_scored": 56,
     "conformal_coverage": 0.9040173925110437,
     "conformal_set_size": 1.0752827439461572,
-    "conformal_target": 0.9
+    "conformal_target": 0.9,
+    "weighted_conformal_coverage": 0.9015426602215695,
+    "weighted_conformal_set_size": 1.0780581446446331,
+    "domain_probe_auc": 0.5148918219275648
   },
   "test_ema": {
     "macro_f1": 0.8536786411926083,

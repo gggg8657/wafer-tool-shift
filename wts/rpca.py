@@ -63,7 +63,7 @@ def rpca(M: torch.Tensor, lam: float | None = None, n_iter: int = 60,
 
 @torch.no_grad()
 def lot_decomposition(maps64: torch.Tensor, lot: torch.Tensor, device="cuda",
-                      min_wafers: int = 4, n_iter: int = 40):
+                      min_wafers: int = 12, n_iter: int = 30):
     """Per-lot RPCA over the whole corpus.
 
     Returns (residual, signature) where `residual` is the sparse part reshaped

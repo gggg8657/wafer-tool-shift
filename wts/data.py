@@ -265,17 +265,19 @@ def build_unlabeled(path="data/LSWMD.pkl", cache="data/unlabeled.pt",
     df = df[df["label"] == ""]
     if limit:
         df = df.iloc[:limit]
-    maps, lots = [], []
+    maps, lots, hw = [], [], []
     for wm, lot in zip(df["waferMap"], df["lotName"]):
         a = np.asarray(wm, dtype=np.uint8)
         if a.ndim != 2 or min(a.shape) < min_dim:
             continue
         maps.append(torch.from_numpy(resize_nearest(a, 64)))
         lots.append(str(lot))
+        hw.append(a.shape)
     lot_names = sorted(set(lots))
     code = {n: i for i, n in enumerate(lot_names)}
     blob = {"maps64": torch.stack(maps),
             "lot": torch.tensor([code[n] for n in lots], dtype=torch.long),
+            "hw": torch.tensor(hw, dtype=torch.long),
             "lot_names": lot_names}
     if cache:
         torch.save(blob, cache)

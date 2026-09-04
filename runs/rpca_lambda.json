@@ -1,0 +1,36 @@
+{
+  "n_lots": 40,
+  "min_lot_size": 20,
+  "sweep": [
+    {
+      "lambda_scale": 0.5,
+      "mean_rank": 0.0,
+      "sparse_share": 0.9999999925494194,
+      "lowrank_energy_share": 0.0
+    },
+    {
+      "lambda_scale": 1.0,
+      "mean_rank": 0.475,
+      "sparse_share": 0.6988650396466255,
+      "lowrank_energy_share": 0.30216161757707594
+    },
+    {
+      "lambda_scale": 2.0,
+      "mean_rank": 0.575,
+      "sparse_share": 0.6898835338652134,
+      "lowrank_energy_share": 0.31399075833614914
+    },
+    {
+      "lambda_scale": 4.0,
+      "mean_rank": 13.95,
+      "sparse_share": 0.16167994793900106,
+      "lowrank_energy_share": 0.8424850225448608
+    },
+    {
+      "lambda_scale": 8.0,
+      "mean_rank": 23.65,
+      "sparse_share": 0.0,
+      "lowrank_energy_share": 0.9999995470046997
+    }
+  ]
+}

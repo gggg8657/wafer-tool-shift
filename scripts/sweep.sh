@@ -13,7 +13,7 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 PY=${PY:-$HOME/miniforge3/envs/pdeno/bin/python}
 EPOCHS=${EPOCHS:-15}
-GPUS=(2 3)
+GPUS=(${GPUS:-2 3})
 LOG=logs/sweep.log
 mkdir -p logs runs
 

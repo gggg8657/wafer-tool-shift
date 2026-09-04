@@ -138,29 +138,34 @@ def weighted_conformal(cal_probs, cal_y, test_probs, cal_w, test_w, alpha=0.1):
 
     Standard split conformal assumes calibration and test are exchangeable. Under
     a tool change they are not, and the coverage guarantee quietly fails. The
-    weighted version (Tibshirani et al.) restores it if the likelihood ratio
-    p_test(x) / p_train(x) is known -- estimated here by a domain classifier, so
-    the guarantee is only as good as that estimate. Reported alongside the
-    unweighted number so the correction's effect is visible rather than assumed.
+    weighted version (Tibshirani et al.) restores it given the likelihood ratio
+    p_test(x) / p_train(x), estimated here by a logistic probe on the embeddings
+    -- so the guarantee is only as good as that probe, which is why the probe's
+    own AUC is reported alongside and the unweighted coverage is kept next to it.
+
+    Exact weighted conformal recomputes the quantile for every test point, since
+    the point's own weight enters the denominator. With ~19k calibration points
+    that term is negligible, so one quantile per class is computed against
+    `sum(cal_w) + median(test_w)`. The approximation is stated rather than
+    hidden; it is what makes the metric affordable inside a sweep.
     """
     n_classes = cal_probs.shape[1]
-    keep = np.zeros_like(test_probs, dtype=bool)
+    cal_w = np.asarray(cal_w, dtype=np.float64)
+    test_w = np.asarray(test_w, dtype=np.float64)
+    w_extra = float(np.median(test_w))
+    qs = np.ones(n_classes)
     for c in range(n_classes):
         m = cal_y == c
         if m.sum() < 10:
-            keep[:, c] = True
             continue
-        s = 1.0 - cal_probs[m, c]
-        w = np.asarray(cal_w)[m]
-        order = np.argsort(s)
-        s_sorted, w_sorted = s[order], w[order]
-        for i in range(test_probs.shape[0]):
-            tot = w_sorted.sum() + test_w[i]
-            cum = np.cumsum(w_sorted) / max(tot, 1e-12)
-            j = int(np.searchsorted(cum, 1 - alpha))
-            q = s_sorted[min(j, len(s_sorted) - 1)]
-            keep[i, c] = (1.0 - test_probs[i, c]) <= q
-    return keep
+        s_c = 1.0 - cal_probs[m, c]
+        w_c = cal_w[m]
+        order = np.argsort(s_c)
+        s_sorted, w_sorted = s_c[order], w_c[order]
+        cum = np.cumsum(w_sorted) / (w_sorted.sum() + w_extra)
+        j = int(np.searchsorted(cum, 1 - alpha))
+        qs[c] = s_sorted[min(j, len(s_sorted) - 1)]
+    return (1.0 - test_probs) <= qs[None, :]
 
 
 def coverage_of(keep, y_true):
