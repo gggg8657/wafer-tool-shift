@@ -162,6 +162,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN on resized 64x64 (BatchNorm) | group_dro | adabn | 0.8615 | 0.8135 | -0.0480 |
 | lot | CNN on resized 64x64 (BatchNorm) | group_dro | tent | 0.8615 | 0.8296 | -0.0319 |
 | lot | CNN on resized 64x64 (BatchNorm) | group_dro | ema | 0.8615 | 0.8593 | -0.0022 |
+| lot | CNN on resized 64x64 (BatchNorm) | group_dro/dtime | ema | 0.8402 | 0.8350 | -0.0053 |
 | lot | CNN on resized 64x64 (BatchNorm) | hsic | adabn | 0.8628 | 0.8225 | -0.0402 |
 | lot | CNN on resized 64x64 (BatchNorm) | hsic | tent | 0.8628 | 0.8358 | -0.0270 |
 | lot | CNN on resized 64x64 (BatchNorm) | hsic | ema | 0.8628 | 0.8595 | -0.0033 |
@@ -267,6 +268,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 |---|---|---|---|---|---|---|
 | lot | CNN on resized 64x64 (BatchNorm) | dtime | 0.8583 | -0.0004 | 0.4898 | +0.0000 |
 | lot | CNN on resized 64x64 (BatchNorm) | + Fourier amplitude swap augmentation | 0.8566 | -0.0021 | 0.4898 | +0.0000 |
+| lot | CNN on resized 64x64 (BatchNorm) | dtime | 0.8402 | -0.0213 | 0.4898 | +0.0000 |
 | lot | CNN on resized 64x64 (BatchNorm) | ot0.0 | 0.8609 | +0.7583 | 0.4898 | +0.2558 |
 | lot | CNN on resized 64x64 (BatchNorm) | ot0.003 | 0.8591 | +0.7565 | 0.4898 | +0.2558 |
 | lot | CNN on resized 64x64 (BatchNorm) | ot0.01 | 0.8540 | +0.7515 | 0.4898 | +0.2558 |
@@ -295,7 +297,9 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range | per seed |
 |---|---|---|---|---|---|---|---|
 | lot | CNN on resized 64x64 (BatchNorm) | erm | - | 3 | 0.8522 | +/-0.0069 | 0.8587, 0.8448, 0.8530 |
-| lot | CNN on resized 64x64 (BatchNorm) | erm | dtime | 2 | 0.8511 | +/-0.0073 | 0.8583, 0.8438 |
+| lot | CNN on resized 64x64 (BatchNorm) | erm | dtime | 3 | 0.8514 | +/-0.0073 | 0.8583, 0.8438, 0.8521 |
+| lot | CNN on resized 64x64 (BatchNorm) | group_dro | - | 3 | 0.8535 | +/-0.0063 | 0.8615, 0.8501, 0.8488 |
+| lot | CNN on resized 64x64 (BatchNorm) | group_dro | dtime | 3 | 0.8257 | +/-0.0139 | 0.8402, 0.8125, 0.8244 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.8647 | +/-0.0044 | 0.8671, 0.8680, 0.8591 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | + lot-adversarial SSL initialization | 3 | 0.8143 | +/-0.0091 | 0.8134, 0.8239, 0.8056 |
 | lot | CNN + RPCA lot-signature channel | erm | - | 3 | 0.8696 | +/-0.0096 | 0.8813, 0.8654, 0.8621 |
@@ -365,6 +369,7 @@ Both macro-F1 columns are averaged over **only the classes present in both halve
 | protocol | representation | objective | macro-F1 all | seen geom. (matched) | unseen geom. (matched) | seen - unseen | shared classes | n seen | n unseen |
 |---|---|---|---|---|---|---|---|---|---|
 | lot | CNN on resized 64x64 (BatchNorm) | erm/dtime | 0.8583 | 0.8438 | 0.8605 | -0.0166 | 8 | 43,121 | 131 |
+| lot | CNN on resized 64x64 (BatchNorm) | group_dro/dtime | 0.8402 | 0.8276 | 0.8396 | -0.0120 | 8 | 43,121 | 131 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.1 | 0.8485 | 0.8434 | 0.7310 | +0.1124 | 8 | 43,121 | 131 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot0.3 | 0.8352 | 0.8240 | 0.7192 | +0.1048 | 8 | 43,121 | 131 |
 | lot | CNN on resized 64x64 (BatchNorm) | sinkhorn/ot1.0 | 0.1026 | 0.1155 | 0.0618 | +0.0537 | 8 | 43,121 | 131 |
@@ -375,7 +380,8 @@ Every group-aware objective was originally handed `lot % 32` as its domain: 10,7
 
 | objective | representation | domain = `lot % 32` | domain = production decile | difference | n domains |
 |---|---|---|---|---|---|
-| `erm` | CNN on resized 64x64 (BatchNorm) | 0.8522 ±0.0069 (n=3) | 0.8511 ±0.0073 (n=2) | -0.0011 | 10 |
+| `erm` | CNN on resized 64x64 (BatchNorm) | 0.8522 ±0.0069 (n=3) | 0.8514 ±0.0073 (n=3) | -0.0008 | 10 |
+| `group_dro` | CNN on resized 64x64 (BatchNorm) | 0.8535 ±0.0063 (n=3) | 0.8257 ±0.0139 (n=3) | -0.0277 | 10 |
 
 **Null control.** `erm` never reads the domain label, so its two columns must agree; they differ by at most 0.0010, against a measured same-code-path floor of about 0.002. The domain machinery did not change ERM, so the other rows are differences in the objective and not in the plumbing. If this line ever exceeds the floor, nothing else in the table can be read.
 
@@ -401,7 +407,50 @@ The penalty column also shows *why* the largest weight destroys the model, which
 
 **Verdict: not a strawman and not a tuning failure.** Across three orders of magnitude the penalty is either untouched (and accuracy is ERM's) or driven toward zero (and the representation is gone). There is no weight at which it falls and accuracy holds. Reported as a negative result about entropic OT on this benchmark, with the default-weight row left in the tables above so that the collapse is visible rather than filtered.
 
+## The active-learning budget is in lots, and the strategies did not buy comparable data
+
+A lot's acquisition score is the *mean* of its wafers' scores (`scripts/active_learning.py`), and the maximum of noisy means favours small samples -- so "take the top-scoring lots" is partly "take the smallest lots". Random sampling has no such bias. The consequence is that at a fixed budget in *lots* the heuristics train on a fraction of random's wafers:
+
+| wafers labelled | 20 lots | 50 lots | 100 lots | 200 lots | 400 lots | 800 lots |
+|---|---|---|---|---|---|---|
+| random | 323 | 728 | 1,491 | 3,012 | 6,284 | 12,526 |
+| entropy | 323 | 355 | 411 | 544 | 1,104 | 2,464 |
+| coreset | 323 | 370 | 501 | 713 | 1,820 | 2,900 |
+| diverse | 323 | 405 | 524 | 794 | 1,344 | 2,478 |
+
+| mean wafers per lot bought | 20 lots | 50 lots | 100 lots | 200 lots | 400 lots | 800 lots |
+|---|---|---|---|---|---|---|
+| random | 16.13 | 14.56 | 14.91 | 15.06 | 15.71 | 15.66 |
+| entropy | 16.13 | 7.09 | 4.11 | 2.72 | 2.76 | 3.08 |
+| coreset | 16.13 | 7.39 | 5.01 | 3.56 | 4.55 | 3.63 |
+| diverse | 16.13 | 8.09 | 5.24 | 3.97 | 3.36 | 3.10 |
+
+Re-plotted against wafers labelled -- the axis that was varying without being controlled -- the ranking changes. These are linear interpolation between measured budget points, no extrapolation:
+
+| macro-F1 at matched wafers | 322 | 750 | 1,179 | 1,607 | 2,035 | 2,463 |
+|---|---|---|---|---|---|---|
+| random | 0.3794 | 0.5116 | 0.5908 | 0.6500 | 0.6556 | 0.6612 |
+| entropy | 0.3794 | 0.5693 | 0.5786 | 0.6285 | 0.6785 | 0.7285 |
+| coreset | 0.3794 | 0.5837 | 0.5877 | 0.5918 | 0.6110 | 0.6451 |
+| diverse | 0.3794 | 0.5762 | 0.6376 | 0.6609 | 0.6655 | 0.6702 |
+
+Random leads only at the smallest point, where every strategy holds the same random seed set by construction.
+
+Straight from the stored table, no interpolation -- each strategy's best measured point against the cheapest random point that matches or beats it:
+
+| strategy | wafers | macro-F1 | wafers random needs | random's macro-F1 | label cost ratio |
+|---|---|---|---|---|---|
+| entropy | 2,464 | 0.7285 | never within the measured range (best 0.7241 at 6,284) | - | - |
+| coreset | 2,900 | 0.6798 | 6,284 | 0.7241 | 2.17x |
+| diverse | 2,478 | 0.6703 | 6,284 | 0.7241 | 2.54x |
+
+**The data-volume confound is arithmetic and certain; the reversal is not.** It rests on three seeds, interpolation between six points, and per-point standard deviations up to 0.035. `scripts/al_wafer_budget.sh` re-runs the grid with the budget counted in wafers so every strategy stops at the same supervision volume. Until it lands, the claim that random acquisition beats these heuristics is **withdrawn**, not reversed.
+
+Both cost models are defensible and they disagree: if a metrology slot costs one lot, the lot axis is right and these heuristics waste slots on near-empty lots; if the cost is per wafer measured, the wafer axis is right. Both curves belong in the paper with the cost model named.
+
 ## Which lots to pay to measure
+
+**Read this table with the section above.** The budget is in lots and the strategies bought lots of very different sizes, so these rows are not at equal supervision volume.
 
 Budgets are spent in whole lots out of 8116 available, seeded with 20 random lots, 3 seeds. Test set is the fixed lot-disjoint split.
 

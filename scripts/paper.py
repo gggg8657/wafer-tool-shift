@@ -12,6 +12,8 @@ from __future__ import annotations
 import argparse
 import json
 from collections import defaultdict
+
+import numpy as np
 from pathlib import Path
 import sys
 
@@ -415,7 +417,7 @@ def main():
 
     # ---------------------------------------------------------------- AL
     al = Path(a.runs) / "active_learning.json"
-    W("## 5. Result: active learning loses to random lot selection")
+    W("## 5. Withdrawn: \"active learning loses to random lot selection\"")
     W("")
     if al.exists():
         d = json.loads(al.read_text())
@@ -426,10 +428,49 @@ def main():
         W("")
         W(f"Budgets spent in whole lots out of {d['n_pool_lots']} available, "
           f"seeded with {d['seed_lots']} random lots, {d['seeds']} seeds, "
-          "evaluated on the fixed lot-disjoint test split. Buying whole lots is "
-          "what a fab actually does — a metrology slot is a lot, not a wafer — "
-          "and it is exactly the setting where per-wafer uncertainty ranking "
-          "has the least to offer.")
+          "evaluated on the fixed lot-disjoint test split.")
+        W("")
+        alb = Path(a.runs) / "al_budget_check.json"
+        if alb.exists():
+            z = json.loads(alb.read_text())
+            B = z["curves"]["random"]["lots"]
+            i4 = B.index(400) if 400 in B else len(B) // 2
+            W("**The table above does not support the conclusion it was written "
+              "for.** The budget is counted in lots, and at the same lot budget "
+              "the strategies do not buy comparable amounts of data:")
+            W("")
+            W(table([[st, f"{z['curves'][st]['wafers'][i4]:,.0f}",
+                      f"{z['wafers_per_lot'][st][str(B[i4])]:.2f}",
+                      f"{z['wafers_relative_to_random'][st][str(B[i4])]:.1%}"]
+                     for st in z["curves"]],
+                    [f"at a {B[i4]}-lot budget", "wafers labelled",
+                     "mean wafers per lot", "share of random's wafers"]))
+            W("")
+            ent = z["curves"]["entropy"]
+            j = int(np.argmax(ent["macro_f1"]))
+            W("The mechanism is the scoring rule. A lot's score is the *mean* "
+              "of its wafers' scores, and the maximum of noisy means favours "
+              "small samples — a two-wafer lot's mean is one or two draws and "
+              "can land anywhere in the tail, while a 25-wafer lot's mean "
+              "regresses to the pool average. So \"take the top-scoring "
+              "lots\" is substantially \"take the smallest lots\", and "
+              "random sampling has no such bias, which is why it looked good. "
+              "Re-plotting against wafers labelled reverses the ranking at "
+              "every volume where the strategies differ; directly from the "
+              f"stored table, entropy reaches {ent['macro_f1'][j]:.4f} on "
+              f"{ent['wafers'][j]:,.0f} wafers, which random does not reach "
+              "anywhere in its measured range.")
+            W("")
+            W("The data-volume confound is arithmetic and certain. The reversal "
+              "is not: three seeds, interpolation between six measured points, "
+              "per-point standard deviations up to 0.035. The grid is being "
+              "re-run with the budget counted in wafers. **Both cost models are "
+              "defensible and they disagree** — if a metrology slot costs one "
+              "lot regardless of how many wafers it holds, then the lot axis is "
+              "right and these heuristics genuinely waste slots on near-empty "
+              "lots; if the cost is per wafer measured, the wafer axis is right "
+              "and the heuristics are ahead. The paper should carry both curves "
+              "with the cost model named, rather than one of them as a result.")
     else:
         W(NM)
     W("")

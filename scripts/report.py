@@ -9,6 +9,8 @@ import argparse
 import json
 from pathlib import Path
 
+import numpy as np
+
 from wts.data import CLASSES
 
 
@@ -571,6 +573,82 @@ def main():
                       "with the default-weight row left in the tables above so "
                       "that the collapse is visible rather than filtered.", ""]
 
+    # ---- the acquisition-cost confound in the active-learning curve
+    alb = Path("runs/al_budget_check.json")
+    if alb.exists():
+        d = json.loads(alb.read_text())
+        B = d["curves"]["random"]["lots"]
+        L += ["## The active-learning budget is in lots, and the strategies "
+              "did not buy comparable data", "",
+              "A lot's acquisition score is the *mean* of its wafers' scores "
+              "(`scripts/active_learning.py`), and the maximum of noisy means "
+              "favours small samples -- so \"take the top-scoring lots\" is "
+              "partly \"take the smallest lots\". Random sampling has no such "
+              "bias. The consequence is that at a fixed budget in *lots* the "
+              "heuristics train on a fraction of random's wafers:", "",
+              table([[s] + [f"{d['curves'][s]['wafers'][i]:,.0f}"
+                            for i in range(len(B))] for s in d["curves"]],
+                    ["wafers labelled"] + [f"{b} lots" for b in B]), "",
+              table([[s] + [f"{d['wafers_per_lot'][s][str(b)]:.2f}" for b in B]
+                     for s in d["wafers_per_lot"]],
+                    ["mean wafers per lot bought"] + [f"{b} lots" for b in B]),
+              ""]
+        mm = d["macro_f1_at_matched_wafer_budget"]
+        grid = sorted(mm["random"], key=lambda x: int(x))
+        L += ["Re-plotted against wafers labelled -- the axis that was varying "
+              "without being controlled -- the ranking changes. These are "
+              f"{d['wafer_matched_range']['method']}:", "",
+              table([[s] + [f(mm[s][g]) if mm[s][g] is not None else "-"
+                            for g in grid] for s in mm],
+                    ["macro-F1 at matched wafers"] + [f"{int(g):,}" for g in grid]),
+              "",
+              "Random leads only at the smallest point, where every strategy "
+              "holds the same random seed set by construction.", ""]
+        # the headline pair, computed rather than typed: the strategy's best
+        # measured point, and the cheapest random point that matches it
+        eff = []
+        rnd = d["curves"]["random"]
+        for name, cv in d["curves"].items():
+            if name == "random":
+                continue
+            i = int(np.argmax(cv["macro_f1"]))
+            best_f1, best_w = cv["macro_f1"][i], cv["wafers"][i]
+            cand = [(w, f_) for w, f_ in zip(rnd["wafers"], rnd["macro_f1"])
+                    if f_ >= best_f1]
+            if cand:
+                w_r, f_r = min(cand)
+                eff.append([name, f"{best_w:,.0f}", f(best_f1), f"{w_r:,.0f}",
+                            f(f_r), f"{w_r / best_w:.2f}x"])
+            else:
+                # random never gets there inside the measured range. Dropping
+                # the row would silently delete the strongest case in the table.
+                j = int(np.argmax(rnd["macro_f1"]))
+                eff.append([name, f"{best_w:,.0f}", f(best_f1),
+                            f"never within the measured range "
+                            f"(best {f(rnd['macro_f1'][j])} at "
+                            f"{rnd['wafers'][j]:,.0f})", "-", "-"])
+        if eff:
+            L += ["Straight from the stored table, no interpolation -- each "
+                  "strategy's best measured point against the cheapest random "
+                  "point that matches or beats it:", "",
+                  table(eff, ["strategy", "wafers", "macro-F1",
+                              "wafers random needs", "random's macro-F1",
+                              "label cost ratio"]), ""]
+        L += [
+              "**The data-volume confound is arithmetic and certain; the "
+              "reversal is not.** It rests on three seeds, interpolation "
+              "between six points, and per-point standard deviations up to "
+              "0.035. `scripts/al_wafer_budget.sh` re-runs the grid with the "
+              "budget counted in wafers so every strategy stops at the same "
+              "supervision volume. Until it lands, the claim that random "
+              "acquisition beats these heuristics is **withdrawn**, not "
+              "reversed.", "",
+              "Both cost models are defensible and they disagree: if a "
+              "metrology slot costs one lot, the lot axis is right and these "
+              "heuristics waste slots on near-empty lots; if the cost is per "
+              "wafer measured, the wafer axis is right. Both curves belong in "
+              "the paper with the cost model named.", ""]
+
     # ---- active learning
     al_path = Path("runs/active_learning.json")
     if al_path.exists():
@@ -581,6 +659,9 @@ def main():
             rows.append([strat] + [f"{curve[str(b)]['macro_f1_mean']:.4f}"
                                    for b in budgets])
         L += ["## Which lots to pay to measure", "",
+              "**Read this table with the section above.** The budget is in "
+              "lots and the strategies bought lots of very different sizes, so "
+              "these rows are not at equal supervision volume.", "",
               f"Budgets are spent in whole lots out of {al['n_pool_lots']} "
               f"available, seeded with {al['seed_lots']} random lots, "
               f"{al['seeds']} seeds. Test set is the fixed lot-disjoint split.",

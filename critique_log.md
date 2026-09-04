@@ -830,3 +830,85 @@ Reading, fixed in advance so the result cannot be reinterpreted afterwards:
 `run_bench.py` now scores `test_in_lot_time_geometries` on every cell, so the
 answer arrives with the backfill already queued rather than needing a stage of
 its own.
+
+### 13. "Active learning lost to random" compared strategies that had bought a fifth of the data
+
+This is one of the three results the paper was going to be built on, and I had
+never looked at it. The numbers, from `runs/active_learning.json`, at a 400-lot
+budget: random 0.7241, diverse 0.6581, coreset 0.5938, entropy 0.5698. Read as
+"per-wafer uncertainty ranking does not survive whole-lot acquisition", which is
+a clean and quotable finding.
+
+The same file records `wafers_mean`, which nobody had read:
+
+| lot budget | 20 | 50 | 100 | 200 | 400 | 800 |
+|---|---|---|---|---|---|---|
+| random, wafers labelled | 323 | 728 | 1,491 | 3,012 | **6,284** | 12,526 |
+| entropy | 323 | 355 | 411 | 544 | **1,104** | 2,464 |
+| coreset | 323 | 370 | 501 | 713 | **1,820** | 2,900 |
+| diverse | 323 | 405 | 524 | 794 | **1,344** | 2,478 |
+
+At the 400-lot budget the heuristics trained on **17.6%, 29.0% and 21.4%** of
+random's wafers. Mean lot size bought: random 15.7 wafers, entropy 2.8. The
+comparison was never between acquisition strategies; it was between a strategy
+with 6,284 labels and strategies with 1,100–1,800.
+
+**The mechanism, and it is not subtle once seen.** `lot_scores`
+(`scripts/active_learning.py:79`) scores a lot as the **mean** of its wafers'
+scores, and the acquisition takes the top-scoring lots. The maximum of noisy
+means favours small samples: a 2-wafer lot's mean is one or two draws and can
+land anywhere in the tail, while a 25-wafer lot's mean regresses to the pool
+average. So "take the highest-entropy lots" is, in substantial part, "take the
+smallest lots". Random sampling has no such bias, which is exactly why it looked
+good. This is a selection artefact of the scoring rule, not a property of
+uncertainty sampling.
+
+**What happens on the axis that was implicitly varying.** Re-plotting the stored
+curve against wafers labelled (`scripts/al_budget_check.py`, linear
+interpolation between measured points, no extrapolation):
+
+| wafers labelled | 322 | 750 | 1,179 | 1,607 | 2,035 | 2,463 |
+|---|---|---|---|---|---|---|
+| random | 0.3794 | 0.5116 | 0.5908 | 0.6500 | 0.6556 | 0.6612 |
+| entropy | 0.3794 | 0.5693 | 0.5786 | 0.6285 | 0.6785 | **0.7285** |
+| coreset | 0.3794 | 0.5837 | 0.5877 | 0.5918 | 0.6110 | 0.6451 |
+| diverse | 0.3794 | 0.5762 | 0.6376 | 0.6609 | 0.6655 | 0.6702 |
+
+Random wins only at 322 wafers, where every strategy holds the identical random
+seed set by construction and the comparison is vacuous. At every other matched
+volume a heuristic is ahead. Directly from the stored table, without any
+interpolation: **entropy reaches 0.7285 ± 0.0134 on 2,464 wafers; random needs
+6,284 wafers to reach 0.7241 ± 0.0049** — the same accuracy for 2.6x the labels.
+
+**What I am claiming and what I am not.** The data-volume confound is certain:
+it is arithmetic on the stored file, no noise involved, and it means the
+published ranking does not support the sentence it was written to support. The
+*reversal* is not certain. It rests on three seeds, on interpolation between six
+points, and on curves whose per-point standard deviations run to 0.035. It is
+enough to require the experiment and not enough to be the result.
+
+So `active_learning.py` gains `--budget-unit {lots,wafers}` and
+`scripts/al_wafer_budget.sh` re-runs the whole grid with every strategy stopped
+at the same supervision volume, queued as the last stage of `chain_rest.sh`. It
+also now records the lots it bought and their sizes, so the next person can
+diagnose a selection bias without re-running anything — which is what cost this
+finding a day.
+
+**The part that is a genuine decision rather than a bug, and I want it stated
+plainly because it is the most interesting thing here.** The two cost models
+disagree, and neither is wrong:
+
+* if a metrology slot costs one **lot** regardless of how many wafers it holds,
+  the original axis is right, and the finding is that these heuristics waste the
+  slot by selecting near-empty lots — actionable, and a genuine failure;
+* if the cost is per **wafer measured**, the wafer axis is right and the
+  heuristics are ahead.
+
+Measured in the smoke run of the new code: to acquire ~780 wafers, random needed
+**50** lots and entropy needed **360**. Same data volume, 7x the slots. A real
+fab pays something of both, so the honest presentation is both curves side by
+side with the cost model named, and the headline "active learning lost to
+random" is withdrawn pending the wafer-budget run.
+
+I should have read `wafers_mean` the first time I looked at that table. It was
+in the file, in the same object as the number I was quoting.

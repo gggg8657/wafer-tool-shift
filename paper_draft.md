@@ -64,9 +64,9 @@ The forward-only test side holds 19 geometries against 338 in training, and 14.1
 | CNN (BatchNorm) | `anchor` | 0.8637 | +0.0115 |
 | CNN (BatchNorm) | `coral` | 0.8553 | +0.0031 |
 | CNN (BatchNorm) | `dann` | 0.8596 | +0.0075 |
-| CNN (BatchNorm) | `group_dro` | 0.8615 | +0.0093 |
+| CNN (BatchNorm) | `group_dro` | 0.8535 ±0.0063 (n=3) | +0.0013 |
 | CNN (BatchNorm) | `hsic` | 0.8628 | +0.0106 |
-| CNN (BatchNorm) | `irm` | 0.8536 | +0.0014 |
+| CNN (BatchNorm) | `irm` | 0.8418 ±0.0094 (n=3) | -0.0103 |
 | CNN (BatchNorm) | `logit_adjust` | 0.8170 | -0.0352 |
 | CNN (BatchNorm) | `mixup_domain` | 0.8541 | +0.0019 |
 | CNN (BatchNorm) | `sinkhorn` | 0.1026 | -0.7496 |
@@ -107,7 +107,8 @@ On `size` the same hash is far less degenerate — 344 geometries into 32 bucket
 
 | objective | domain = `lot % 32` | domain = production decile | difference |
 |---|---|---|---|
-| `erm` | 0.8522 ±0.0069 (n=3) | 0.8511 ±0.0073 (n=2) | -0.0011 |
+| `erm` | 0.8522 ±0.0069 (n=3) | 0.8514 ±0.0073 (n=3) | -0.0008 |
+| `group_dro` | 0.8535 ±0.0063 (n=3) | 0.8257 ±0.0139 (n=3) | -0.0277 |
 
 `erm` never reads the domain label, so its two columns must agree exactly; it is included as the null control on the plumbing.
 
@@ -146,7 +147,7 @@ Masked-die modelling on 638,506 unlabelled wafers with a gradient-reversed nuisa
 
 The obvious alternative explanation is that the fine-tuning recipe is tuned for a random initialization: the pretrained weights are not at random-init scale (mean |w| of the deepest conv is 0.0852 in the checkpoint against 0.0147 for a fresh encoder, a factor of 5.8), and every cell above uses one LR on a OneCycle schedule. `scripts/ssl_lr_sweep.sh` runs both arms at four learning rates so the comparison is made LR by LR rather than best-of-treatment against one-shot-control.
 
-## 5. Result: active learning loses to random lot selection
+## 5. Withdrawn: "active learning loses to random lot selection"
 
 | strategy | 20 lots | 50 lots | 100 lots | 200 lots | 400 lots | 800 lots |
 |---|---|---|---|---|---|---|
@@ -155,14 +156,30 @@ The obvious alternative explanation is that the fine-tuning recipe is tuned for 
 | coreset | 0.3794 | 0.4213 | 0.5013 | 0.5833 | 0.5938 | 0.6798 |
 | diverse | 0.3794 | 0.5009 | 0.5045 | 0.5898 | 0.6581 | 0.6703 |
 
-Budgets spent in whole lots out of 8116 available, seeded with 20 random lots, 3 seeds, evaluated on the fixed lot-disjoint test split. Buying whole lots is what a fab actually does — a metrology slot is a lot, not a wafer — and it is exactly the setting where per-wafer uncertainty ranking has the least to offer.
+Budgets spent in whole lots out of 8116 available, seeded with 20 random lots, 3 seeds, evaluated on the fixed lot-disjoint test split.
+
+**The table above does not support the conclusion it was written for.** The budget is counted in lots, and at the same lot budget the strategies do not buy comparable amounts of data:
+
+| at a 400-lot budget | wafers labelled | mean wafers per lot | share of random's wafers |
+|---|---|---|---|
+| random | 6,284 | 15.71 | 100.0% |
+| entropy | 1,104 | 2.76 | 17.6% |
+| coreset | 1,820 | 4.55 | 29.0% |
+| diverse | 1,344 | 3.36 | 21.4% |
+
+The mechanism is the scoring rule. A lot's score is the *mean* of its wafers' scores, and the maximum of noisy means favours small samples — a two-wafer lot's mean is one or two draws and can land anywhere in the tail, while a 25-wafer lot's mean regresses to the pool average. So "take the top-scoring lots" is substantially "take the smallest lots", and random sampling has no such bias, which is why it looked good. Re-plotting against wafers labelled reverses the ranking at every volume where the strategies differ; directly from the stored table, entropy reaches 0.7285 on 2,464 wafers, which random does not reach anywhere in its measured range.
+
+The data-volume confound is arithmetic and certain. The reversal is not: three seeds, interpolation between six measured points, per-point standard deviations up to 0.035. The grid is being re-run with the budget counted in wafers. **Both cost models are defensible and they disagree** — if a metrology slot costs one lot regardless of how many wafers it holds, then the lot axis is right and these heuristics genuinely waste slots on near-empty lots; if the cost is per wafer measured, the wafer axis is right and the heuristics are ahead. The paper should carry both curves with the cost model named, rather than one of them as a result.
 
 ## 6. Seed spread is a result, not an appendix
 
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range |
 |---|---|---|---|---|---|---|
 | `lot` | CNN (BatchNorm) | `erm` | — | 3 | 0.8522 | ±0.0069 |
-| `lot` | CNN (BatchNorm) | `erm` | dtime | 2 | 0.8511 | ±0.0073 |
+| `lot` | CNN (BatchNorm) | `erm` | dtime | 3 | 0.8514 | ±0.0073 |
+| `lot` | CNN (BatchNorm) | `group_dro` | — | 3 | 0.8535 | ±0.0063 |
+| `lot` | CNN (BatchNorm) | `group_dro` | dtime | 3 | 0.8257 | ±0.0139 |
+| `lot` | CNN (BatchNorm) | `irm` | — | 3 | 0.8418 | ±0.0094 |
 | `lot` | CNN (GroupNorm) | `erm` | — | 3 | 0.8647 | ±0.0044 |
 | `lot` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.8143 | ±0.0091 |
 | `lot` | CNN + 4th channel | `erm` | — | 3 | 0.8696 | ±0.0096 |

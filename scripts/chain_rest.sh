@@ -17,6 +17,9 @@
 #   2 mixed      MIXED-SYNTH, both protocols, focal included
 #   3 ssl_lr     the LR confound on the -5 to -8 point SSL result
 #   4 longtail   focal gamma sweep with gamma=0 as its own control
+#   5 al_wafer   active learning re-run with the budget in wafers rather than
+#                lots, because the published curve compared heuristics that had
+#                bought a fifth of random's data
 #
 # `domain_def` is not here: it is stage 2 of chain_s1 and is already queued.
 set -uo pipefail
@@ -33,4 +36,6 @@ say "--- chain_rest: ssl fine-tuning LR ---"
 GPUS="0 1" bash scripts/ssl_lr_sweep.sh
 say "--- chain_rest: long tail ---"
 GPUS="0 1" bash scripts/longtail_sweep.sh
+say "--- chain_rest: active learning on a wafer budget ---"
+GPU=0 bash scripts/al_wafer_budget.sh
 say "=== chain_rest done ==="

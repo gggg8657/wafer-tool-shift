@@ -13,6 +13,8 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+
+import numpy as np
 from pathlib import Path
 import sys
 
@@ -216,6 +218,40 @@ def main():
           "`scripts/domain_def_sweep.sh` is queued.")
     W("")
 
+    alb = Path(a.runs) / "al_budget_check.json"
+    if alb.exists():
+        z = json.loads(alb.read_text())
+        B = z["curves"]["random"]["lots"]
+        i4 = B.index(400) if 400 in B else len(B) // 2
+        W("### 2.4b Withdrawn: \"active learning lost to random\"")
+        W("")
+        W(f"At the {B[i4]}-lot budget the published table reads random "
+          f"{z['curves']['random']['macro_f1'][i4]:.4f}, diverse "
+          f"{z['curves']['diverse']['macro_f1'][i4]:.4f}, coreset "
+          f"{z['curves']['coreset']['macro_f1'][i4]:.4f}, entropy "
+          f"{z['curves']['entropy']['macro_f1'][i4]:.4f}. The same JSON records "
+          "how many wafers each strategy actually labelled:")
+        W("")
+        W(table([[st, f"{z['curves'][st]['wafers'][i4]:,.0f}",
+                  f"{z['wafers_per_lot'][st][str(B[i4])]:.2f}",
+                  f"{z['wafers_relative_to_random'][st][str(B[i4])]:.1%}"]
+                 for st in z["curves"]],
+                [f"at {B[i4]} lots", "wafers labelled", "wafers per lot",
+                 "share of random's wafers"]))
+        W("")
+        ent = z["curves"]["entropy"]
+        j = int(np.argmax(ent["macro_f1"]))
+        W("The heuristics were losing while training on a fifth of the data. "
+          "A lot's acquisition score is the *mean* of its wafers' scores, and "
+          "the maximum of noisy means favours small samples, so \"take the "
+          "top-scoring lots\" is partly \"take the smallest lots\". Straight "
+          f"from the stored table, entropy reaches {ent['macro_f1'][j]:.4f} on "
+          f"{ent['wafers'][j]:,.0f} wafers, which random never reaches at any "
+          "budget it was measured at. **Rules out nothing yet** — the confound "
+          "is certain but the reversal rests on 3 seeds and interpolation, so "
+          "the grid is being re-run with the budget in wafers.")
+        W("")
+
     W("### 2.5 The forward-only result is a compound, not pure temporal drift")
     W("")
     tp = Path(a.runs) / "time_proxy.json"
@@ -304,7 +340,7 @@ def main():
         W("")
 
     # ---------------------------------------------------------------- decisions
-    W("## 3. Three things that need a human decision")
+    W("## 3. Four things that need a human decision")
     W("")
     W("**Decision 1 — MixedWM38, or drop the multi-label target.** The target "
       "says \"multi-label F1 ≥ 0.95\". WM-811K is single-label over 9 classes, "
@@ -338,6 +374,19 @@ def main():
       "optimistic protocol. *Recommendation: (a). The gap is the paper; "
       "closing it by loosening the split is the one thing the rules here "
       "forbid.*")
+    W("")
+    W("**Decision 4 — which acquisition cost model is the real one?** The "
+      "active-learning comparison depends entirely on it and the two answers "
+      "disagree. If a metrology slot costs one **lot** whatever its size, the "
+      "published lot-budget curve is right and the finding is that these "
+      "heuristics waste slots on near-empty lots. If the cost is per **wafer "
+      "measured**, the wafer axis is right and the heuristics are ahead of "
+      "random. Measured in a smoke run of the new code: to acquire ~780 "
+      "wafers, random needed 50 lots and entropy needed 360 — same data, seven "
+      "times the slots. *Recommendation: state the fab's actual cost model and "
+      "report the curve for it, with the other beside it. This is the one "
+      "question here that only someone who knows the metrology contract can "
+      "answer.*")
     W("")
     W("**Decision 3 — how should the forward-only result be framed?** It is "
       "the repo's largest number and it is a compound. `lot_time` tests on a "

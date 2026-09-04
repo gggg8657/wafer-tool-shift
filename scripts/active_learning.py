@@ -90,6 +90,13 @@ def main():
     ap.add_argument("--seed-lots", type=int, default=20)
     ap.add_argument("--strategies", default="random,entropy,coreset,diverse")
     ap.add_argument("--seeds", type=int, default=3)
+    ap.add_argument("--budget-unit", default="lots", choices=["lots", "wafers"],
+                    help="what the budget counts. The published curve used "
+                         "lots, and the heuristics answered by buying lots "
+                         "averaging 2.7 wafers against random's 15.7 -- so on "
+                         "that axis they were compared while training on a "
+                         "fifth of the data. `wafers` holds the supervision "
+                         "volume fixed and measures acquisition quality alone.")
     args = ap.parse_args()
 
     dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -100,7 +107,17 @@ def main():
     X = (X - mu) / sd
     budgets = [int(b) for b in args.budgets.split(",")]
     lots_pool = np.unique(c.lot[tr_all].numpy())
+    lot_size = {int(u): int(n) for u, n in
+                zip(*np.unique(c.lot[tr_all].numpy(), return_counts=True))}
     results = {}
+
+    def n_wafers(lots):
+        return sum(lot_size.get(int(l), 0) for l in lots)
+
+    def reached(lots, b):
+        """Has this acquisition met the budget, in whichever unit is in force?"""
+        return (len(lots) >= b if args.budget_unit == "lots"
+                else n_wafers(lots) >= b)
 
     for strategy in args.strategies.split(","):
         curve = []
@@ -111,16 +128,32 @@ def main():
             per_budget = {}
             for b in budgets:
                 # grow the labelled set to the budget with this strategy
-                while len(chosen) < b:
+                while not reached(chosen, b):
                     pool_lots = np.setdiff1d(lots_pool, np.array(chosen))
                     if len(pool_lots) == 0:
                         break
                     mask = np.isin(c.lot[tr_all].numpy(), pool_lots)
                     pool_idx = tr_all[torch.from_numpy(mask)]
+                    # how many lots to take before re-scoring. Under a lot
+                    # budget this is the shortfall directly; under a wafer
+                    # budget the shortfall is in wafers, so it is converted at
+                    # the pool's mean lot size and floored at one.
+                    if args.budget_unit == "lots":
+                        step = b - len(chosen)
+                    else:
+                        # Estimate the lots needed from the size of the lots
+                        # *this strategy* has been buying, not the pool mean.
+                        # The pool mean is ~15 and a heuristic that buys 2-wafer
+                        # lots would then take seven times as many re-scoring
+                        # rounds as the lot-budget run did, which is a different
+                        # acquisition schedule and not a comparable experiment.
+                        seen = [lot_size.get(int(l), 0) for l in chosen]
+                        mean_size = max(float(np.mean(seen)) if seen else 0.0,
+                                        1.0)
+                        step = int(np.ceil((b - n_wafers(chosen)) / mean_size))
+                    step = max(1, min(step, len(pool_lots)))
                     if strategy == "random":
-                        pick = rng.choice(pool_lots,
-                                          min(b - len(chosen), len(pool_lots)),
-                                          replace=False)
+                        pick = rng.choice(pool_lots, step, replace=False)
                         chosen += list(pick)
                         continue
                     model_now, _ = train_eval(
@@ -131,7 +164,7 @@ def main():
                     sc = lot_scores(model_now, X, pool_idx, c.lot, dev,
                                     strategy, chosen_emb)
                     order = sorted(sc, key=sc.get, reverse=True)
-                    take = order[:max(1, (b - len(chosen)))]
+                    take = order[:step]
                     chosen += take
                     if strategy in ("coreset", "diverse"):
                         sel = tr_all[torch.from_numpy(
@@ -140,16 +173,41 @@ def main():
                             chosen_emb = (model_now.embed(X[sel].to(dev)).cpu().numpy()
                                           if strategy == "coreset"
                                           else X[sel].numpy())
+                # Under a lot budget the first b lots are the purchase. Under
+                # a wafer budget the loop stops on the first lot that crosses
+                # the line, which overshoots by up to one step, so the purchase
+                # is trimmed to the longest prefix that fits -- you cannot buy
+                # the lot that would exceed the budget. At least one lot is
+                # always kept, or a budget below the first lot's size would
+                # train on nothing.
+                if args.budget_unit == "lots":
+                    bought = chosen[:b]
+                else:
+                    bought, tot = [], 0
+                    for l in chosen:
+                        sz = lot_size.get(int(l), 0)
+                        if bought and tot + sz > b:
+                            break
+                        bought.append(l); tot += sz
                 labelled = tr_all[torch.from_numpy(
-                    np.isin(c.lot[tr_all].numpy(), np.array(chosen[:b])))]
+                    np.isin(c.lot[tr_all].numpy(), np.array(bought)))]
                 _, p = train_eval(X, c.labels, labelled, te, dev, seed=seed)
                 m = metrics.summarize(c.labels[te].numpy(), p,
                                       groups=c.lot[te].numpy())
+                sizes = [lot_size.get(int(l), 0) for l in bought]
                 per_budget[b] = {"macro_f1": m["macro_f1"],
                                  "p10_domain_macro_f1": m["p10_domain_macro_f1"],
-                                 "n_wafers": int(len(labelled))}
-                print(f"  [{strategy} seed{seed}] {b} lots "
-                      f"({len(labelled)} wafers): macroF1 "
+                                 "n_wafers": int(len(labelled)),
+                                 "n_lots": int(len(bought)),
+                                 "mean_lot_size": float(np.mean(sizes)),
+                                 "median_lot_size": float(np.median(sizes)),
+                                 # the lots themselves, so the selection bias
+                                 # can be diagnosed without re-running anything
+                                 "lots": [int(l) for l in bought]}
+                print(f"  [{strategy} seed{seed}] budget {b} "
+                      f"{args.budget_unit}: {len(bought)} lots, "
+                      f"{len(labelled)} wafers, mean lot size "
+                      f"{np.mean(sizes):.2f}: macroF1 "
                       f"{m['macro_f1']:.4f}", flush=True)
             curve.append(per_budget)
         results[strategy] = {
@@ -159,9 +217,15 @@ def main():
                 "p10_mean": float(np.mean([c_[b]["p10_domain_macro_f1"]
                                            for c_ in curve])),
                 "wafers_mean": float(np.mean([c_[b]["n_wafers"] for c_ in curve])),
+                "lots_mean": float(np.mean([c_[b]["n_lots"] for c_ in curve])),
+                "mean_lot_size": float(np.mean([c_[b]["mean_lot_size"]
+                                                for c_ in curve])),
+                "median_lot_size": float(np.mean([c_[b]["median_lot_size"]
+                                                  for c_ in curve])),
             } for b in budgets}
     Path(args.out).write_text(json.dumps(
-        {"budgets": budgets, "seed_lots": args.seed_lots, "seeds": args.seeds,
+        {"budgets": budgets, "budget_unit": args.budget_unit,
+         "seed_lots": args.seed_lots, "seeds": args.seeds,
          "n_pool_lots": int(len(lots_pool)), "results": results}, indent=2))
     print(f"wrote {args.out}")
 
