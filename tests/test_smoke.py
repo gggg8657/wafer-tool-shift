@@ -199,3 +199,32 @@ def test_hash32_domains_erase_a_shift_that_production_order_keeps():
     # domain ids must be dense, since they index GroupDRO's weights and DANN's head
     for dom, n in ((hashed, n_hashed), (timed, n_timed)):
         assert int(dom.min()) >= 0 and int(dom.max()) < n
+
+
+def test_focal_at_gamma_zero_is_exactly_cross_entropy():
+    """The control built into the focal sweep, asserted rather than assumed.
+
+    If `--focal-gamma 0` did not reproduce ERM, every delta in the long-tail
+    sweep would be measured against a baseline that is not the baseline, and
+    the sweep would look like it had found something.
+    """
+    import torch.nn.functional as F
+
+    from wts import methods
+
+    class Identity:
+        def __call__(self, x, mask=None):
+            return x
+
+    torch.manual_seed(0)
+    logits = torch.randn(128, len(CLASSES))
+    y = torch.randint(0, len(CLASSES), (128,))
+    batch = {"x": logits, "y": y, "mask": None}
+
+    loss0, _ = methods.focal(Identity(), batch, {"focal_gamma": 0.0})
+    assert torch.allclose(loss0, F.cross_entropy(logits, y), atol=1e-7)
+
+    # and gamma > 0 must actually change the loss, or the knob does nothing
+    loss2, aux = methods.focal(Identity(), batch, {"focal_gamma": 2.0})
+    assert not torch.allclose(loss2, loss0, atol=1e-4)
+    assert 0.0 <= aux["focal_pt"] <= 1.0

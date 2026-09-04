@@ -294,6 +294,34 @@ def anchor(model, batch, st):
     return cls + (st["anchor_gamma"] - 1.0) * pen, {"anchor_penalty": float(pen)}
 
 
-OBJECTIVES.update({"hsic": hsic, "sinkhorn": sinkhorn, "anchor": anchor})
+def focal(model, batch, st):
+    """Multi-class focal loss (Lin et al., 2017), single-label form.
+
+    Aimed at this corpus's long tail rather than at its domain shift. The
+    lot-disjoint per-class F1 is `none` 0.992 and `Edge-Ring` 0.984 against
+    `Scratch` 0.747 and `Loc` 0.766, and 85% of the corpus is `none` predicted
+    at high confidence -- so nearly all of the gradient mass comes from examples
+    that are already right. Focal's `(1 - p_y)^gamma` factor removes that mass
+    and leaves the hard minority.
+
+    `gamma = 0` is exactly cross-entropy, which makes it the built-in control:
+    the sweep runs it and it must reproduce ERM.
+
+    Composes with `--class-weight`, which is a different correction (prior
+    reweighting rather than difficulty reweighting), so the two are swept
+    separately and never in the same cell.
+    """
+    x, y = batch["x"], batch["y"]
+    logits = model(x, batch["mask"]) if st.get("masked") else model(x)
+    logp = F.log_softmax(logits, dim=1)
+    logpy = logp.gather(1, y[:, None]).squeeze(1)
+    loss = -((1 - logpy.exp()) ** st["focal_gamma"]) * logpy
+    if st.get("cw") is not None:
+        loss = loss * st["cw"][y]
+    return loss.mean(), {"focal_pt": float(logpy.exp().mean())}
+
+
+OBJECTIVES.update({"hsic": hsic, "sinkhorn": sinkhorn, "anchor": anchor,
+                   "focal": focal})
 NEEDS_DOMAIN.update({"hsic", "sinkhorn", "anchor"})
 NEEDS_EMBED.update({"hsic", "sinkhorn"})

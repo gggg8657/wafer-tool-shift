@@ -267,6 +267,7 @@ class Runner:
             "mix_alpha": a.mix_alpha, "lamb": a.dann_lambda,
             "hsic_lambda": a.hsic_lambda, "ot_lambda": a.ot_lambda,
             "anchor_gamma": a.anchor_gamma, "n_dom": self.n_dom,
+            "focal_gamma": a.focal_gamma,
             "masked": a.encoder in ("spectral", "graph"),
             "domain_index": torch.arange(self.n_dom, device=self.dev),
             "dummy": torch.tensor(1.0, device=self.dev, requires_grad=True),
@@ -331,6 +332,7 @@ class Runner:
             "encoder": a.encoder, "objective": a.objective, "protocol": a.protocol,
             "tag": a.tag, "sig_channel": a.sig_channel,
             "domain_def": a.domain_def, "n_invariance_domains": self.n_dom,
+            "focal_gamma": a.focal_gamma, "class_weight": a.class_weight,
             "ot_lambda": a.ot_lambda,
             "seed": a.seed, "epochs": a.epochs,
             "n_train": len(self.tr), "n_val": len(self.va), "n_test": len(self.te),
@@ -499,6 +501,9 @@ def main():
     p.add_argument("--hsic-lambda", type=float, default=1.0)
     p.add_argument("--ot-lambda", type=float, default=1.0)
     p.add_argument("--anchor-gamma", type=float, default=4.0)
+    p.add_argument("--focal-gamma", type=float, default=2.0,
+                   help="focal loss exponent; 0 is exactly cross-entropy and is "
+                        "the control the sweep must reproduce ERM with")
     p.add_argument("--fda-aug", type=float, default=0.0,
                    help="probability of a Fourier amplitude swap per batch")
     p.add_argument("--fda-beta", type=float, default=0.05)
