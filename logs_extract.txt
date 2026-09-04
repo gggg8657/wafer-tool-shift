@@ -1,0 +1,8 @@
+wrote data/features.pt  (172948, 124)  (21s, 0.12 ms/wafer effective)
+per-block std (should be non-degenerate):
+  zernike          mean|x| 0.0137  std 0.0339
+  betti            mean|x| 4.5763  std 5.1721
+  radial_angular   mean|x| 0.1126  std 0.1552
+  variogram        mean|x| 0.0879  std 0.0431
+  power_spectrum   mean|x| 0.0833  std 0.0521
+  moments          mean|x| 0.5151  std 0.3184

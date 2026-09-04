@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.DS_Store
+*.pt
+*.pkl
+# cached tensors and the 1.6 GB source pickle
+data/
+logs/

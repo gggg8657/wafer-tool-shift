@@ -1,0 +1,4 @@
+torch>=2.4          # install the build matching your driver
+numpy>=1.24
+scipy>=1.10         # distance transform, connected components (extract only)
+pandas>=2.0         # only to read the legacy LSWMD.pkl
