@@ -326,8 +326,11 @@ def main():
     # ---------------------------------------------------------------- running
     W("## 4. What is still running, and how to check it")
     W("")
-    W("Stages run one at a time on GPUs 0 and 1, each waiting on a marker line "
-      "in the previous stage's log:")
+    W("Stages run one at a time on GPUs 0 and 1: `scripts/chain_s1.sh` then "
+      "`scripts/chain_rest.sh`, which waits on a marker line in the previous "
+      "stage's log. Nothing runs in parallel with anything else, so a stage "
+      "that hangs stops the queue rather than oversubscribing the two leased "
+      "devices.")
     W("")
     W("```")
     W("tail -f logs/chain_s1.log      # which stage is up")
@@ -337,21 +340,31 @@ def main():
     W("python tests/run_tests.py      # no pytest in the pdeno env, by design")
     W("```")
     W("")
+    # order matches scripts/chain_s1.sh then scripts/chain_rest.sh
     stages = [
         ("`sinkhorn_lambda.sh`", "logs/sinkhorn_lambda.log",
-         "7 OT weights incl. 0 as an ERM control through the same wrapper; "
-         "decides whether the collapsed row is a tuning failure or a broken "
-         "objective, and the row is deleted if the latter"),
+         "7 OT weights incl. 0 as an ERM control through the same wrapper, "
+         "with the penalty itself logged. **Answered**: tuned on validation it "
+         "is +0.0004 over ERM and the penalty is never reduced -- inert, not a "
+         "tradeoff"),
         ("`domain_def_sweep.sh`", "logs/domain_def.log",
-         "7 objectives x {lot%32, production decile} x 3 seeds; the headline "
-         "re-test of section 2.4"),
+         "7 objectives x {lot%32, production decile} x 3 seeds. The headline "
+         "re-test: does the DG negative result survive a domain definition "
+         "that carries real shift?"),
+        ("`backfill_metrics.sh`", "logs/backfill.log",
+         "the seen/unseen-geometry decomposition on every ERM cell -- how much "
+         "of the forward-only drop is geometry rather than time -- plus the "
+         "metrics added since these cells ran. Measures the run-to-run floor "
+         "first and **refuses to overwrite** anything if stored values do not "
+         "reproduce within it"),
         ("`mixed_sweep.sh`", "logs/mixed_sweep.log",
          "MIXED-SYNTH, 3 losses incl. focal, both protocols, 2 seeds"),
         ("`ssl_lr_sweep.sh`", "logs/ssl_lr.log",
-         "both arms at 3 more LRs; the confound check on section 2.2"),
-        ("`backfill_metrics.sh`", "logs/backfill.log",
-         "re-runs the ERM grid so old cells carry the new metrics; **aborts** "
-         "if the re-run does not reproduce the stored number to 1e-9"),
+         "both arms at 3 more LRs; the confound check on the -5 to -8 point "
+         "SSL result"),
+        ("`longtail_sweep.sh`", "logs/longtail.log",
+         "focal gamma over {0, 0.5, 1, 2, 5} plus class weighting, 2 seeds; "
+         "gamma=0 is bit-exact ERM and is the built-in control"),
     ]
     rows = []
     for name, log, what in stages:
