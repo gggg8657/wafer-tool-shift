@@ -208,8 +208,8 @@ What was left is that `CnnResized.embed` is a global average over the final feat
 | `lot` | `meanmean` (**control**) | +0.0052 | overlaps | -0.0006 | overlaps |
 | `iid` | `meanmax` (treatment) | +0.0090 | below the floor (0.0041) | +0.0253 | overlaps |
 | `iid` | `meanmean` (**control**) | +0.0003 | overlaps | -0.0061 | overlaps |
-| `size` | `meanmax` (treatment) | -0.0590 | below the floor (0.0068) | -0.0777 | below the floor (0.0087) |
-| `size` | `meanmean` (**control**) | +0.0022 | overlaps | -0.0044 | overlaps |
+| `size` | `meanmax` (treatment) | -0.0281 | overlaps | -0.0427 | overlaps |
+| `size` | `meanmean` (**control**) | -0.0036 | overlaps | +0.0129 | overlaps |
 | `lot_time` | `meanmax` (treatment) | +0.0051 | overlaps | +0.0291 | overlaps |
 | `lot_time` | `meanmean` (**control**) | +0.0169 | overlaps | +0.0055 | overlaps |
 
@@ -329,8 +329,8 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `size` | CNN (BatchNorm) | `logit_adjust` | sizeseed | 3 | 0.6798 | ±0.0680 |
 | `size` | CNN (BatchNorm) | `mixup_domain` | sizeseed | 3 | 0.7803 | ±0.0405 |
 | `size` | CNN (GroupNorm) | `erm` | — | 3 | 0.8467 | ±0.0346 |
-| `size` | CNN (GroupNorm) | `erm` | poolmean | 3 | 0.8404 | ±0.0377 |
-| `size` | CNN (GroupNorm) | `erm` | poolmeanmax | 3 | 0.7814 | ±0.0345 |
+| `size` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8462 | ±0.0391 |
+| `size` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.8181 | ±0.0700 |
 | `size` | CNN (GroupNorm) | `erm` | poolmeanmean | 3 | 0.8426 | ±0.0290 |
 | `size` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.8413 | ±0.0369 |
 | `size` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.7711 | ±0.0265 |

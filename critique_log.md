@@ -2365,3 +2365,50 @@ question of whether the thing I had queued was the thing I needed. Of the four
 silent no-ops, three were found by that kind of incidental check and one by the
 absence of an output file. None was found by anything failing, because nothing
 did.
+
+### 49. A counter for the absences
+
+§48 named the pattern; this turn builds the guard. `scripts/verify_stage.py`
+takes a glob and an integer and fails loudly when a stage produced fewer files
+than it launched. Demonstrated on both a stage that worked and the one that did
+not:
+
+```
+$ verify_stage.py --glob 'runs/lot__cnn_gn__erm__poolmeanmax__s*.json' --expect 3
+  ok      3 / 3   ...   exit 0
+
+$ verify_stage.py --glob 'runs/pooling_size_perm.json' --expect 1
+  BAD     0 / 1   ...
+  FAILED: size permutation test did not produce what it launched.   exit 1
+```
+
+Wired into the three stages that end by writing a summary file — `gn_vs_bn.sh`,
+`al_wafer_budget.sh`, `determinism_repeats.sh` — because that is where three of
+the four silent failures landed. `pooling_size_seeds.sh` was executing and was
+not touched, for the byte-offset reason.
+
+**Why a glob and an integer rather than something better.** A more principled
+guard would reconstruct each launched cell's expected filename from its
+arguments and check them individually. `run_bench.py` already owns that mapping
+(`{protocol}__{encoder}__{objective}{suffix}__s{seed}.json`) and duplicating it
+in bash would be a second place for it to drift. The dumb version catches every
+failure this project has actually had, costs one line per stage, and will still
+be added by someone in a hurry. A check that is hard to add does not get added,
+and the failure mode here is not subtlety — it is nothing happening.
+
+**What it does not catch, stated so nobody trusts it further than it goes.** It
+counts files, so it cannot see a stage that wrote the right number of wrong
+results. The reporter key collision (#2 in the list) would have produced exactly
+the right file count while silently overwriting a seed; it was caught by reading
+the code, not by counting. Overwrites, wrong-population samples like the `[:40]`
+in the lambda sweep, and controls that cannot fail are all invisible to it. It
+raises the floor and does not raise the ceiling.
+
+`WEEKEND.md` now carries the four failures as a table under "what is running",
+with the corollary that matters for anyone reading the results: **a missing
+result is not a null result.** Where a table says `[not measured]`, check
+whether the run happened before concluding the effect is zero. That sentence is
+there because I very nearly made that mistake myself with H33 — a void
+experiment returned a clean null that agreed with everything I already believed,
+and I would have kept it if it had not contradicted a mechanism I had measured
+directly.

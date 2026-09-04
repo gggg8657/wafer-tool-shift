@@ -59,5 +59,9 @@ for spec in "${jobs[@]}"; do
   fi
 done
 if [ ${#pids[@]} -gt 0 ]; then wait "${pids[@]}" || true; fi
-$PY scripts/gn_vs_bn.py >> "$LOG" 2>&1 || true
+$PY scripts/gn_vs_bn.py >> "$LOG" 2>&1 || say "  !! permutation test failed"
+# the analysis step is the one that failed silently elsewhere: verify it
+# actually wrote its summary before declaring the stage complete
+$PY scripts/verify_stage.py --glob runs/gn_vs_bn.json --expect 1 \
+  --label "GN vs BN permutation summary" | tee -a "$LOG" || exit 1
 say "=== GN vs BN done ==="

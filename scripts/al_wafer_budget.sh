@@ -31,4 +31,8 @@ CUDA_VISIBLE_DEVICES=$GPU $PY scripts/active_learning.py \
   --budgets 400,800,1600,3200,6400 \
   --seeds 3 \
   --out runs/active_learning_wafers.json >> logs/al_wafer.log 2>&1
+# the first run of this stage was OOM-killed two strategies in, logged
+# "done" and wrote no JSON. Verify before claiming completion.
+$PY scripts/verify_stage.py --glob runs/active_learning_wafers.json \
+  --expect 1 --label "wafer-budget active learning" | tee -a logs/al_wafer.log || exit 1
 echo "[$(date +%H:%M:%S)] === al wafer budget done ===" | tee -a logs/al_wafer.log

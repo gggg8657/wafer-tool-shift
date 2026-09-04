@@ -659,6 +659,39 @@ def main():
         rows.append([name, st, f"`{log}`", what])
     W(table(rows, ["stage", "status", "log", "what it decides"]))
     W("")
+    W("### A property of this codebase worth knowing before you run anything")
+    W("")
+    W("**Its default failure mode is silence.** Four times this weekend a stage "
+      "logged completion having produced nothing, or less than it claimed, and "
+      "every one was found by an incidental check rather than by anything "
+      "failing:")
+    W("")
+    W(table([
+        ["`sweep_c.sh` built a log path containing a `/` from "
+         "`--init-from runs/ssl_pretrain.pt`",
+         "bash failed the redirect before exec; three SSL cells never ran "
+         "while the sweep logged \"launch\" for each"],
+        ["`report.py` keyed cells without the seed",
+         "a second seed of any cell would have silently replaced the first"],
+        ["the first wafer-budget acquisition run was OOM-killed",
+         "its stage printed `=== al wafer budget done ===` and wrote no JSON"],
+        ["`pooling_size_seeds.sh` invoked the permutation test with globs "
+         "hardcoded to another protocol",
+         "zero files matched; it printed a note and returned 0"],
+    ], ["what happened", "what it looked like"]))
+    W("")
+    W("The shared shape is that **a stage boundary converts an error into an "
+      "absence**, and an absence is invisible unless something counts. "
+      "`scripts/verify_stage.py` is that counter — a glob and an integer, "
+      "deliberately dumb, because a check that is hard to add does not get "
+      "added. It is wired into the stages that end by writing a summary file, "
+      "which is where three of the four failures landed. **Any new sweep should "
+      "end with it.**")
+    W("")
+    W("The corollary for reading anything here: a missing result is not a null "
+      "result. If a table says " + NM + ", check whether the run happened "
+      "before concluding the effect is zero.")
+    W("")
     W("The metric backfill (`scripts/backfill_metrics.sh`) is **deliberately "
       "blocked** and should stay blocked: it refuses to overwrite measured "
       "cells while a fresh re-run does not reproduce them, and overwriting the "

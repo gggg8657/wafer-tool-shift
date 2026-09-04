@@ -73,4 +73,6 @@ rec = {
 json.dump(rec, open(out, "w"), indent=2)
 print(json.dumps(rec, indent=2))
 PYEOF
+$PY scripts/verify_stage.py --glob "$OUT" --expect 1 \
+  --label "determinism summary for $PROTO/$ENC" | tee -a "$LOG" || exit 1
 say "=== determinism repeats done ==="

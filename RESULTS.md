@@ -560,8 +560,8 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | size | CNN on resized 64x64 (BatchNorm) | logit_adjust | sizeseed | 3 | 0.6798 | +/-0.0680 | 0.6567, 0.6233, 0.7594 |
 | size | CNN on resized 64x64 (BatchNorm) | mixup_domain | sizeseed | 3 | 0.7803 | +/-0.0405 | 0.7643, 0.7478, 0.8287 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.8467 | +/-0.0346 | 0.8203, 0.8301, 0.8895 |
-| size | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 3 | 0.8404 | +/-0.0377 | 0.8231, 0.8114, 0.8868 |
-| size | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 3 | 0.7814 | +/-0.0345 | 0.8039, 0.7357, 0.8046 |
+| size | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 8 | 0.8462 | +/-0.0391 | 0.8231, 0.8114, 0.8868, 0.8088, 0.8756, 0.8202, 0.8871, 0.8568 |
+| size | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 8 | 0.8181 | +/-0.0700 | 0.8039, 0.7357, 0.8046, 0.8076, 0.8758, 0.8191, 0.8601, 0.8383 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmean | 3 | 0.8426 | +/-0.0290 | 0.8318, 0.8190, 0.8770 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | sess2 | 3 | 0.8413 | +/-0.0369 | 0.8274, 0.8113, 0.8852 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | + lot-adversarial SSL initialization | 3 | 0.7711 | +/-0.0265 | 0.7602, 0.7500, 0.8030 |
