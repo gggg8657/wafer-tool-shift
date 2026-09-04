@@ -302,13 +302,29 @@ def main():
         dd = json.loads(det.read_text())
         W("### 2.6 Run-to-run reproducibility floor")
         W("")
-        W(f"The same cell run twice under identical arguments differs by "
-          f"**{dd['run_to_run_abs_diff']:.2e}** in test macro-F1 "
-          f"({dd['run_a_macro_f1']:.4f} vs {dd['run_b_macro_f1']:.4f}"
-          + ("; bit-reproducible" if dd["bit_reproducible"] else
-             ", so the pipeline is not bit-reproducible on this GPU") + "). "
-          "Two cells closer together than this have not been shown to differ "
-          "at all, whatever their arguments.")
+        floor = dd.get("range", dd.get("run_to_run_abs_diff"))
+        vals = dd.get("macro_f1_values")
+        W(f"The same cell run {dd.get('n_repeats', 2)} times under identical "
+          f"arguments spans **{floor:.4f}** in test macro-F1"
+          + (": " + ", ".join(f"{v:.4f}" for v in vals) if vals else "")
+          + ". Two cells closer together than that have not been shown to "
+          "differ at all, whatever their arguments — and every verdict in "
+          "`RESULTS.md` now requires the margin between two cells' seed ranges "
+          "to exceed it.")
+        W("")
+        if dd.get("stored_inside_repeat_range") is False:
+            W(f"The stored value for that cell, {dd['stored_macro_f1']:.4f}, is "
+              f"**outside** those repeats — "
+              f"{dd['stored_distance_to_nearest_repeat']:.4f} below the nearest, "
+              "with every repeat above it. The code is not the cause: the "
+              "pre-weekend code re-run on these GPUs lands inside the current "
+              "range. The stored cells were measured on GPUs 2/3, which belong "
+              "to another session and were not taken to check this. So total "
+              "spread across sessions is roughly twice the within-session "
+              "figure, and the seed spreads quoted elsewhere understate it "
+              "because a cell's seeds are all run back-to-back on one pair of "
+              "devices. `scripts/backfill_metrics.sh` refuses to overwrite "
+              "measured cells while that is true.")
         W("")
 
     lb = Path(a.runs) / "label_blind.json"
