@@ -101,9 +101,24 @@ shows the delta with its sign.
 | `irm` | causal inference | one predictor is optimal in every domain simultaneously |
 | `coral` | domain adaptation | aligning second moments across domains is enough |
 | `mixup_domain` | vicinal risk / LISA | interpolating *across* domains fills the space between them |
+| `hsic` / `sinkhorn` / `anchor` | kernel independence / optimal transport / econometrics | see `wts/methods.py` |
+| `focal` | long-tail recognition | the tail is hard examples, not rare ones; `gamma=0` is exactly ERM |
 
-Plus what a fab could actually deploy, using only the **unlabelled** wafers from
-the new tool:
+**What counts as a "domain" is a decision, not a detail, and getting it wrong
+makes every method here look like ERM.** These objectives need several wafers
+per domain in a batch, but a random 256-wafer batch drawn from 10,762 lots holds
+~254 *different* lots. The first version bucketed lots by `lot % 32`, which
+averages ~336 lots into each bucket and leaves the buckets nearly identical —
+so an invariance penalty was already satisfied before training began and every
+method degenerated to ERM by construction. `--domain-def` now selects the
+vocabulary (`hash32`, `time_decile`, `fail_decile`, `geometry`) and `RESULTS.md`
+reports the label shift each one actually carries. Read the objective tables
+with that column in view.
+
+Plus what a fab could actually run with no labels from the new tool — which is
+not the same as recommending them. Measured here, AdaBN and TENT *degrade*
+accuracy on every shifted protocol; that they are deployable and that they help
+are separate questions, and only the first is true:
 
 | method | borrowed from | what it changes at test time |
 |---|---|---|
@@ -112,19 +127,40 @@ the new tool:
 | `ema` | weight averaging (SWA / SWAD) | averaged weights, a free check on whether flatness helped |
 | `fda` | Fourier domain adaptation | swaps low-frequency amplitude toward the target, no adversarial machinery |
 
-## Metrics that a model cannot game
+## Metrics, and the way each one still misleads
 
-- **macro-F1** over 9 classes and **defect macro-F1** over the 8 defect classes —
-  85% of the corpus is `none`, so accuracy is meaningless here.
-- **worst-domain and 10th-percentile domain macro-F1.** An average hides the
-  failure this benchmark exists to expose: a model can post a fine mean while
-  being useless on one tool. A lot holds at most 25 wafers, so the single worst
-  lot is noisy and the p10 is the headline.
-- **ECE**, and **class-conditional conformal coverage** calibrated on held-out
-  *training* domains and measured on test — coverage under shift, which is what
-  tells you whether an uncertainty guarantee survives a new tool. Class-conditional
-  rather than marginal, because a marginal guarantee is satisfied by covering
-  `none` and abandoning `Near-full`.
+An earlier version of this section was titled "metrics that a model cannot
+game". Every entry below is a way that claim turned out to be wrong, found by
+reading the table rather than by running anything new.
+
+- **macro-F1** over 9 classes and **defect macro-F1** over the 8 defect classes.
+  85% of the corpus is `none`, so accuracy is meaningless here. macro-F1
+  averages over the classes *present*, so it is not comparable across subsets
+  that hold different classes — which is why the seen/unseen-geometry split is
+  reported over the shared classes only.
+- **Domain-level statistics.** An average hides the failure this benchmark
+  exists to expose: a model can post a fine mean while being useless on one
+  tool. But on the `lot` protocol the per-lot statistics are *quantized* — a lot
+  holds at most 25 wafers, so a lot whose single defect is missed scores exactly
+  (48/49 + 0)/2 = 0.4898 whichever model missed it, and most `lot` cells report
+  one of two values. `worst_domain_macro_f1` and `p10_domain_macro_f1` therefore
+  cannot rank models on `lot`; they are informative on `size`, whose domains are
+  large. `mean_domain_macro_f1` and `frac_domains_below_half` average over
+  ~1,700 lots and do separate models.
+- **ECE** is sample-weighted top-1 calibration error. The majority class is easy
+  and confident, so this sits below 0.01 across every model regardless of what
+  macro-F1 does. It is a sanity check on `none`, not a robustness metric.
+- **Conformal coverage** is built from *class-conditional* thresholds,
+  calibrated on held-out **training** domains and measured on test, because a
+  marginal guarantee is satisfied by covering `none` and abandoning `Near-full`.
+  But averaging the hits over the test set turns the reported number back into a
+  marginal one, which is the failure the construction exists to prevent — so
+  per-class coverage, the worst class, and the empty-prediction-set rate are
+  reported alongside it.
+- **Seed spread.** Reported for every cell that has more than one seed, because
+  on the `size` protocol it is larger than most of the effects in these tables.
+  A run-to-run floor is measured too: two identical invocations of one cell,
+  which bounds any same-seed comparison.
 
 ## Results
 
