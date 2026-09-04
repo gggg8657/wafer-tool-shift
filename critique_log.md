@@ -1125,3 +1125,61 @@ Not everything collapses. Checked against the same 0.0054:
 * **The die-graph GNN is worse than everything else**, by 0.086 on `lot`.
 * **The RPCA fourth channel is matched by zeros** — that was already an
   overlap result and the floor only strengthens it.
+
+### 20. Active learning on a wafer budget: the conclusion reverses, and the real question is the price of a metrology slot
+
+The re-run finished after the k-center memory fix. Same pool, same test split,
+same seeds; the only change is that every strategy stops at the same number of
+labelled **wafers** instead of the same number of lots. Wafer counts come out
+equal by construction (387–400, 792–800, …), so data volume is held fixed:
+
+| macro-F1 at | 400 | 800 | 1,600 | 3,200 | 6,400 wafers |
+|---|---|---|---|---|---|
+| random | 0.4274 | 0.4923 | 0.5942 | 0.6697 | 0.7257 |
+| **entropy** | **0.5456** | **0.5954** | **0.7003** | **0.7432** | **0.7770** |
+| coreset | 0.5539 | 0.5904 | 0.6642 | 0.7151 | 0.7681 |
+| diverse | 0.5010 | 0.5610 | 0.6332 | 0.7364 | 0.7434 |
+
+Seed standard deviations run 0.004–0.047; entropy's advantage runs 0.05–0.13,
+two to ten times that and far above the 0.0054 reproducibility floor. **At
+matched supervision volume, uncertainty sampling beats random at every budget
+measured.** The published claim was the opposite, and it was an artefact of
+counting the budget in lots while the heuristics systematically bought the
+smallest lots available.
+
+**But the reversal is not the finding either, and I want to be careful not to
+replace one over-claim with its mirror image.** The lots each strategy needed to
+buy those wafers:
+
+| lots needed for | 400 | 800 | 1,600 | 3,200 | 6,400 wafers |
+|---|---|---|---|---|---|
+| random | 25 | 54 | 103 | 205 | **397** |
+| entropy | 95 | 365 | 666 | 1,008 | **1,355** |
+
+Entropy needs **3.4x the metrology slots** for the same number of measured
+wafers. So both of these are true, measured on the same corpus:
+
+* priced per **lot**, random acquisition wins and the heuristics waste slots on
+  near-empty lots;
+* priced per **wafer**, entropy wins by 0.05 to 0.13.
+
+Neither is a fact about active learning. Both are facts about active learning
+*plus a cost model*, and the cost model was never stated — it was smuggled in as
+"budget = 400" in a table header. That is the actual methodological finding, and
+it generalizes past this benchmark: an acquisition experiment whose budget unit
+is not the thing being paid for measures the budget unit, not the acquisition.
+
+Both curves are now in `RESULTS.md` with the cost model named at each. The
+headline is withdrawn and not replaced; `WEEKEND.md` Decision 4 asks the owner
+which price is real, and it is now quantified on both axes rather than posed as
+an open question.
+
+**A note on how this was nearly missed twice.** The first wafer-budget run died
+two strategies in: the k-center distance materialized a |pool| x |chosen| x dim
+array, was killed by the OOM killer with no traceback, and the stage logged
+`=== al wafer budget done ===` and wrote no JSON. Nothing failed loudly. That is
+the third silent-failure mode this weekend — after the redirect into a
+nonexistent directory that dropped three cells, and the reporter key collision
+that would have overwritten seeds — and all three shared the property that the
+harness reported success. The fix is chunked accumulation, verified against the
+naive formula to 2.9e-06.

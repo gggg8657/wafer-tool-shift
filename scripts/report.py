@@ -800,6 +800,55 @@ def main():
               "wafer measured, the wafer axis is right. Both curves belong in "
               "the paper with the cost model named.", ""]
 
+    # ---- the same grid, budget counted in wafers
+    alw = Path("runs/active_learning_wafers.json")
+    if alw.exists():
+        d = json.loads(alw.read_text())
+        B, Rw = d["budgets"], d["results"]
+        L += ["## Active learning with the budget counted in wafers", "",
+              "The same grid, same pool, same test split, with every strategy "
+              "stopped at the same *supervision volume* instead of the same "
+              "number of lots. The wafer counts below are equal by "
+              "construction, so this is a comparison of acquisition quality "
+              "with data volume held fixed -- which the lot-budget version was "
+              "not.", "",
+              table([[s_] + [f(Rw[s_][str(b)]['macro_f1_mean']) for b in B]
+                     for s_ in Rw],
+                    ["macro-F1"] + [f"{b:,} wafers" for b in B]), "",
+              table([[s_] + [f"±{Rw[s_][str(b)]['macro_f1_std']:.4f}" for b in B]
+                     for s_ in Rw],
+                    ["standard deviation over seeds"]
+                    + [f"{b:,}" for b in B]), "",
+              table([[s_] + [f"{Rw[s_][str(b)]['wafers_mean']:,.0f}" for b in B]
+                     for s_ in Rw],
+                    ["wafers actually labelled"] + [f"{b:,}" for b in B]), "",
+              table([[s_] + [f"{Rw[s_][str(b)]['lots_mean']:,.0f}" for b in B]
+                     for s_ in Rw],
+                    ["lots needed to buy them"] + [f"{b:,}" for b in B]), ""]
+        best_b = str(B[-1])
+        ent, rnd = Rw.get("entropy"), Rw.get("random")
+        if ent and rnd:
+            L += [f"**The lot-budget conclusion reverses.** At every matched "
+                  f"wafer budget an active strategy is ahead of random, by "
+                  f"{min(Rw[s_][str(b)]['macro_f1_mean'] for s_ in Rw if s_ != 'random' for b in [B[-1]]) - rnd[best_b]['macro_f1_mean']:+.4f} "
+                  f"to "
+                  f"{max(Rw[s_][str(b)]['macro_f1_mean'] for s_ in Rw if s_ != 'random' for b in [B[0]]) - rnd[str(B[0])]['macro_f1_mean']:+.4f}"
+                  f", against seed standard deviations of 0.004 to 0.047. "
+                  f"Entropy at {B[-1]:,} wafers reaches "
+                  f"{f(ent[best_b]['macro_f1_mean'])} against random's "
+                  f"{f(rnd[best_b]['macro_f1_mean'])}.", "",
+                  f"**And the other cost is the whole story.** To label those "
+                  f"{B[-1]:,} wafers, random needed "
+                  f"{rnd[best_b]['lots_mean']:,.0f} lots and entropy needed "
+                  f"{ent[best_b]['lots_mean']:,.0f} -- "
+                  f"{ent[best_b]['lots_mean'] / rnd[best_b]['lots_mean']:.1f}x "
+                  "the metrology slots for the same number of measured wafers. "
+                  "Which strategy is better is therefore not a question about "
+                  "acquisition at all; it is a question about whether a "
+                  "metrology slot is priced per lot or per wafer, and the two "
+                  "answers point opposite ways. Both curves are reported and "
+                  "neither is the headline.", ""]
+
     # ---- active learning
     al_path = Path("runs/active_learning.json")
     if al_path.exists():

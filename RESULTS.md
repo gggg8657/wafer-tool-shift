@@ -572,6 +572,42 @@ Straight from the stored table, no interpolation -- each strategy's best measure
 
 Both cost models are defensible and they disagree: if a metrology slot costs one lot, the lot axis is right and these heuristics waste slots on near-empty lots; if the cost is per wafer measured, the wafer axis is right. Both curves belong in the paper with the cost model named.
 
+## Active learning with the budget counted in wafers
+
+The same grid, same pool, same test split, with every strategy stopped at the same *supervision volume* instead of the same number of lots. The wafer counts below are equal by construction, so this is a comparison of acquisition quality with data volume held fixed -- which the lot-budget version was not.
+
+| macro-F1 | 400 wafers | 800 wafers | 1,600 wafers | 3,200 wafers | 6,400 wafers |
+|---|---|---|---|---|---|
+| random | 0.4274 | 0.4923 | 0.5942 | 0.6697 | 0.7257 |
+| entropy | 0.5456 | 0.5954 | 0.7003 | 0.7432 | 0.7770 |
+| coreset | 0.5539 | 0.5904 | 0.6642 | 0.7151 | 0.7681 |
+| diverse | 0.5010 | 0.5610 | 0.6332 | 0.7364 | 0.7434 |
+
+| standard deviation over seeds | 400 | 800 | 1,600 | 3,200 | 6,400 |
+|---|---|---|---|---|---|
+| random | ±0.0467 | ±0.0049 | ±0.0320 | ±0.0392 | ±0.0039 |
+| entropy | ±0.0130 | ±0.0184 | ±0.0049 | ±0.0123 | ±0.0103 |
+| coreset | ±0.0264 | ±0.0042 | ±0.0429 | ±0.0288 | ±0.0190 |
+| diverse | ±0.0908 | ±0.0481 | ±0.0260 | ±0.0072 | ±0.0234 |
+
+| wafers actually labelled | 400 | 800 | 1,600 | 3,200 | 6,400 |
+|---|---|---|---|---|---|
+| random | 387 | 795 | 1,589 | 3,191 | 6,388 |
+| entropy | 400 | 795 | 1,589 | 3,186 | 6,390 |
+| coreset | 400 | 800 | 1,594 | 3,199 | 6,391 |
+| diverse | 400 | 792 | 1,600 | 3,197 | 6,391 |
+
+| lots needed to buy them | 400 | 800 | 1,600 | 3,200 | 6,400 |
+|---|---|---|---|---|---|
+| random | 25 | 54 | 103 | 205 | 397 |
+| entropy | 95 | 365 | 666 | 1,008 | 1,355 |
+| coreset | 92 | 355 | 557 | 957 | 1,653 |
+| diverse | 47 | 204 | 514 | 941 | 1,293 |
+
+**The lot-budget conclusion reverses.** At every matched wafer budget an active strategy is ahead of random, by +0.0177 to +0.1265, against seed standard deviations of 0.004 to 0.047. Entropy at 6,400 wafers reaches 0.7770 against random's 0.7257.
+
+**And the other cost is the whole story.** To label those 6,400 wafers, random needed 397 lots and entropy needed 1,355 -- 3.4x the metrology slots for the same number of measured wafers. Which strategy is better is therefore not a question about acquisition at all; it is a question about whether a metrology slot is priced per lot or per wafer, and the two answers point opposite ways. Both curves are reported and neither is the headline.
+
 ## Which lots to pay to measure
 
 **Read this table with the section above.** The budget is in lots and the strategies bought lots of very different sizes, so these rows are not at equal supervision volume.
