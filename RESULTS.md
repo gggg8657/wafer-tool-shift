@@ -343,7 +343,7 @@ The nuisance CE rising toward chance is the signal that the embedding is losing 
 
 ## Per-class F1, best `lot` cell (CNN + RPCA lot-signature channel, erm)
 
-Selected on validation macro-F1 (0.8977); its test macro-F1 is 0.8813. Selecting on *test* instead would have picked CNN + RPCA lot-signature channel / erm at 0.8813, and that number would be a selection artefact.
+Selected on validation macro-F1 (0.8977); its test macro-F1 is 0.8813. Selecting on test macro-F1 instead would have picked the same cell, so the two rules agree here and nothing is riding on the choice.
 
 | class | F1 |
 |---|---|

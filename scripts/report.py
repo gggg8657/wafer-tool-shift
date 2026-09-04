@@ -384,13 +384,19 @@ def main():
         t = lot_cells[best_k]["test"]
         L += [f"## Per-class F1, best `lot` cell ({ENC_LABEL[best_k[1]]}, "
               f"{best_k[2]})", "",
-              f"Selected on validation macro-F1 "
-              f"({lot_cells[best_k]['val_macro_f1']:.4f}); its test macro-F1 is "
-              f"{t['macro_f1']:.4f}. Selecting on *test* instead would have "
-              f"picked {ENC_LABEL[best_test[1]]} / {best_test[2]}"
-              f"{'/' + best_test[3] if best_test[3] else ''} at "
-              f"{lot_cells[best_test]['test']['macro_f1']:.4f}, and that number "
-              f"would be a selection artefact.", "",
+              (f"Selected on validation macro-F1 "
+               f"({lot_cells[best_k]['val_macro_f1']:.4f}); its test macro-F1 "
+               f"is {t['macro_f1']:.4f}. "
+               + ("Selecting on test macro-F1 instead would have picked the "
+                  "same cell, so the two rules agree here and nothing is "
+                  "riding on the choice."
+                  if best_test == best_k else
+                  f"Selecting on *test* instead would have picked "
+                  f"{ENC_LABEL[best_test[1]]} / {best_test[2]}"
+                  f"{'/' + best_test[3] if best_test[3] else ''} at "
+                  f"{lot_cells[best_test]['test']['macro_f1']:.4f}; that is "
+                  f"selection on the test set across {len(lot_cells)} cells and "
+                  f"the number would be an artefact of it.")), "",
               table([[c, f(t["per_class_f1"][c])] for c in CLASSES],
                     ["class", "F1"]), "",
               "The long tail is where the shift bites: `Near-full` has 149 "
