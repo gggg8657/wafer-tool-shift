@@ -162,6 +162,106 @@ def main():
       "shift, so the drop is not purely covariate.")
     W("")
 
+    # ------------------------------------------- what lot_time actually holds out
+    W("### 2.1 What the forward-only protocol actually holds out")
+    W("")
+    tp = Path(a.runs) / "time_proxy.json"
+    if tp.exists():
+        d = json.loads(tp.read_text())
+        rows = []
+        for k, v in d["variables"].items():
+            rows.append([f"`{k}`", f"{v['spearman_gap_vs_tv']:+.4f}",
+                         f"{v['null_p95']:.4f}", f"{v['p_value_one_sided']:.3f}",
+                         f"{v['mean_tv_adjacent_deciles']:.4f}",
+                         f"{v['mean_tv_farthest_deciles']:.4f}"])
+        W("WM-811K carries no timestamps. `lot_time` orders lots by the integer "
+          "in the lot name, on the assumption that a fab issues lot numbers in "
+          "production order. That cannot be verified, but it can be refuted: if "
+          "the numbers were arbitrary identifiers, two lots would be no more "
+          "alike for being adjacent in the numbering. We bucket lots into "
+          f"deciles of lot number and correlate the decile gap against the "
+          "total-variation distance between the deciles' distributions, against "
+          f"a null of {d['null_draws']} random reassignments of numbers to lots "
+          "that preserves every lot's contents and destroys only the ordering.")
+        W("")
+        W(table(rows, ["variable", "Spearman(gap, TV)", "null p95", "p",
+                       "TV, adjacent deciles", "TV, farthest deciles"]))
+        W("")
+        W("Geometry and failed-die rate drift monotonically with lot number and "
+          "the defect-class mix does not (p = "
+          f"{d['variables']['defect_class']['p_value_one_sided']:.3f}, below its "
+          "own null's 95th percentile). So the numbering carries real "
+          "structure — but the test cannot separate production order from "
+          "product blocking, since a product line numbered in a contiguous "
+          "block produces the same signature. The honest reading is that "
+          "`lot_time` is a forward-only split over *something systematic*, and "
+          "the next table says how much of that something is geometry.")
+        W("")
+    seen_rows = []
+    for p_ in PROTOS:
+        for e in ["cnn_gn", "cnn_bn"]:
+            v = C.get((p_, e, "erm", ""))
+            if not v:
+                continue
+            r = next(iter(v.values()))
+            if "n_test_seen_geometry" not in r:
+                continue
+            tot = r["n_test_seen_geometry"] + r["n_test_unseen_geometry"]
+            sg, ug = r.get("test_seen_geometry"), r.get("test_unseen_geometry")
+            seen_rows.append([
+                f"`{p_}`", ENC[e], r["n_geometries_train"],
+                r["n_geometries_test"],
+                f"{r['n_test_unseen_geometry'] / max(tot, 1):.2%}",
+                f"{r['test']['macro_f1']:.4f}",
+                f"{sg['macro_f1']:.4f}" if sg else NM,
+                f"{ug['macro_f1']:.4f}" if ug else NM])
+    if seen_rows:
+        W("Splitting each protocol's test set by whether the wafer's geometry "
+          "appeared in training at all:")
+        W("")
+        W(table(seen_rows, ["protocol", "representation", "geoms train",
+                            "geoms test", "test wafers of unseen geometry",
+                            "macro-F1 all", "seen geom.", "unseen geom."]))
+        W("")
+        W("**Caution on the last two columns.** macro-F1 averages over the "
+          "classes *present*, and the two subsets do not contain the same "
+          "classes, so the seen and unseen columns are averages over different "
+          "class sets and are not directly comparable to each other. Each "
+          "subset's full per-class F1 and class list is in the run JSON for a "
+          "like-for-like comparison.")
+        W("")
+    else:
+        W("The *model-side* decomposition — macro-F1 on the seen-geometry and "
+          "unseen-geometry halves of each test set — is " + NM + ": the field "
+          "was added to `run_bench.py` after the current cells were measured, "
+          "and `scripts/backfill_metrics.sh` is queued to populate it. The "
+          "*split-side* decomposition needs no model and is measured:")
+        W("")
+        if tp.exists():
+            sg = json.loads(tp.read_text()).get("split_geometry", {})
+            if sg:
+                W(table([[f"`{k}`", v["n_geometries_train"],
+                          v["n_geometries_test"], v["n_geometries_test_unseen"],
+                          f"{v['frac_test_wafers_unseen_geometry']:.2%}"]
+                         for k, v in sg.items()],
+                        ["protocol", "geometries in train", "in test",
+                         "in test, unseen in train",
+                         "test wafers of unseen geometry"]))
+                W("")
+                lt = sg.get("lot_time", {})
+                W(f"The forward-only test side holds "
+                  f"{lt.get('n_geometries_test', '?')} geometries against "
+                  f"{lt.get('n_geometries_train', '?')} in training, and "
+                  f"{lt.get('frac_test_wafers_unseen_geometry', 0):.2%} of its "
+                  "test wafers are of a geometry that never appeared in "
+                  "training — against "
+                  f"{sg.get('lot', {}).get('frac_test_wafers_unseen_geometry', 0):.2%} "
+                  f"for `lot`. So part of the forward-only drop, currently an "
+                  "unquantified part, is the `size` protocol arriving through "
+                  "the back door. The headline should not be read as pure "
+                  "temporal drift until the model-side decomposition lands.")
+                W("")
+
     # ---------------------------------------------------------------- result 2
     W("## 3. Result: the invariance toolbox does not beat ERM, "
       "and the reason is partly our own domain definition")
@@ -409,11 +509,16 @@ def main():
     # ---------------------------------------------------------------- threats
     W("## 8. Threats to validity")
     W("")
-    W("1. **Time is a proxy.** WM-811K carries no timestamps. `lot_time` orders "
-      "lots by the integer in the lot name, on the assumption that a fab issues "
-      "lot numbers in production order. If that assumption fails the "
-      "forward-only protocol is measuring something else, and it is our largest "
-      "single result.")
+    W("1. **Time is a proxy, and the forward-only split is not purely "
+      "temporal.** WM-811K carries no timestamps; `lot_time` orders lots by the "
+      "integer in the lot name. Section 2.1 shows the numbering is not "
+      "arbitrary, but cannot distinguish production order from product "
+      "blocking — and shows that the forward-only test side is concentrated on "
+      "a small number of geometries, a sixth of its wafers being of geometries "
+      "never trained on. "
+      "Our largest single result is therefore a compound of temporal drift and "
+      "geometry shift in a proportion that section 2.1 will quantify and "
+      "currently does not.")
     W("2. **The test split is label-aware.** `_stratified_group_split` skips a "
       "candidate held-out group when moving it would leave a class with no "
       "training examples. No label reaches the model, but which domains land in "

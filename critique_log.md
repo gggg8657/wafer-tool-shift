@@ -573,3 +573,119 @@ the *setting* correctly — these methods need only unlabelled target wafers —
 but reads as an endorsement. The finding that the deployable methods make things
 worse is one of this repo's better results and the README should lead with it
 rather than bury it.
+
+### 8. The forward-only protocol is not purely temporal, and that is a confound in the largest result
+
+`lot_time` is the headline: macro-F1 falls from ~0.86 lot-disjoint to 0.64–0.70
+forward-only. The whole thing rests on `wts.data.lot_numbers`, which reads the
+integer out of a lot name and treats it as a clock. Nobody had tested that.
+
+**Test 1 — is the numbering arbitrary?** It cannot be proved to be time, but it
+can be refuted as random. Bucket lots into deciles of lot number, take the
+total-variation distance between each pair of deciles' distributions over a
+wafer-level variable, and correlate that against the decile gap. The null is 200
+random reassignments of numbers to lots, which preserves every lot's contents
+and every marginal and destroys only the ordering (`scripts/time_proxy_check.py`
+→ `runs/time_proxy.json`):
+
+| variable | Spearman(gap, TV) | null p95 | p | TV adjacent | TV farthest |
+|---|---|---|---|---|---|
+| geometry | +0.3834 | 0.2800 | 0.000 | 0.8682 | 0.9998 |
+| defect class | +0.2560 | 0.3005 | **0.055** | 0.0964 | 0.4129 |
+| failed-die rate | +0.4050 | 0.2452 | 0.000 | 0.4062 | 0.7651 |
+
+Geometry and process health drift monotonically with lot number; the defect
+class mix does not, at p = 0.055 and with its correlation *below* its own null's
+95th percentile. So the numbering carries real systematic structure — the "these
+are arbitrary IDs" objection is dead — but the test cannot distinguish
+production order from product blocking, because a product line numbered in a
+contiguous block produces exactly this signature. That is stated in the paper
+rather than glossed into "we verified the time axis".
+
+**Test 2 — and this is the one that hurts.** The adjacent-decile geometry TV is
+**0.8682**. Neighbouring tenths of the lot numbering share almost no geometry at
+all. That is not gentle drift; it says the numbering is heavily blocked by
+product. Which raises the obvious question nobody had asked: what geometries does
+the forward-only *split* actually test on? Measured from the splits alone, no
+model involved:
+
+| protocol | geometries in train | in test | unseen in train | test wafers of unseen geometry |
+|---|---|---|---|---|
+| `iid` | 327 | 266 | 17 | 0.05% |
+| `lot` | 320 | 209 | 24 | 0.28% |
+| `size` | 205 | 139 | 139 | 100.00% |
+| **`lot_time`** | **338** | **19** | **4** | **14.15%** |
+
+The forward-only test set is **19 geometries**. Training sees 338. One test wafer
+in seven is of a geometry the model has never seen, against one in 360 for the
+plain lot holdout. So `lot_time` is not a clean temporal protocol: it is a
+forward-only split that also concentrates the test distribution onto a narrow
+slice of geometry space and puts a seventh of it out of distribution
+geometrically. Part of the ~0.17 drop credited to "forward-only time" is the
+`size` protocol arriving through the back door.
+
+**How large a part is currently unmeasured, and I am not going to guess.**
+`run_bench.py` now decomposes every test set into its seen-geometry and
+unseen-geometry halves and evaluates both, so the next run of any cell answers
+it. Queued as the first stage of `chain_rest.sh`, promoted ahead of three other
+sweeps precisely because it bears on the biggest claim.
+
+**A trap in that decomposition that I built the guard for up front.** macro-F1
+averages over the classes *present*, and the seen and unseen halves do not
+contain the same classes — the unseen half is 19 geometries' worth of wafers and
+will be missing several. Comparing their macro-F1 values directly would be
+comparing averages over different class sets, which is the same error as
+comparing across protocols without saying so. Both halves therefore record their
+full per-class F1 and their class list, so a like-for-like average over shared
+classes can be taken downstream, and the paper prints the caution next to the
+columns rather than in a footnote.
+
+**What this does not do.** It does not withdraw the forward-only result. The
+protocol is still the honest one for deployment — a fab genuinely does meet new
+products and new tools going forward, and a split that forbids that is the
+optimistic one. What changes is the *explanation*: "forward-only time costs 20
+points" becomes "forward-only deployment costs 20 points, of which an
+unquantified share is meeting geometries you have not trained on". The second
+sentence is less quotable and more nearly true.
+
+### 9. The sinkhorn sweep, partway: the control is doing its job and has already found something
+
+Two of seven cells (`scripts/sinkhorn_lambda.sh`), with the per-epoch OT penalty
+now logged into the run JSON:
+
+| `--ot-lambda` | test macro-F1 | OT penalty, epoch 1 → 12 | Scratch F1 |
+|---|---|---|---|
+| 0.0 (ERM through the same wrapper) | 0.8609 | 0.1360 → 0.1691 | 0.7224 |
+| 0.003 | 0.8591 | 0.1360 → 0.1699 | 0.6992 |
+| 1.0 (the original cell) | 0.1026 | not logged | 0.0000 |
+
+Two things worth recording before the rest lands.
+
+First, the penalty at λ = 0.003 ends at 0.1699 against 0.1691 unpenalized — the
+penalty is not being reduced at all, so that weight is doing nothing whatsoever.
+The unpenalized penalty *rises* over training, which is what an embedding that
+is getting more discriminative and therefore more domain-separated should do.
+Whatever the sweep finds, the useful window is somewhere above 0.003 and below
+1.0, and the two ends bracket it.
+
+Second, and this was not what the sweep was for: **λ = 0 scores 0.8609 where the
+stored plain-ERM cell for the same encoder, protocol and seed scores 0.8587.**
+Those two are mathematically the same computation — with λ = 0 the penalty term
+contributes exactly zero to the gradient — differing only in that `sinkhorn`
+routes through `model.embed()` then `model.head()` while `erm` calls `model(x)`,
+and in that the penalty is computed and discarded. A gap of 0.0022 between two
+configurations that are algebraically identical is a *floor on same-seed
+reproducibility*, and it is larger than several deltas this repo has reported as
+findings.
+
+I have not established whether that 0.0022 is non-deterministic convolution
+backward kernels, or a real difference in floating-point op ordering between the
+two code paths, and I will not assert either. What I did instead is make the
+backfill measure it: `scripts/backfill_metrics.sh` now runs one cell **twice
+under identical arguments** before overwriting anything, treats the difference
+between those two runs as the run-to-run floor, and admits the backfill only if
+the stored values agree with a fresh re-run to within it. The previous version
+demanded agreement to 1e-9, i.e. assumed bit-reproducibility on a GPU, which
+nobody had tested and which would have aborted the whole stage on a property
+that is not a bug. The floor goes to `runs/determinism.json` for the reports to
+cite, because it bounds every same-seed comparison here.

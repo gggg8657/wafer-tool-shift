@@ -345,6 +345,7 @@ class Runner:
         cal = self.calibration(model)
         res["test"] = self.evaluate(model, self.te, groups=True, cal=cal)
         res["test"].update(self.weighted_coverage(model, cal))
+        res.update(self.geometry_decomposition(model))
 
         if a.tta and a.encoder != "feat":
             # unlabelled target batches: what a fab would actually have on a new
@@ -375,6 +376,43 @@ class Runner:
               f"worstDomain {t.get('worst_domain_macro_f1', float('nan')):.4f}  "
               f"AUROC {t['defect_auroc']:.4f}  ECE {t['ece']:.4f}")
         return res
+
+    def geometry_decomposition(self, model):
+        """Split the test set by whether its geometry was seen in training.
+
+        The `lot_time` protocol is this repo's largest result and it is not a
+        pure time split. Measured on this corpus at seed 0, its test side holds
+        only 19 geometries against 338 in training, and 14.15% of its test
+        wafers are of a geometry that never appeared in training at all -- so
+        part of the ~0.17 drop attributed to forward-only time is the `size`
+        protocol arriving through the back door. This decomposes it.
+
+        macro-F1 is an average over the classes *present*, so the two subsets
+        average over different class sets and their macro-F1 values are not
+        directly comparable. Both subsets' full per-class F1 is therefore
+        recorded, along with the classes each one contains, so a like-for-like
+        average over the shared classes can be taken downstream instead of
+        being quietly assumed here.
+        """
+        sid = self.c.size_id
+        seen = torch.zeros(int(sid.max()) + 1, dtype=torch.bool)
+        seen[torch.unique(sid[self.tr])] = True
+        is_seen = seen[sid[self.te]]
+        out = {"n_test_seen_geometry": int(is_seen.sum()),
+               "n_test_unseen_geometry": int((~is_seen).sum()),
+               "n_geometries_train": int(torch.unique(sid[self.tr]).numel()),
+               "n_geometries_test": int(torch.unique(sid[self.te]).numel())}
+        for name, mask in (("test_seen_geometry", is_seen),
+                           ("test_unseen_geometry", ~is_seen)):
+            idx = self.te[mask]
+            if len(idx) < 64:
+                out[name] = None          # a blank, not a number from 12 wafers
+                continue
+            r = self.evaluate(model, idx, groups=True)
+            r["classes_present"] = sorted(
+                CLASSES[c] for c in torch.unique(self.c.labels[idx]).tolist())
+            out[name] = r
+        return out
 
     @torch.no_grad()
     def probs_for(self, model, batches):

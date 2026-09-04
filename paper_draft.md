@@ -32,6 +32,29 @@ Model selection for every cell uses a validation split carved from the *training
 
 The `iid − lot` column is the part of a published random-split number that came from having seen the same lot in training. It is small. This was the surprise: the standard objection to random splits on WM-811K is that near-duplicate wafers from one lot land on both sides, and on this corpus that objection is worth little. The forward-only column is where the accuracy goes, and it is also the protocol with the largest label shift, so the drop is not purely covariate.
 
+### 2.1 What the forward-only protocol actually holds out
+
+WM-811K carries no timestamps. `lot_time` orders lots by the integer in the lot name, on the assumption that a fab issues lot numbers in production order. That cannot be verified, but it can be refuted: if the numbers were arbitrary identifiers, two lots would be no more alike for being adjacent in the numbering. We bucket lots into deciles of lot number and correlate the decile gap against the total-variation distance between the deciles' distributions, against a null of 200 random reassignments of numbers to lots that preserves every lot's contents and destroys only the ordering.
+
+| variable | Spearman(gap, TV) | null p95 | p | TV, adjacent deciles | TV, farthest deciles |
+|---|---|---|---|---|---|
+| `geometry` | +0.3834 | 0.2800 | 0.000 | 0.8682 | 0.9998 |
+| `defect_class` | +0.2560 | 0.3005 | 0.055 | 0.0964 | 0.4129 |
+| `failed_die_rate_ventile` | +0.4050 | 0.2452 | 0.000 | 0.4062 | 0.7651 |
+
+Geometry and failed-die rate drift monotonically with lot number and the defect-class mix does not (p = 0.055, below its own null's 95th percentile). So the numbering carries real structure — but the test cannot separate production order from product blocking, since a product line numbered in a contiguous block produces the same signature. The honest reading is that `lot_time` is a forward-only split over *something systematic*, and the next table says how much of that something is geometry.
+
+The *model-side* decomposition — macro-F1 on the seen-geometry and unseen-geometry halves of each test set — is [not measured]: the field was added to `run_bench.py` after the current cells were measured, and `scripts/backfill_metrics.sh` is queued to populate it. The *split-side* decomposition needs no model and is measured:
+
+| protocol | geometries in train | in test | in test, unseen in train | test wafers of unseen geometry |
+|---|---|---|---|---|
+| `iid` | 327 | 266 | 17 | 0.05% |
+| `lot` | 320 | 209 | 24 | 0.28% |
+| `size` | 205 | 139 | 139 | 100.00% |
+| `lot_time` | 338 | 19 | 4 | 14.15% |
+
+The forward-only test side holds 19 geometries against 338 in training, and 14.15% of its test wafers are of a geometry that never appeared in training — against 0.28% for `lot`. So part of the forward-only drop, currently an unquantified part, is the `size` protocol arriving through the back door. The headline should not be read as pure temporal drift until the model-side decomposition lands.
+
 ## 3. Result: the invariance toolbox does not beat ERM, and the reason is partly our own domain definition
 
 **Protocol `lot`** (deltas against the same encoder under ERM):
@@ -164,7 +187,7 @@ MIXED-SYNTH training results: [not measured]. `scripts/mixed_sweep.sh` queued.
 
 ## 8. Threats to validity
 
-1. **Time is a proxy.** WM-811K carries no timestamps. `lot_time` orders lots by the integer in the lot name, on the assumption that a fab issues lot numbers in production order. If that assumption fails the forward-only protocol is measuring something else, and it is our largest single result.
+1. **Time is a proxy, and the forward-only split is not purely temporal.** WM-811K carries no timestamps; `lot_time` orders lots by the integer in the lot name. Section 2.1 shows the numbering is not arbitrary, but cannot distinguish production order from product blocking — and shows that the forward-only test side is concentrated on a small number of geometries, a sixth of its wafers being of geometries never trained on. Our largest single result is therefore a compound of temporal drift and geometry shift in a proportion that section 2.1 will quantify and currently does not.
 2. **The test split is label-aware.** `_stratified_group_split` skips a candidate held-out group when moving it would leave a class with no training examples. No label reaches the model, but which domains land in test is not independent of the labels; the guard binds almost only on `Near-full` (149 wafers). The size of the resulting bias is [not measured].
 3. **One architecture family.** Every CNN cell is the same three-block encoder at width 32 and 12 epochs. Whether the protocol ordering survives at a modern backbone and a longer schedule is [not measured].
 4. **Three seeds.** Half-ranges over three seeds are descriptive, not inferential. We report the range we saw and do not attach a p-value to it.

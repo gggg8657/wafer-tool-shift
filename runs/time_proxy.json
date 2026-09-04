@@ -1,0 +1,68 @@
+{
+  "n_wafers": 172948,
+  "n_lots": 10762,
+  "deciles": 10,
+  "null_draws": 200,
+  "lot_number_min": 1,
+  "lot_number_max": 47542,
+  "variables": {
+    "geometry": {
+      "spearman_gap_vs_tv": 0.3833942952778177,
+      "null_mean": 0.0061129232169965,
+      "null_p95": 0.2799769452491445,
+      "p_value_one_sided": 0.0,
+      "mean_tv_adjacent_deciles": 0.8681919325520853,
+      "mean_tv_farthest_deciles": 0.9998264692272094
+    },
+    "defect_class": {
+      "spearman_gap_vs_tv": 0.2560261151245864,
+      "null_mean": -0.009006537829792454,
+      "null_p95": 0.30047435339940215,
+      "p_value_one_sided": 0.055,
+      "mean_tv_adjacent_deciles": 0.09635185318270151,
+      "mean_tv_farthest_deciles": 0.4128653549406867
+    },
+    "failed_die_rate_ventile": {
+      "spearman_gap_vs_tv": 0.40501946047674553,
+      "null_mean": -0.01243198608703946,
+      "null_p95": 0.24518962997089983,
+      "p_value_one_sided": 0.0,
+      "mean_tv_adjacent_deciles": 0.4061653652033972,
+      "mean_tv_farthest_deciles": 0.7650943081264487
+    }
+  },
+  "split_geometry": {
+    "iid": {
+      "n_geometries_train": 327,
+      "n_geometries_test": 266,
+      "n_geometries_test_unseen": 17,
+      "n_test_wafers": 43237,
+      "n_test_wafers_unseen_geometry": 20,
+      "frac_test_wafers_unseen_geometry": 0.000463
+    },
+    "lot": {
+      "n_geometries_train": 320,
+      "n_geometries_test": 209,
+      "n_geometries_test_unseen": 24,
+      "n_test_wafers": 43252,
+      "n_test_wafers_unseen_geometry": 120,
+      "frac_test_wafers_unseen_geometry": 0.002774
+    },
+    "size": {
+      "n_geometries_train": 205,
+      "n_geometries_test": 139,
+      "n_geometries_test_unseen": 139,
+      "n_test_wafers": 44908,
+      "n_test_wafers_unseen_geometry": 44908,
+      "frac_test_wafers_unseen_geometry": 1.0
+    },
+    "lot_time": {
+      "n_geometries_train": 338,
+      "n_geometries_test": 19,
+      "n_geometries_test_unseen": 4,
+      "n_test_wafers": 43237,
+      "n_test_wafers_unseen_geometry": 6118,
+      "frac_test_wafers_unseen_geometry": 0.141499
+    }
+  }
+}
