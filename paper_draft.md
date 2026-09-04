@@ -209,6 +209,8 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range |
 |---|---|---|---|---|---|---|
 | `iid` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.8625 | ±0.0042 |
+| `iid` | CNN (GroupNorm) | `erm` | poolmean | 3 | 0.8836 | ±0.0032 |
+| `iid` | CNN (GroupNorm) | `erm` | poolmeanmax | 3 | 0.8926 | ±0.0023 |
 | `iid` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.8837 | ±0.0016 |
 | `iid` | descriptors + MLP | `erm` | sess2 | 3 | 0.8443 | ±0.0076 |
 | `iid` | spectral operator | `erm` | sess2 | 3 | 0.8576 | ±0.0142 |

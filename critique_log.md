@@ -2073,3 +2073,51 @@ support.
 I have been wrong about the sign of a per-class effect once already today, so
 this is a prediction about direction only, and the control decides whether any
 of it counts.
+
+### 43. The Monday document said the weekend produced no positive results, which stopped being true
+
+`WEEKEND.md` opened with *"the weekend produced essentially no positive results,
+and that is the honest outcome"*. That was accurate when written and is now
+false: `meanmax` beats global average pooling by +0.0173 macro-F1 and +0.0566 on
+`Scratch`, both clearing the floor, with a capacity control that buys nothing.
+It is the single actionable finding here and it was **absent from the Monday
+document entirely** while five paragraphs of withdrawals were not.
+
+That is a failure mode worth naming, because it is the mirror image of the one
+this log has spent thirty entries on. Having spent the weekend learning to
+distrust positive results, I wrote a hand-off that under-reported the one
+positive result that had survived a control designed to kill it. Scepticism
+applied asymmetrically is not scepticism, it is a different bias with better
+manners.
+
+Rewritten. The document now opens with the floor, states that most of what
+follows is a withdrawal, and then says plainly that two things came out positive
+and both were controlled. `2.0` is the pooling result, placed first in section 2
+because it is the only thing an owner can act on.
+
+Three further staleness fixes in the same pass:
+
+* **§2.1 said the `size` half of the DG result "stands".** It does not. The
+  re-run at three seeds with `size`'s own floor (0.0133) shows GroupDRO's
+  −0.1534 failing at margin 0.0008, because its seeds span 0.1844 — more than
+  its own effect. The section now carries that table and the conclusion is
+  stated without an exception: no borrowed objective separates from ERM on
+  either protocol, under either domain definition.
+* **"What survives the floor"** was four rows and is now seven, gaining the two
+  positives and the corrected H33 result.
+* **The stage table** listed six stages as pending questions when five had been
+  answered. Each now carries its answer, including the `rpca_hide_raw` row
+  marked *"answered on the second attempt; the first was void"* — a hand-off
+  that hides its own void experiment is not a hand-off.
+
+The document is 3,213 words, up from 2,508. That is over the five-minute target
+and I am accepting it: the previous version hit the target partly by omitting a
+result. If it has to be one or the other, a tired person is better served by a
+complete document they skim than a short one that misleads.
+
+**One open question remains**, and it is the right one to be running into
+Monday: the pooling win is measured on `lot` with one encoder, and a repository
+whose thesis is that results move when the protocol changes has no business
+reporting a single-protocol win. 27 cells across `iid`, `size` and `lot_time`
+are in flight with the prediction recorded — holds or grows on `iid`, shrinks or
+reverses on `lot_time`.

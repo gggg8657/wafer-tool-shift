@@ -126,12 +126,17 @@ def main():
           "between them to clear that floor. Applying it is what most of this "
           "weekend consisted of.")
         W("")
-    W("Six claims the repository made on Friday are withdrawn. None was "
-      "withdrawn because a new idea beat an old one — the weekend produced "
-      "essentially no positive results, and that is the honest outcome. Each "
-      "withdrawal closes off a direction that looked open, and two of them "
-      "(the acquisition cost model, the forward-only decomposition) replace a "
-      "wrong answer with a better question.")
+    W("Most of what follows is a withdrawal. Six claims the repository made on "
+      "Friday do not survive being measured against that floor, and none was "
+      "withdrawn because a new idea beat an old one. Each closes off a "
+      "direction that looked open, and two of them — the acquisition cost "
+      "model and the forward-only decomposition — replace a wrong answer with "
+      "a better question.")
+    W("")
+    W("**Two things did come out positive, and both were controlled.** Changing "
+      "what the encoder pools moved the long tail (section 2.0), and it is the "
+      "one actionable result here. GroupNorm over BatchNorm survived being "
+      "re-measured with a test capable of resolving it (section 3).")
     W("")
     W("Nothing here was obtained by loosening a protocol. Where a protocol "
       "changed, both numbers are reported and neither is discarded.")
@@ -175,6 +180,60 @@ def main():
           "it because a cell's seeds are always run back to back.")
         W("")
 
+    # ---------------------------------------------------------------- positive
+    P = {t: {sd: r for sd, r in v.items()}
+         for t, v in ((t, C.get(("lot", "cnn_gn", "erm", t), {}))
+                      for t in ("poolmean", "poolmeanmax", "poolmeanmean"))
+         if v}
+    if len(P) == 3:
+        W("## 2.0 The one thing that worked: what the encoder pools")
+        W("")
+        bx = sorted(r["test"]["macro_f1"] for r in P["poolmean"].values())
+        bsc = sorted(r["test"]["per_class_f1"]["Scratch"]
+                     for r in P["poolmean"].values())
+        rows = []
+        for t, lab in (("poolmean", "`mean` — global average, the original"),
+                       ("poolmeanmax", "`meanmax` — **treatment**"),
+                       ("poolmeanmean", "`meanmean` — **capacity control**")):
+            xs = sorted(r["test"]["macro_f1"] for r in P[t].values())
+            sc = sorted(r["test"]["per_class_f1"]["Scratch"]
+                        for r in P[t].values())
+            rows.append([
+                lab, f"{sum(xs)/len(xs):.4f}",
+                "—" if t == "poolmean" else f"{sum(xs)/len(xs)-sum(bx)/len(bx):+.4f}",
+                "—" if t == "poolmean" else sep(xs, bx, floor)[0],
+                f"{sum(sc)/len(sc):.4f}",
+                "—" if t == "poolmean" else f"{sum(sc)/len(sc)-sum(bsc)/len(bsc):+.4f}",
+                "—" if t == "poolmean" else sep(sc, bsc, floor)[0]])
+        W(table(rows, ["pooling", "macro-F1", "vs `mean`", "verdict",
+                       "Scratch F1", "vs `mean`", "verdict"]))
+        W("")
+        W("`CnnResized.embed` was a global average over the final feature map. "
+          "A `Scratch` is a thin connected line; averaged over the wafer it is "
+          "close to a slightly elevated background failure rate, which is "
+          "exactly the statistic that discards the fact that the failures form "
+          "a line. Concatenating a max recovers it.")
+        W("")
+        W("**`meanmean` is why this is a result and not a number.** It has "
+          "`meanmax`'s exact parameter count and carries the mean concatenated "
+          "with itself, so it separates \"max pooling helps\" from \"a wider "
+          "head helps\". It buys nothing. The RPCA channel died on precisely "
+          "this question, asked after the fact; here it was asked first.")
+        W("")
+        W("Three other explanations for the long tail were measured and "
+          "discarded first: focal loss over five values of gamma against its "
+          "own bit-exact `gamma = 0` control, class-balanced weighting, and "
+          "input resolution — the last refuted outright, since 97.7% of wafers "
+          "are *upsampled* to reach 64x64 and a finer grid has nothing to "
+          "recover. **The long tail was an architecture problem, not a class-"
+          "imbalance problem.** That is the sentence worth taking away.")
+        W("")
+        W("*Caveat, and it is the one this repository would insist on: this is "
+          "measured on `lot` with one encoder. A benchmark whose thesis is that "
+          "results move when the protocol changes should not report a "
+          "single-protocol win. `iid`, `size` and `lot_time` are running.*")
+        W("")
+
     # ---------------------------------------------------------------- withdrawn
     W("## 2. What was withdrawn, and what each withdrawal rules out")
     W("")
@@ -212,14 +271,42 @@ def main():
             W("")
             W(table(rows, ["objective", "macro-F1", "vs ERM", "verdict"]))
             W("")
-            W("**Not one separates from ERM.** GroupDRO has the largest "
-              "movement and its seed ranges are disjoint from ERM's, but the "
-              "margin is below the floor. So the original claim was unearned "
-              "*and* correct: the experiment as run could not have shown "
-              "otherwise, and the corrected experiment reaches the same "
-              "conclusion honestly. **Rules out:** this family of invariance "
-              "objectives, on this corpus, under either domain definition.")
+            W("**Not one separates from ERM.** So the original claim was "
+              "unearned *and* correct: the experiment as run could not have "
+              "shown otherwise, and the corrected experiment reaches the same "
+              "conclusion honestly.")
             W("")
+            sz = {o: (agg(C, ("size", "cnn_bn", o, "sizeseed")),
+                      agg(C, ("size", "cnn_bn", "erm", "sizeseed")))
+                  for o in ("group_dro", "logit_adjust")}
+            if all(a and b for a, b in sz.values()):
+                fl_sz = floor_for(F, "size") if False else None
+                fs = js("determinism__size__cnn_bn.json")
+                fsz = fs.get("range") if fs else None
+                W("**And the `size` protocol, which was the half of this result "
+                  "said to 'stand', does not stand either.** It was the only "
+                  "place a borrowed objective showed a large effect, and those "
+                  "cells were single-seed. Re-run at three seeds in one "
+                  "session, with `size`'s own run-to-run floor measured first "
+                  f"({fsz:.4f}, two and a half times `lot`'s):")
+                W("")
+                rows2 = []
+                for o, (x, b) in sz.items():
+                    v, m = sep(x["vals"], b["vals"], fsz)
+                    rows2.append([f"`{o}`", f"{x['mean'] - b['mean']:+.4f}",
+                                  f"{max(x['vals']) - min(x['vals']):.4f}", v])
+                W(table(rows2, ["objective", "vs ERM on `size`",
+                                "its own seed range", "verdict"]))
+                W("")
+                W("GroupDRO's mean effect is the largest number in this "
+                  "repository and it still fails: its seeds span more than its "
+                  "effect, so its range and ERM's overlap almost exactly. It is "
+                  "not a method that loses on geometry shift; it is a method "
+                  "that is *unstable* on geometry shift. **Rules out:** this "
+                  "family of invariance objectives, on this corpus, on either "
+                  "protocol, under either domain definition — with no exception "
+                  "left.")
+                W("")
 
     alb = js("al_budget_check.json")
     if alb:
@@ -405,6 +492,30 @@ def main():
     W("## 3. What survives the floor")
     W("")
     surv = []
+    if len(P) == 3:
+        mx = agg(C, ("lot", "cnn_gn", "erm", "poolmeanmax"))
+        mn = agg(C, ("lot", "cnn_gn", "erm", "poolmean"))
+        ctl = agg(C, ("lot", "cnn_gn", "erm", "poolmeanmean"))
+        surv.append(["**Max pooling beats global average pooling**",
+                     f"{mx['mean'] - mn['mean']:+.4f} macro-F1 and "
+                     f"{'+%.4f' % (sum(sorted(r['test']['per_class_f1']['Scratch'] for r in P['poolmeanmax'].values())) / 3 - sum(sorted(r['test']['per_class_f1']['Scratch'] for r in P['poolmean'].values())) / 3)}"
+                     f" on `Scratch`; the capacity control gives "
+                     f"{ctl['mean'] - mn['mean']:+.4f} and overlaps"])
+    gb = js("gn_vs_bn.json")
+    if gb:
+        surv.append(["**GroupNorm beats BatchNorm**",
+                     f"{gb['difference']:+.4f} on `lot`, permutation "
+                     f"p = {gb['permutation_test']['p_two_sided']:.4f} over "
+                     f"{gb['n_per_arm']} seeds per arm — the range test cannot "
+                     "resolve it and never could"])
+    hr = {t: agg(C, ("lot", "rpca_cnn", "erm", t))
+          for t in ("hideraw2_failmask", "hideraw2_residual")}
+    if all(hr.values()):
+        surv.append(["The RPCA residual is a worse description of the defect "
+                     "than the raw mask",
+                     f"{hr['hideraw2_residual']['mean'] - hr['hideraw2_failmask']['mean']:+.4f} "
+                     "when it is the *only* description; indistinguishable when "
+                     "the raw mask is also present"])
     b_scr = agg(C, ("lot", "cnn_gn", "erm", ""))
     b_ssl = agg(C, ("lot", "cnn_gn", "erm", "sslinit"))
     if b_scr and b_ssl:
@@ -519,10 +630,26 @@ def main():
          "seeds 1-2 folds a session offset into what is presented as seed "
          "variance. Reported beside the original table, not replacing it"),
         ("`pooling_sweep.sh`", "logs/pooling.log",
-         "the last standing long-tail hypothesis: global average pooling "
-         "discards the fact that a Scratch is a *line*. mean / meanmax / "
-         "meanmean, where meanmean is the capacity control with identical "
-         "parameter count and no extra information"),
+         "**answered** (section 2.0): max pooling beats global average pooling "
+         "on `lot` and the capacity control does not"),
+        ("`size_objectives_seeds.sh`", "logs/size_objectives.log",
+         "**answered**: nothing separates from ERM on `size` either, GroupDRO "
+         "included"),
+        ("`gn_vs_bn.sh`", "logs/gn_vs_bn.log",
+         "**answered**: GroupNorm beats BatchNorm, permutation p = 0.011 at "
+         "eight seeds per arm"),
+        ("`rpca_ablation_clean.sh`", "logs/rpca_clean.log",
+         "**answered**: all four fourth-channel arms within the floor of each "
+         "other, as the original ablation said"),
+        ("`rpca_hide_raw.sh`", "logs/rpca_hide_raw.log",
+         "**answered on the second attempt**; the first was void because the "
+         "one-hot planes sum to 1 and the 'hidden' plane was recoverable"),
+        ("`pooling_protocols.sh`", "logs/pooling_protocols.log",
+         "the only open question: does the pooling win survive `iid`, `size` "
+         "and `lot_time`? Prediction on record — holds or grows on `iid`, "
+         "shrinks or reverses on `lot_time`, because max pooling keeps the "
+         "extreme a thin structure produces and forward-only shift is where "
+         "extremes move"),
     ]
     rows = []
     for name, log, what in stages:
