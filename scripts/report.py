@@ -29,9 +29,14 @@ def f(x, n=4):
 
 
 def load(run_dir):
+    """Benchmark cells only -- `runs/` also holds the active-learning curve, the
+    RPCA lambda sweep and the pretraining history, which have their own shapes.
+    """
     out = {}
     for p in sorted(Path(run_dir).glob("*.json")):
         r = json.loads(p.read_text())
+        if not isinstance(r, dict) or "protocol" not in r:
+            continue
         out[(r["protocol"], r["encoder"], r["objective"], r.get("tag", ""))] = r
     return out
 
@@ -225,13 +230,20 @@ def main():
               f"Masked-die modelling on {ssl['n_unlabeled']:,} unlabelled "
               f"wafers with a gradient-reversed lot head, "
               f"{ssl['minutes']:.1f} min.", "",
-              table([[r["epoch"], f(r["recon_ce"]), f(r["lot_ce"]),
-                      f(r["lot_ce_chance"])] for r in h],
-                    ["epoch", "masked-die CE", "lot CE (adversarial)",
-                     "lot CE at chance"]),
+              table([[r["epoch"], f(r["recon_ce"]),
+                      f(r.get("nuisance_ce", r.get("lot_ce"))),
+                      f(r.get("nuisance_ce_chance", r.get("lot_ce_chance")))]
+                     for r in h],
+                    ["epoch", "masked-die CE", "nuisance CE (adversarial)",
+                     "CE at chance"]),
               "",
-              "The lot CE rising toward chance is the signal that the embedding "
-              "is losing its ability to name its own lot.", ""]
+              "The nuisance CE rising toward chance is the signal that the "
+              "embedding is losing the lot's failure-rate decile and the wafer "
+              "geometry. An earlier version asked the adversary to name the lot "
+              "itself out of 64 hashed buckets; its loss sat at chance from "
+              "epoch 1 because the label was unpredictable, so gradient "
+              "reversal had nothing to reverse -- a vacuous adversary that reads "
+              "as invariance in the logs.", ""]
 
     # ---- per-class for the best lot-protocol cell
     lot_cells = {k: v for k, v in R.items() if k[0] == "lot"}
