@@ -856,6 +856,11 @@ def main():
                              f"{pcf('Scratch') - bpc('Scratch'):+.4f}",
                              separation(sc, bsc, floor_for(F, "lot"))[0]
                              if tg != "poolmean" else "—"])
+            perm = {}
+            for f_, k_ in (("runs/pooling_lot_perm.json", "macro_f1"),
+                           ("runs/pooling_lot_perm_scratch.json", "Scratch")):
+                if Path(f_).exists():
+                    perm[k_] = json.loads(Path(f_).read_text())
             L += ["## What the encoder pools: the long tail is an architecture "
                   "problem", "",
                   "Class imbalance was measured and discarded — focal loss over "
@@ -869,7 +874,33 @@ def main():
                   "background failure rate.", "",
                   table(rows, ["pooling", "macro-F1", "vs `mean`", "verdict",
                                "Scratch F1", "vs `mean`", "verdict"]), "",
-                  "**`meanmean` is why this is a result rather than a number.** "
+                  "**Read the verdict column with care, and prefer the "
+                  "permutation test below it.** Those verdicts come from "
+                  "whether the seed ranges overlap, which is the right "
+                  "conservative default for a table of three-seed cells and "
+                  "the wrong tool once a comparison has been run properly: a "
+                  "sample's range grows with the sample, so adding seeds makes "
+                  "non-overlap strictly harder. At eight seeds per arm this "
+                  "comparison reads *ranges overlap* on both metrics while an "
+                  "exact permutation test puts one of them below 0.001.", ""]
+            if perm:
+                L += [table([[k, f"{d['n_per_arm']}",
+                              f"{d['mean_gn']:.4f}", f"{d['mean_bn']:.4f}",
+                              f"{d['difference']:+.4f}",
+                              d["range_test"]["verdict"],
+                              f"**{d['permutation_test']['p_two_sided']:.5f}**"]
+                             for k, d in perm.items()],
+                            ["metric", "seeds/arm", "`meanmax`", "`mean`",
+                             "difference", "range test",
+                             "exact permutation p"]), "",
+                      "The effect is concentrated in `Scratch`, whose p is more "
+                      "than twenty times smaller than macro-F1's — which is "
+                      "what the mechanism predicts, since a thin connected line "
+                      "is precisely the structure a mean over the wafer "
+                      "destroys and a max preserves. That concentration was "
+                      "predicted before the run rather than observed after it.",
+                      ""]
+            L += ["**`meanmean` is why this is a result rather than a number.** "
                   "It has exactly the parameter count of `meanmax` and carries "
                   "the mean concatenated with itself, so it separates \"max "
                   "pooling helps\" from \"a wider head helps\". It buys "

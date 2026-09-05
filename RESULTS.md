@@ -508,8 +508,8 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.8647 | +/-0.0044 | 0.8671, 0.8680, 0.8591 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | cw | 2 | 0.8692 | +/-0.0044 | 0.8736, 0.8648 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | gnbn | 8 | 0.8726 | +/-0.0160 | 0.8734, 0.8680, 0.8589, 0.8705, 0.8708, 0.8736, 0.8750, 0.8908 |
-| lot | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 7 | 0.8714 | +/-0.0161 | 0.8729, 0.8668, 0.8601, 0.8758, 0.8897, 0.8574, 0.8773 |
-| lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 7 | 0.8868 | +/-0.0093 | 0.8862, 0.8796, 0.8860, 0.8857, 0.8983, 0.8815, 0.8903 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 8 | 0.8738 | +/-0.0163 | 0.8729, 0.8668, 0.8601, 0.8758, 0.8897, 0.8574, 0.8773, 0.8901 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 8 | 0.8888 | +/-0.0116 | 0.8862, 0.8796, 0.8860, 0.8857, 0.8983, 0.8815, 0.8903, 0.9027 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmean | 3 | 0.8717 | +/-0.0081 | 0.8709, 0.8802, 0.8641 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | rpca2_3ch | 3 | 0.8703 | +/-0.0096 | 0.8812, 0.8679, 0.8619 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | scratch_lr1e-3 | 2 | 0.8690 | +/-0.0009 | 0.8699, 0.8681 |
@@ -800,9 +800,18 @@ Class imbalance was measured and discarded — focal loss over five values of ga
 
 | pooling | macro-F1 | vs `mean` | verdict | Scratch F1 | vs `mean` | verdict |
 |---|---|---|---|---|---|---|
-| `mean` (global average, the original) | 0.8714 (n=7) | — | — | 0.7266 | — | — |
-| `meanmax` (mean + max) — treatment | 0.8868 (n=7) | +0.0154 | ranges overlap | 0.7754 | +0.0488 | ranges overlap |
-| `meanmean` (mean + mean) — **control** | 0.8717 (n=3) | +0.0003 | ranges overlap | 0.7210 | -0.0056 | ranges overlap |
+| `mean` (global average, the original) | 0.8738 (n=8) | — | — | 0.7292 | — | — |
+| `meanmax` (mean + max) — treatment | 0.8888 (n=8) | +0.0150 | ranges overlap | 0.7764 | +0.0473 | ranges overlap |
+| `meanmean` (mean + mean) — **control** | 0.8717 (n=3) | -0.0020 | ranges overlap | 0.7210 | -0.0082 | ranges overlap |
+
+**Read the verdict column with care, and prefer the permutation test below it.** Those verdicts come from whether the seed ranges overlap, which is the right conservative default for a table of three-seed cells and the wrong tool once a comparison has been run properly: a sample's range grows with the sample, so adding seeds makes non-overlap strictly harder. At eight seeds per arm this comparison reads *ranges overlap* on both metrics while an exact permutation test puts one of them below 0.001.
+
+| metric | seeds/arm | `meanmax` | `mean` | difference | range test | exact permutation p |
+|---|---|---|---|---|---|---|
+| macro_f1 | 8 | 0.8888 | 0.8738 | +0.0150 | ranges overlap | **0.01197** |
+| Scratch | 8 | 0.7764 | 0.7292 | +0.0473 | ranges overlap | **0.00047** |
+
+The effect is concentrated in `Scratch`, whose p is more than twenty times smaller than macro-F1's — which is what the mechanism predicts, since a thin connected line is precisely the structure a mean over the wafer destroys and a max preserves. That concentration was predicted before the run rather than observed after it.
 
 **`meanmean` is why this is a result rather than a number.** It has exactly the parameter count of `meanmax` and carries the mean concatenated with itself, so it separates "max pooling helps" from "a wider head helps". It buys nothing, and it moves `Scratch` by −0.0006. The RPCA channel died on precisely this question.
 

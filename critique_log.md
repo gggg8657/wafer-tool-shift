@@ -2563,3 +2563,67 @@ arrived on the weekend's one positive result rather than on a convenient
 negative is the best available check that the instrument was not chosen to suit
 a conclusion. The verdict on H50 will come from a test that does not punish
 extra data, and I will take whatever it says.
+
+### 54. H50 confirmed on both counts: the weekend has a positive result
+
+Eight seeds per arm on `lot`, one session, exact permutation test:
+
+| metric | `meanmax` | `mean` | difference | range test | permutation p |
+|---|---|---|---|---|---|
+| macro-F1 | 0.8888 | 0.8738 | **+0.0150** | ranges overlap | **0.01197** |
+| **`Scratch`** | 0.7764 | 0.7292 | **+0.0473** | ranges overlap | **0.00047** |
+
+The prediction was: survives with p < 0.05 on macro-F1, and a *smaller* p on
+`Scratch`, because `Scratch` is where the mechanism says the effect lives. Both
+hold, and `Scratch`'s p is twenty-five times smaller than macro-F1's.
+
+**That concentration is the part that matters.** The claim was never "a bigger
+head helps"; it was that a global average destroys the one thing that identifies
+a thin connected line, and a max preserves it. If the effect were capacity or
+noise it would be spread across the nine classes, and it is not — it is
+concentrated in exactly the class the mechanism named, and the capacity control
+with identical parameter count moves that class by −0.0056.
+
+**And the range criterion says "ranges overlap" for a result at p = 0.00047.**
+That is the clearest demonstration this weekend of the point made in §30: the
+range of a sample grows with the sample, so the criterion that is right for
+reading a table of three-seed cells becomes actively misleading once a
+comparison has been run properly. `RESULTS.md` now prints the permutation test
+beside the range verdict with an instruction to prefer it, because a table
+saying "overlaps" next to p = 0.0005 is worse than no table.
+
+So the weekend produced one positive result, and it is now held to a higher
+standard than anything else in this repository: eight seeds per arm, an exact
+test that does not punish extra data, a capacity control that moves nothing, a
+mechanism that predicted *which class* would move before the run, and a known
+failure to generalize.
+
+**What it is worth being careful about.** It is one encoder, one protocol, and a
+first-order architectural change that anyone could have tried. It does not
+rescue the benchmark's headline numbers, it does not approach the 0.95 target,
+and its own protocol-dependence is the more interesting half. I am recording it
+as a positive result and not as a contribution.
+
+### 55. The other half of that claim is still at three seeds
+
+The finding has two parts — it works on `lot`, and it does *not* generalize.
+The first is now at eight seeds with p = 0.012. The second rests on three seeds
+for `iid` and `lot_time`; only `size` has been taken to eight (p = 0.162 on
+macro-F1, p = 0.202 on `Scratch`, unestablished either way).
+
+A "does not generalize" claim built on the sample size that has been wrong four
+times this weekend is not a claim, it is the absence of one. The whole point of
+the finding is the contrast between protocols, so both sides of the contrast
+need the same instrument — the same argument as §51, applied to the part of my
+own result that happens to be convenient.
+
+`scripts/pooling_protocols_seeds.sh` takes `iid` and `lot_time` to eight seeds
+per arm and runs the permutation test on macro-F1 and on `Scratch` for each,
+every step behind `verify_stage.py`.
+
+**H54, before the run:** `iid` comes out positive but weaker than `lot` and does
+not reach p < 0.05 — its three-seed effect was +0.0090 against `lot`'s +0.0173,
+and its baseline is higher. `lot_time` is a genuine null. If `iid` *does* reach
+significance the claim simplifies to "helps where geometry is shared, hurts
+where it is not", which is stronger and cleaner than what I have now, so this is
+one of the few predictions here I would be pleased to lose.

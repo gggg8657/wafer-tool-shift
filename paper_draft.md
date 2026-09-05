@@ -8,7 +8,7 @@ Wafer-map defect classification is usually reported on a random split of WM-811K
 
 The rest of the paper is a sequence of our own claims failing their own controls, and we think that is the contribution. Nine borrowed invariance objectives fail to beat ERM — a finding the first version of the experiment could not have produced otherwise, since it handed every objective a domain vocabulary of 32 buckets whose class distributions differ by a total variation of 0.02. The 6 of them re-run against production-order deciles carrying nine times that shift all still fail, and so does every objective on the geometry-holdout protocol once its own reproducibility floor is measured: **not one separates from ERM anywhere.** Two methods we built for this corpus do not survive either. An RPCA lot-signature channel is matched by a fourth channel of zeros — and could not have been otherwise, because the encoder is handed an untouched copy of what the decomposition removes; the knob has no setting that yields a non-trivial decomposition on a representative sample, and the sweep that said it did was run on forty lots taken as a slice. Lot-adversarial self-supervised pretraining is worse than random initialization at every learning rate. Our active-learning result compared heuristics that had bought a fifth of the labels random had.
 
-Two things survive. First, replacing the encoder's global average pooling with a mean-and-max moves macro-F1 by +0.0154 (n=7 vs 7) on the lot-disjoint split while a capacity control with identical parameter count moves it by +0.0003 (n=3) — and it does not generalize, being unestablished on the other three protocols. Second, GroupNorm beats BatchNorm by +0.0130 (permutation p = 0.011 at 8 seeds per arm), which the seed-range criterion used elsewhere in this paper cannot resolve and never could.
+Two things survive. First, replacing the encoder's global average pooling with a mean-and-max moves macro-F1 by +0.0150 (n=8 vs 8) on the lot-disjoint split while a capacity control with identical parameter count moves it by -0.0020 (n=3) — and it does not generalize, being unestablished on the other three protocols. Second, GroupNorm beats BatchNorm by +0.0130 (permutation p = 0.011 at 8 seeds per arm), which the seed-range criterion used elsewhere in this paper cannot resolve and never could.
 
 Underneath all of it is a measurement problem we did not know we had. Two identical invocations of one cell differ by more than most of the effects the first version of these tables reported, that spread is not one number but a property of each protocol, and three seeds — the budget behind essentially every published wafer-map comparison we are aware of, including our own first draft — are enough to get the sign of an effect right and nowhere near enough to get its size right. Four separate three-seed results in this paper shrank or vanished when taken to eight.
 
@@ -208,8 +208,8 @@ What was left is that `CnnResized.embed` is a global average over the final feat
 
 | protocol | pooling | macro-F1 vs `mean` | verdict | Scratch F1 vs `mean` | verdict |
 |---|---|---|---|---|---|
-| `lot` | `meanmax` (treatment) | +0.0154 | overlaps | +0.0488 | overlaps |
-| `lot` | `meanmean` (**control**) | +0.0003 | overlaps | -0.0056 | overlaps |
+| `lot` | `meanmax` (treatment) | +0.0150 | overlaps | +0.0473 | overlaps |
+| `lot` | `meanmean` (**control**) | -0.0020 | overlaps | -0.0082 | overlaps |
 | `iid` | `meanmax` (treatment) | +0.0090 | below the floor (0.0041) | +0.0253 | overlaps |
 | `iid` | `meanmean` (**control**) | +0.0003 | overlaps | -0.0061 | overlaps |
 | `size` | `meanmax` (treatment) | -0.0281 | overlaps | -0.0427 | overlaps |
@@ -281,8 +281,8 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (GroupNorm) | `erm` | — | 3 | 0.8647 | ±0.0044 |
 | `lot` | CNN (GroupNorm) | `erm` | cw | 2 | 0.8692 | ±0.0044 |
 | `lot` | CNN (GroupNorm) | `erm` | gnbn | 8 | 0.8726 | ±0.0160 |
-| `lot` | CNN (GroupNorm) | `erm` | poolmean | 7 | 0.8714 | ±0.0161 |
-| `lot` | CNN (GroupNorm) | `erm` | poolmeanmax | 7 | 0.8868 | ±0.0093 |
+| `lot` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8738 | ±0.0163 |
+| `lot` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.8888 | ±0.0116 |
 | `lot` | CNN (GroupNorm) | `erm` | poolmeanmean | 3 | 0.8717 | ±0.0081 |
 | `lot` | CNN (GroupNorm) | `erm` | rpca2_3ch | 3 | 0.8703 | ±0.0096 |
 | `lot` | CNN (GroupNorm) | `erm` | scratch_lr1e-3 | 2 | 0.8690 | ±0.0009 |
