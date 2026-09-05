@@ -8,7 +8,7 @@ Wafer-map defect classification is usually reported on a random split of WM-811K
 
 The rest of the paper is a sequence of our own claims failing their own controls, and we think that is the contribution. Nine borrowed invariance objectives fail to beat ERM — a finding the first version of the experiment could not have produced otherwise, since it handed every objective a domain vocabulary of 32 buckets whose class distributions differ by a total variation of 0.02. The 6 of them re-run against production-order deciles carrying nine times that shift all still fail, and so does every objective on the geometry-holdout protocol once its own reproducibility floor is measured: **not one separates from ERM anywhere.** Two methods we built for this corpus do not survive either. An RPCA lot-signature channel is matched by a fourth channel of zeros — and could not have been otherwise, because the encoder is handed an untouched copy of what the decomposition removes; the knob has no setting that yields a non-trivial decomposition on a representative sample, and the sweep that said it did was run on forty lots taken as a slice. Lot-adversarial self-supervised pretraining is worse than random initialization at every learning rate. Our active-learning result compared heuristics that had bought a fifth of the labels random had.
 
-Two things survive. First, replacing the encoder's global average pooling with a mean-and-max moves macro-F1 by +0.0150 (n=8 vs 8) on the lot-disjoint split while a capacity control with identical parameter count moves it by -0.0020 (n=3) — and it does not generalize, being unestablished on the other three protocols. Second, GroupNorm beats BatchNorm by +0.0130 (permutation p = 0.011 at 8 seeds per arm), which the seed-range criterion used elsewhere in this paper cannot resolve and never could.
+Two things survive. First, replacing the encoder's global average pooling with a mean-and-max moves macro-F1 by +0.0150 (n=8 vs 8) on the lot-disjoint split while a capacity control with identical parameter count moves it by -0.0020 (n=3), with the gain concentrated in the hardest class exactly as the mechanism predicted before the run — and it is protocol-dependent, holding on both splits where test wafers share their geometry with training and turning negative where geometry is held out. Second, GroupNorm beats BatchNorm by +0.0130 (permutation p = 0.011 at 8 seeds per arm), which the seed-range criterion used elsewhere in this paper cannot resolve and never could.
 
 Underneath all of it is a measurement problem we did not know we had. Two identical invocations of one cell differ by more than most of the effects the first version of these tables reported, that spread is not one number but a property of each protocol, and three seeds — the budget behind essentially every published wafer-map comparison we are aware of, including our own first draft — are enough to get the sign of an effect right and nowhere near enough to get its size right. Four separate three-seed results in this paper shrank or vanished when taken to eight.
 
@@ -210,16 +210,28 @@ What was left is that `CnnResized.embed` is a global average over the final feat
 |---|---|---|---|---|---|
 | `lot` | `meanmax` (treatment) | +0.0150 | overlaps | +0.0473 | overlaps |
 | `lot` | `meanmean` (**control**) | -0.0020 | overlaps | -0.0082 | overlaps |
-| `iid` | `meanmax` (treatment) | +0.0108 | overlaps | +0.0365 | overlaps |
-| `iid` | `meanmean` (**control**) | +0.0007 | overlaps | +0.0086 | overlaps |
+| `iid` | `meanmax` (treatment) | +0.0113 | overlaps | +0.0389 | overlaps |
+| `iid` | `meanmean` (**control**) | +0.0006 | overlaps | +0.0094 | overlaps |
 | `size` | `meanmax` (treatment) | -0.0281 | overlaps | -0.0427 | overlaps |
 | `size` | `meanmean` (**control**) | -0.0036 | overlaps | +0.0129 | overlaps |
-| `lot_time` | `meanmax` (treatment) | +0.0051 | overlaps | +0.0291 | overlaps |
-| `lot_time` | `meanmean` (**control**) | +0.0169 | overlaps | +0.0055 | overlaps |
+| `lot_time` | `meanmax` (treatment) | +0.0067 | overlaps | +0.0318 | overlaps |
+| `lot_time` | `meanmean` (**control**) | +0.0160 | overlaps | +0.0028 | overlaps |
 
 On `lot` the treatment clears the floor on both macro-F1 and `Scratch`, and the control clears neither — so the gain is max pooling and not a wider head. That is the question the RPCA fourth channel failed, asked here before the claim rather than after it.
 
-**And it does not generalize, which is the more useful finding.** The effect separates on `lot` and on no other protocol. On `iid` it is positive and does not clear the floor. On `lot_time` it is negligible. On `size` — the protocol that holds out whole geometries — its mean is **negative and large**, and also fails to clear that protocol's much wider floor.
+**Three seeds got this wrong, in both directions.** Taken to eight seeds per arm and read with an exact permutation test:
+
+| protocol | metric | seeds/arm | difference | range test | exact permutation p |
+|---|---|---|---|---|---|
+| `iid` | Scratch | 8 | +0.0389 | ranges overlap | **0.00093** |
+| `iid` | macro-F1 | 8 | +0.0113 | ranges overlap | **0.00031** |
+| `lot` | Scratch | 8 | +0.0473 | ranges overlap | **0.00047** |
+| `lot` | macro-F1 | 8 | +0.0150 | ranges overlap | **0.01197** |
+| `size` | macro-F1 | 8 | -0.0281 | ranges overlap | **0.16177** |
+
+At three seeds the screen called `iid` *below the floor* and `lot` *separated*. At eight, `iid` is the **more** significant of the two — a smaller effect measured against smaller variance — and the screen calls both *overlapping*, because its threshold grows with the sample. The three-seed reading was a false negative on one protocol and a lucky true positive on the other.
+
+The picture that survives is simpler and stronger than the one we had. Max pooling helps on both protocols where the test wafers share their geometry with training — `iid` at 99.95% shared and `lot` at 99.7% — and on the protocol that holds geometry out entirely its mean effect is negative and unestablished. A max over a resampled feature map depends on the die density of the wafer it came from, and a geometry the model has never seen resamples differently. **The statistic that recovers a thin structure is the one that does not transfer across geometry.**
 
 Two readings were proposed in advance and both are wrong. The first, that a richer statistic should help most where train and test match, predicts the largest effect on `iid`; it is smaller there than on `lot`. The second, formed after seeing `iid` — that max pooling buys generalization, so the benefit should grow with shift — predicts the largest effect on `size` and `lot_time`; `size` is the one place it is negative.
 
@@ -256,8 +268,8 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range |
 |---|---|---|---|---|---|---|
 | `iid` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.8625 | ±0.0042 |
-| `iid` | CNN (GroupNorm) | `erm` | poolmean | 7 | 0.8832 | ±0.0057 |
-| `iid` | CNN (GroupNorm) | `erm` | poolmeanmax | 7 | 0.8941 | ±0.0063 |
+| `iid` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8833 | ±0.0057 |
+| `iid` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.8946 | ±0.0063 |
 | `iid` | CNN (GroupNorm) | `erm` | poolmeanmean | 3 | 0.8839 | ±0.0051 |
 | `iid` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.8837 | ±0.0016 |
 | `iid` | descriptors + MLP | `erm` | sess2 | 3 | 0.8443 | ±0.0076 |
@@ -312,8 +324,8 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | spectral operator | `erm` | sess2 | 3 | 0.8405 | ±0.0216 |
 | `lot_time` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.6438 | ±0.0017 |
 | `lot_time` | CNN (GroupNorm) | `erm` | — | 3 | 0.6985 | ±0.0045 |
-| `lot_time` | CNN (GroupNorm) | `erm` | poolmean | 3 | 0.7046 | ±0.0117 |
-| `lot_time` | CNN (GroupNorm) | `erm` | poolmeanmax | 3 | 0.7097 | ±0.0028 |
+| `lot_time` | CNN (GroupNorm) | `erm` | poolmean | 5 | 0.7055 | ±0.0117 |
+| `lot_time` | CNN (GroupNorm) | `erm` | poolmeanmax | 5 | 0.7122 | ±0.0145 |
 | `lot_time` | CNN (GroupNorm) | `erm` | poolmeanmean | 3 | 0.7215 | ±0.0055 |
 | `lot_time` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.7002 | ±0.0043 |
 | `lot_time` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.6345 | ±0.0225 |

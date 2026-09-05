@@ -170,8 +170,11 @@ def main():
             f"mean-and-max moves macro-F1 by {mx['mean'] - mn['mean']:+.4f} "
             f"(n={mx['n']} vs {mn['n']}) on the lot-disjoint split while a "
             "capacity control with identical parameter count moves it by "
-            f"{ctl['mean'] - mn['mean']:+.4f} (n={ctl['n']}) — and it does not "
-            "generalize, being unestablished on the other three protocols")
+            f"{ctl['mean'] - mn['mean']:+.4f} (n={ctl['n']}), with the gain "
+            "concentrated in the hardest class exactly as the mechanism "
+            "predicted before the run — and it is protocol-dependent, holding "
+            "on both splits where test wafers share their geometry with "
+            "training and turning negative where geometry is held out")
     if gb:
         bits.append(
             f"GroupNorm beats BatchNorm by {gb['difference']:+.4f} "
@@ -711,13 +714,47 @@ def main():
           "pooling and not a wider head. That is the question the RPCA fourth "
           "channel failed, asked here before the claim rather than after it.")
         W("")
-        W("**And it does not generalize, which is the more useful finding.** "
-          "The effect separates on `lot` and on no other protocol. On `iid` it "
-          "is positive and does not clear the floor. On `lot_time` it is "
-          "negligible. On `size` — the protocol that holds out whole "
-          "geometries — its mean is **negative and large**, and also fails to "
-          "clear that protocol's much wider floor.")
-        W("")
+        # the eight-seed permutation results, wherever they exist
+        pp = {}
+        for proto in ("iid", "lot", "size", "lot_time"):
+            for fn, lab in ((f"pooling_{proto}_perm_macro_f1.json", "macro-F1"),
+                            (f"pooling_{proto}_perm_class_Scratch.json", "Scratch"),
+                            (f"pooling_{proto}_perm.json", "macro-F1"),
+                            (f"pooling_{proto}_perm_scratch.json", "Scratch")):
+                q = Path(a.runs) / fn
+                if q.exists() and (proto, lab) not in pp:
+                    pp[(proto, lab)] = json.loads(q.read_text())
+        if pp:
+            W("**Three seeds got this wrong, in both directions.** Taken to "
+              "eight seeds per arm and read with an exact permutation test:")
+            W("")
+            W(table([[f"`{k[0]}`", k[1], d["n_per_arm"],
+                      f"{d['difference']:+.4f}",
+                      d["range_test"]["verdict"],
+                      f"**{d['permutation_test']['p_two_sided']:.5f}**"]
+                     for k, d in sorted(pp.items())],
+                    ["protocol", "metric", "seeds/arm", "difference",
+                     "range test", "exact permutation p"]))
+            W("")
+            W("At three seeds the screen called `iid` *below the floor* and "
+              "`lot` *separated*. At eight, `iid` is the **more** significant "
+              "of the two — a smaller effect measured against smaller variance "
+              "— and the screen calls both *overlapping*, because its "
+              "threshold grows with the sample. The three-seed reading was a "
+              "false negative on one protocol and a lucky true positive on the "
+              "other.")
+            W("")
+            W("The picture that survives is simpler and stronger than the one "
+              "we had. Max pooling helps on both protocols where the test "
+              "wafers share their geometry with training — `iid` at 99.95% "
+              "shared and `lot` at 99.7% — and on the protocol that holds "
+              "geometry out entirely its mean effect is negative and "
+              "unestablished. A max over a resampled feature map depends on "
+              "the die density of the wafer it came from, and a geometry the "
+              "model has never seen resamples differently. **The statistic "
+              "that recovers a thin structure is the one that does not "
+              "transfer across geometry.**")
+            W("")
         W("Two readings were proposed in advance and both are wrong. The first, "
           "that a richer statistic should help most where train and test match, "
           "predicts the largest effect on `iid`; it is smaller there than on "

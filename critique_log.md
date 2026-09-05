@@ -2721,3 +2721,53 @@ about whether the sentences around the numbers still describe them, and after
 fifty-eight entries the ratio is not reassuring: every prose claim in these
 documents that I have checked against the data it sits beside has needed
 revision at least once.
+
+### 59. H54 falsified: `iid` is more significant than `lot`, and three seeds got it backwards
+
+The `iid` arm reached eight seeds. I predicted it would be "positive but weaker
+than `lot` and does not reach p < 0.05". Eight seeds per arm, exact permutation
+test:
+
+| protocol | metric | difference | range test | permutation p |
+|---|---|---|---|---|
+| `iid` | macro-F1 | +0.0113 | overlaps | **0.00031** |
+| `iid` | `Scratch` | +0.0389 | overlaps | **0.00093** |
+| `lot` | macro-F1 | +0.0150 | overlaps | 0.01197 |
+| `lot` | `Scratch` | +0.0473 | overlaps | 0.00047 |
+| `size` | macro-F1 | −0.0281 | overlaps | 0.16177 |
+
+`iid` is the **more** significant of the two despite the smaller effect — a
+smaller difference measured against smaller variance.
+
+**The three-seed screen got this wrong in both directions at once.** It called
+`iid` *below the floor* (+0.0090, margin 0.0041 against 0.0054) and `lot`
+*separated* (+0.0173, margin 0.0067). At eight seeds `iid` is p = 0.0003 and
+`lot` is p = 0.012. So the screen produced a false negative on one protocol and
+a true positive on the other by a margin of 0.0013 — which is to say, by luck.
+I have been quoting "the effect separates on `lot` and on no other protocol" for
+three turns on the strength of that.
+
+That is the fifth time three seeds have misled here, and the first time in the
+*conservative* direction. Every previous instance inflated an effect; this one
+hid one. It is worth stating because the lesson I had been drawing — "three
+seeds get the sign right and not the size" — is too kind. Three seeds also get
+the *existence* wrong, in both directions, and the failure is not detectable
+from within a three-seed table.
+
+**The claim that survives is simpler and stronger than the one it replaces.**
+Max pooling helps on both protocols where the test wafers share their geometry
+with training — `iid` at 99.95% shared, `lot` at 99.7% — and on the protocol
+that holds geometry out entirely its mean effect is negative and unestablished.
+A max over a resampled feature map depends on the die density of the wafer it
+came from, and a geometry the model has never seen resamples differently. The
+statistic that recovers a thin structure is the one that does not transfer
+across geometry.
+
+This is the outcome I said I would be pleased to lose to, and I record that I
+said so before the run rather than after. `lot_time`, at 86% shared geometry,
+is the case that would test the ordering properly and is still running; on this
+account it should land between `lot` and `size`.
+
+`paper_draft.md` §4.3 and the abstract are corrected: "it does not generalize,
+being unestablished on the other three protocols" was true of a three-seed
+reading and is false.

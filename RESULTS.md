@@ -483,8 +483,8 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range | per seed |
 |---|---|---|---|---|---|---|---|
 | iid | CNN on resized 64x64 (BatchNorm) | erm | sess2 | 3 | 0.8625 | +/-0.0042 | 0.8623, 0.8668, 0.8584 |
-| iid | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 7 | 0.8832 | +/-0.0057 | 0.8855, 0.8795, 0.8858, 0.8865, 0.8798, 0.8772, 0.8885 |
-| iid | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 7 | 0.8941 | +/-0.0063 | 0.8933, 0.8946, 0.8899, 0.8865, 0.8961, 0.8989, 0.8991 |
+| iid | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 8 | 0.8833 | +/-0.0057 | 0.8855, 0.8795, 0.8858, 0.8865, 0.8798, 0.8772, 0.8885, 0.8839 |
+| iid | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 8 | 0.8946 | +/-0.0063 | 0.8933, 0.8946, 0.8899, 0.8865, 0.8961, 0.8989, 0.8991, 0.8983 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmean | 3 | 0.8839 | +/-0.0051 | 0.8782, 0.8884, 0.8852 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm | sess2 | 3 | 0.8837 | +/-0.0016 | 0.8820, 0.8838, 0.8852 |
 | iid | size-invariant descriptors + MLP | erm | sess2 | 3 | 0.8443 | +/-0.0076 | 0.8532, 0.8417, 0.8380 |
@@ -539,8 +539,8 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot | spectral operator, native resolution | erm | sess2 | 3 | 0.8405 | +/-0.0216 | 0.8551, 0.8118, 0.8547 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | erm | sess2 | 3 | 0.6438 | +/-0.0017 | 0.6458, 0.6423, 0.6434 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.6985 | +/-0.0045 | 0.6935, 0.6993, 0.7026 |
-| lot_time | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 3 | 0.7046 | +/-0.0117 | 0.6958, 0.7191, 0.6990 |
-| lot_time | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 3 | 0.7097 | +/-0.0028 | 0.7093, 0.7071, 0.7127 |
+| lot_time | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 5 | 0.7055 | +/-0.0117 | 0.6958, 0.7191, 0.6990, 0.7159, 0.6976 |
+| lot_time | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 5 | 0.7122 | +/-0.0145 | 0.7093, 0.7071, 0.7127, 0.7304, 0.7015 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmean | 3 | 0.7215 | +/-0.0055 | 0.7216, 0.7269, 0.7160 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | sess2 | 3 | 0.7002 | +/-0.0043 | 0.6997, 0.7047, 0.6961 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | + lot-adversarial SSL initialization | 3 | 0.6345 | +/-0.0225 | 0.6120, 0.6569, 0.6345 |
