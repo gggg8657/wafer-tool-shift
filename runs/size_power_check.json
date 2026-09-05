@@ -1,0 +1,133 @@
+{
+  "coral__macro_f1": {
+    "objective": "coral",
+    "metric": "macro_f1",
+    "protocol": "size",
+    "tag": "sizeseed",
+    "n_per_arm": 3,
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "mean_objective": 0.7714445623859151,
+    "mean_erm": 0.7914914583810703,
+    "difference": -0.02004689599515519,
+    "p_two_sided": 0.7,
+    "arrangements": 20,
+    "min_attainable_p": 0.1,
+    "at_resolution_floor": false,
+    "ranges_overlap": true
+  },
+  "dann__macro_f1": {
+    "objective": "dann",
+    "metric": "macro_f1",
+    "protocol": "size",
+    "tag": "sizeseed",
+    "n_per_arm": 3,
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "mean_objective": 0.7744262944297925,
+    "mean_erm": 0.7914914583810703,
+    "difference": -0.017065163951277773,
+    "p_two_sided": 0.6,
+    "arrangements": 20,
+    "min_attainable_p": 0.1,
+    "at_resolution_floor": false,
+    "ranges_overlap": true
+  },
+  "irm__macro_f1": {
+    "objective": "irm",
+    "metric": "macro_f1",
+    "protocol": "size",
+    "tag": "sizeseed",
+    "n_per_arm": 3,
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "mean_objective": 0.765704152462151,
+    "mean_erm": 0.7914914583810703,
+    "difference": -0.025787305918919312,
+    "p_two_sided": 0.6,
+    "arrangements": 20,
+    "min_attainable_p": 0.1,
+    "at_resolution_floor": false,
+    "ranges_overlap": true
+  },
+  "group_dro__macro_f1": {
+    "objective": "group_dro",
+    "metric": "macro_f1",
+    "protocol": "size",
+    "tag": "sizeseed",
+    "n_per_arm": 3,
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "mean_objective": 0.6380720050616319,
+    "mean_erm": 0.7914914583810703,
+    "difference": -0.1534194533194384,
+    "p_two_sided": 0.1,
+    "arrangements": 20,
+    "min_attainable_p": 0.1,
+    "at_resolution_floor": true,
+    "ranges_overlap": false
+  },
+  "mixup_domain__macro_f1": {
+    "objective": "mixup_domain",
+    "metric": "macro_f1",
+    "protocol": "size",
+    "tag": "sizeseed",
+    "n_per_arm": 3,
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "mean_objective": 0.7802845638544967,
+    "mean_erm": 0.7914914583810703,
+    "difference": -0.01120689452657353,
+    "p_two_sided": 0.6,
+    "arrangements": 20,
+    "min_attainable_p": 0.1,
+    "at_resolution_floor": false,
+    "ranges_overlap": true
+  },
+  "logit_adjust__macro_f1": {
+    "objective": "logit_adjust",
+    "metric": "macro_f1",
+    "protocol": "size",
+    "tag": "sizeseed",
+    "n_per_arm": 3,
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "mean_objective": 0.6797801565997181,
+    "mean_erm": 0.7914914583810703,
+    "difference": -0.11171130178135213,
+    "p_two_sided": 0.1,
+    "arrangements": 20,
+    "min_attainable_p": 0.1,
+    "at_resolution_floor": true,
+    "ranges_overlap": false
+  },
+  "_meta": {
+    "n_per_arm": [
+      3
+    ],
+    "min_attainable_p": [
+      0.1
+    ],
+    "n_at_floor": 2,
+    "n_objectives": 6,
+    "erm_seed_range": 0.0735056734159637
+  }
+}

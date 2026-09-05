@@ -453,20 +453,74 @@ def main():
     dt = [(o, a_, b) for o, a_, b in dt if a_]
     W("### The domain definition was doing the work")
     W("")
+    def js(name):
+        q = Path(a.runs) / name
+        return json.loads(q.read_text()) if q.exists() else None
+
+    # these four total variations used to be typed into the sentence. They are
+    # measurements of the corpus and belong in `runs/`, like every other number.
+    _cs = js("corpus_stats.json") or {}
+    _tv = _cs.get("domain_label_tv", {})
+
+    def _t(k):
+        v = _tv.get(k, {}).get("mean_pairwise_label_tv")
+        return f"**{v:.4f}**" if v is not None else NM
+
     W("Every group-aware objective above received `lot % 32` as its domain "
       "label: 10,762 lots averaged into 32 buckets. Measured on this corpus, "
       "the mean pairwise total-variation distance between those buckets' class "
-      "distributions is **0.0208**, against **0.1666** between real lots and "
-      "**0.1822** between production-order deciles. An invariance penalty asked "
-      "to equalize 32 distributions that are already equal to within 0.02 is "
-      "satisfied by doing nothing, so ERM-equivalence on `lot` was close to "
-      "guaranteed by construction rather than discovered.")
+      f"distributions is {_t('hash32_lot')}, against {_t('real_lots')} between "
+      f"real lots and {_t('time_decile')} between production-order deciles. An "
+      "invariance penalty asked to equalize 32 distributions that are already "
+      "equal to within 0.02 is satisfied by doing nothing, so ERM-equivalence "
+      "on `lot` was close to guaranteed by construction rather than "
+      "discovered.")
     W("")
-    W("On `size` the same hash is far less degenerate — 344 geometries into 32 "
-      "buckets, TV 0.2592 — which is why that protocol shows large, real and "
-      "mostly negative effects. The `size` half of the negative result stands "
-      "as measured; the `lot` half needed re-running.")
+    W(f"On `size` the same hash is far less degenerate — 344 geometries into "
+      f"32 buckets, TV {_t('hash32_size')} — and that protocol shows much "
+      "larger effects. It does not follow that they are established.")
     W("")
+    sp = js("size_power_check.json") or {}
+    spm = sp.get("_meta") or {}
+    if spm:
+        _n = spm.get("n_per_arm") or [0]
+        _fl = spm.get("min_attainable_p") or [None]
+        _rows = [[f"`{v['objective']}`", f"{v['difference']:+.4f}",
+                  f"{v['p_two_sided']:.4f}",
+                  "**at floor**" if v["at_resolution_floor"] else ""]
+                 for k, v in sorted(sp.items(),
+                                    key=lambda kv: kv[1].get("difference", 0)
+                                    if kv[0] != "_meta" else 0)
+                 if k != "_meta"]
+        W(table(_rows, ["objective on `size`", "vs ERM (macro-F1)",
+                        "exact permutation p", ""]))
+        W("")
+        _f = _fl[0]
+        W("**This half is unestablished too, and for the opposite reason.** "
+          f"Every arm holds {_n[0]} seeds, and a two-sample exact permutation "
+          f"test at {_n[0]} per arm admits only "
+          f"{sp[[k for k in sp if k != '_meta'][0]]['arrangements']} "
+          "arrangements, so the smallest two-sided p it can return is "
+          f"{_f:.2f}. Not one of these objectives could have reached 0.05 "
+          "however large its effect was. "
+          f"{spm.get('n_at_floor', 0)} of {spm.get('n_objectives', 0)} sit "
+          "exactly on that floor with fully disjoint seed ranges — `group_dro` "
+          "and `logit_adjust`, at effects several times anything measured on "
+          "`lot`.")
+        W("")
+        _er = spm.get("erm_seed_range")
+        W("So the `lot` half was withdrawn because the experiment could not "
+          "have shown an effect, and the `size` half has to be withdrawn "
+          "because the test could not have certified one. An earlier draft of "
+          "this section said the `size` half *stood as measured*; that was "
+          "wrong, and it was wrong in the direction that flattered the "
+          "result. The effects here are the largest in the paper and they may "
+          "well be real — "
+          + (f"though ERM's own three seeds span {_er:.4f} on this protocol, "
+             "which is most of the gap being argued about. " if _er else "")
+          + "Eight seeds per arm would settle it; at three, the honest entry "
+          "is that both halves of the negative result are unresolved.")
+        W("")
     if dt:
         rows = [[f"`{o}`", fmt(b), fmt(a_),
                  f"{a_['mean'] - b['mean']:+.4f}" if b else NM]
