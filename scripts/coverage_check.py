@@ -65,8 +65,23 @@ def main():
     # generator *consumes* the result -- if none reads it, nothing can report
     # it, and that is the failure worth catching.
     def covered(key):
-        return ([g for g, t in gen.items() if key in t]
+        hits = ([g for g, t in gen.items() if key in t]
                 or [d for d, t in text.items() if key in t])
+        if hits:
+            return hits
+        # Generators build most filenames with f-strings, so the literal stem
+        # never appears in the source: `f"pooling_{proto}_perm_{metric}.json"`
+        # covers eight files and matches none of them textually. Fall back to
+        # the longest contiguous literal chunk of the stem -- crude, but the
+        # alternative is reporting eight false orphans, and a check that cries
+        # wolf gets ignored.
+        for n in range(len(key), 9, -1):
+            for i in range(0, len(key) - n + 1):
+                frag = key[i:i + n]
+                m = [g for g, t in gen.items() if frag in t]
+                if m:
+                    return m
+        return []
 
     orphans = []
     print(f"{'family':34s} {'cells':>6s}  read by")

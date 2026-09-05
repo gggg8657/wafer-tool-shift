@@ -2875,3 +2875,64 @@ the regenerated output rather than by any check, because no check I have looks
 for a number that is merely wrong rather than missing. `verify_stage.py` counts
 files; the numeric lint looks for hand-typed constants; neither sees a live
 computation with a stale divisor.
+
+### 62. A section of the hand-off omitted itself, and the omission hid a crash
+
+Last turn I added a row to `WEEKEND.md`'s survivors table asserting that the
+pooling gain is not extra parameters — the capacity control at eight seeds. I
+regenerated the document, read the table, and committed. **The row was not
+there.**
+
+Two bugs, one hiding the other:
+
+1. The sweep script built its output filename with
+   `tagm=$(echo "$m" | tr -cs 'A-Za-z0-9' '_')`. `echo` appends a newline,
+   which `tr` is happy to convert into a trailing underscore, so the file is
+   `pooling_lot_control_perm_macro_f1_.json` and the generator asks for
+   `pooling_lot_control_perm_macro_f1.json`. `js()` returns `None` for a missing
+   file, the `if pc:` guard is false, and the row is skipped in silence.
+2. The row itself read `v['p_two_sided']`, but `gn_vs_bn.py` nests it under
+   `permutation_test` — `dg_power_check.json` is the flat one. **That is a
+   crash**, and it only fired once the filename was fixed and the file was
+   actually found.
+
+So the first bug concealed the second, and neither was visible in the output,
+because a section that omits itself looks exactly like a section that was never
+written. I read that table last turn to check the numbers in the rows that were
+present. It did not occur to me to check for a row that was absent.
+
+**What caught it was `coverage_check.py`**, one level removed — it flagged the
+underscore files as results no generator reads. The tool built in §46 for a
+different purpose found this, which is the argument for cheap structural checks:
+they catch things they were not aimed at.
+
+**What did not catch it**, and this is now a pattern with three members:
+`verify_stage.py` counts files and cannot see a wrong number; the numeric lint
+looks for hand-typed constants and cannot see a stale divisor (§61); nothing at
+all looks for a section that declined to render. Every guard I have built
+detects *absence of a file* or *presence of a bad literal*. None detects a
+document that is quietly shorter than it should be.
+
+Fixed: filenames canonicalised, both sweep scripts switched to `printf`, the key
+path corrected, and the `pc` block now emits a visible note when the file is
+missing rather than skipping in silence. `coverage_check.py` also learned that
+generators build filenames with f-strings — `f"pooling_{proto}_perm_{metric}.json"`
+covers eight files and matches none of them textually — so it falls back to the
+longest contiguous literal fragment instead of reporting eight false orphans.
+
+**And the finding this unblocked.** With all four protocols' permutation
+summaries now readable, `WEEKEND.md` carries the shape of the pooling result
+rather than a single protocol's row:
+
+| protocol | `Scratch` vs `mean` | p |
+|---|---|---|
+| `iid` (99.95% geometry shared) | +0.0389 | 0.00093 |
+| `lot` (99.7%) | +0.0473 | 0.00047 |
+| `lot_time` (86%) | +0.0391 | 0.00031 |
+| `size` (0%) | −0.0427 | 0.20230 |
+
+`Scratch` improves at p ≤ 0.001 on every protocol where the test wafers share
+their geometry with training, and fails only where geometry is held out
+entirely. That is a much cleaner statement than the macro-F1 version, which
+tracks it on `iid` and `lot` and disappears on `lot_time` — because one class
+moving 0.039 cannot move a nine-class average that is already at 0.71.

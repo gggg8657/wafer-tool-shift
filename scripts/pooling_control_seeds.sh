@@ -58,7 +58,10 @@ $PY scripts/verify_stage.py \
   --glob 'runs/lot__cnn_gn__erm__poolmeanmean__s*.json' \
   --expect 8 --label "capacity control, eight seeds" | tee -a "$LOG" || exit 1
 for m in macro_f1 class:Scratch; do
-  tagm=$(echo "$m" | tr -cs 'A-Za-z0-9' '_')
+  # printf, not echo: echo appends a newline, which tr turns
+  # into a trailing underscore, and the file the generators
+  # look for then does not exist
+  tagm=$(printf "%s" "$m" | tr -cs 'A-Za-z0-9' '_')
   $PY scripts/gn_vs_bn.py --protocol lot \
     --arm-a cnn_gn:poolmeanmean --arm-b cnn_gn:poolmean \
     --label-a meanmean --label-b mean --metric "$m" \

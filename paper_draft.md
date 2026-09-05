@@ -223,8 +223,13 @@ On `lot` the treatment clears the floor on both macro-F1 and `Scratch`, and the 
 
 | protocol | metric | seeds/arm | difference | range test | exact permutation p |
 |---|---|---|---|---|---|
+| `iid` | Scratch | 8 | +0.0389 | ranges overlap | **0.00093** |
+| `iid` | macro-F1 | 8 | +0.0113 | ranges overlap | **0.00031** |
 | `lot` | Scratch | 8 | +0.0473 | ranges overlap | **0.00047** |
 | `lot` | macro-F1 | 8 | +0.0150 | ranges overlap | **0.01197** |
+| `lot_time` | Scratch | 8 | +0.0391 | ranges overlap | **0.00031** |
+| `lot_time` | macro-F1 | 8 | +0.0038 | ranges overlap | **0.43046** |
+| `size` | Scratch | 8 | -0.0427 | ranges overlap | **0.20233** |
 | `size` | macro-F1 | 8 | -0.0281 | ranges overlap | **0.16177** |
 
 At three seeds the screen called `iid` *below the floor* and `lot` *separated*. At eight, `iid` is the **more** significant of the two — a smaller effect measured against smaller variance — and the screen calls both *overlapping*, because its threshold grows with the sample. The three-seed reading was a false negative on one protocol and a lucky true positive on the other.

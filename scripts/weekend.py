@@ -204,6 +204,16 @@ def main():
          if v}
     if len(P) == 3:
         W("## 2.0 The one thing that worked: what the encoder pools")
+    W("")
+    pall = {}
+    for proto in ("iid", "lot", "lot_time", "size"):
+        for fn, lab in ((f"pooling_{proto}_perm_macro_f1.json", "macro-F1"),
+                        (f"pooling_{proto}_perm_class_Scratch.json", "Scratch"),
+                        (f"pooling_{proto}_perm.json", "macro-F1"),
+                        (f"pooling_{proto}_perm_scratch.json", "Scratch")):
+            d_ = js(fn)
+            if d_ and (proto, lab) not in pall:
+                pall[(proto, lab)] = d_
         W("")
         bx = sorted(r["test"]["macro_f1"] for r in P["poolmean"].values())
         bsc = sorted(r["test"]["per_class_f1"]["Scratch"]
@@ -253,6 +263,25 @@ def main():
               "observed after it. The range test calling this *overlaps* at "
               "p = 0.0005 is the clearest illustration in this repository of "
               "why the criterion used elsewhere is a floor and not a verdict.")
+            W("")
+        if pall:
+            W("**Across all four protocols, eight seeds per arm.** This is the "
+              "shape of the finding and it is not the macro-F1 row:")
+            W("")
+            W(table([[f"`{k[0]}`", k[1], f"{d['difference']:+.4f}",
+                      f"**{d['permutation_test']['p_two_sided']:.5f}**"]
+                     for k, d in sorted(pall.items())],
+                    ["protocol", "metric", "vs `mean`", "exact permutation p"]))
+            W("")
+            W("`Scratch` improves on **every protocol where the test wafers "
+              "share their geometry with training** — `iid` at 99.95% shared, "
+              "`lot` at 99.7%, `lot_time` at 86% — each at p ≤ 0.001, and it "
+              "fails only on `size`, which holds geometry out entirely. "
+              "macro-F1 follows where one class can move a nine-class average "
+              "and does not on `lot_time`, where it cannot. A max over a "
+              "resampled feature map depends on the die density of the wafer "
+              "it came from, so the statistic that recovers a thin structure "
+              "is the one that does not transfer across geometry.")
             W("")
         W("`CnnResized.embed` was a global average over the final feature map. "
           "A `Scratch` is a thin connected line; averaged over the wafer it is "
@@ -587,11 +616,26 @@ def main():
         d_ = js(fn)
         if d_:
             pc[d_["metric"]] = d_
+    if not pc:
+        # This row silently vanished once already, because the file it reads
+        # was written with a trailing underscore and `js` returns None for a
+        # missing file. A section that omits itself looks exactly like a
+        # section that was never written.
+        W("*(capacity-control permutation summary not found — "
+          "`runs/pooling_lot_control_perm_*.json` is missing, so the row "
+          "asserting the pooling gain is not extra parameters has been left "
+          "out rather than silently skipped.)*")
+        W("")
     if pc:
+        # gn_vs_bn.py nests the p under "permutation_test"; dg_power_check.json
+        # is flat. Reading the flat path here crashed the generator the moment
+        # the file it wanted actually existed -- the missing filename had been
+        # hiding a second bug behind the first.
         surv.append(["**The pooling gain is not extra parameters**",
                      "the capacity control at eight seeds gives "
                      + " and ".join(
-                         f"{v['difference']:+.4f} on {k} (p = {v['p_two_sided']:.3f})"
+                         f"{v['difference']:+.4f} on {k} "
+                         f"(p = {v['permutation_test']['p_two_sided']:.3f})"
                          for k, v in sorted(pc.items()))])
     dgp = js("dg_power_check.json")
     if dgp:
