@@ -31,16 +31,26 @@ mkdir -p logs runs
 say(){ echo "[$(date +%H:%M:%S)] $*" | tee -a "$LOG"; }
 slug(){ echo "$*" | tr -cs 'A-Za-z0-9' '_' | sed 's/^_//;s/_$//' | cut -c1-90; }
 
+# Resumable. The first attempt was killed at 14/20 -- both in-flight cells
+# stopped mid-epoch at the same instant with no traceback, which is the
+# signature of the parent's process group going away rather than of a fault in
+# the work. Re-running should not redo the fourteen cells that landed, so a
+# cell whose JSON already exists is skipped.
 jobs=()
+have=0
 for seed in 3 4 5 6 7; do
   for obj in coral dann irm hsic; do
+    if [ -f "runs/lot__cnn_bn__${obj}__dtime__s${seed}.json" ]; then
+      have=$((have+1)); continue
+    fi
     jobs+=("--encoder cnn_bn --objective $obj --protocol lot --seed $seed --domain-def time_decile --tag dtime")
   done
 done
 
-say "=== DG completion: ${#jobs[@]} cells ==="
+say "=== DG completion: ${#jobs[@]} cells to run, $have already present ==="
+if [ ${#jobs[@]} -eq 0 ]; then say "nothing to run; scoring what is on disk"; fi
 i=0; pids=()
-for spec in "${jobs[@]}"; do
+for spec in ${jobs[@]+"${jobs[@]}"}; do
   g=${GPUS[$((i % ${#GPUS[@]}))]}
   say "launch gpu$g: $spec"
   CUDA_VISIBLE_DEVICES=$g $PY scripts/run_bench.py $spec --epochs "$EPOCHS" \
