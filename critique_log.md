@@ -3104,3 +3104,64 @@ prose written once against a state of the world that then moved.
 `duplicated_blocks()` is tested against the real failure in both directions —
 it must flag a tripled paragraph and must not flag repeated tables or repeated
 short labels, since tables legitimately recur across protocols.
+
+### 66. The `size` half was not stale, it was backwards, and the p-value was the wrong instrument
+
+Entry 64 listed "the `size` half of the negative result stands as measured" among
+six falsified claims. I recorded it and did not remove it, so it stayed in
+`paper_draft.md` for the rest of the weekend. Recording a defect is not fixing
+one, and the critique log is not a place to park work.
+
+Scoring the arms (`scripts/size_power_check.py`) shows the sentence was not merely
+out of date. **Every `size` arm holds three seeds.** A two-sample exact
+permutation test at three per arm admits twenty arrangements, so the smallest
+two-sided p it can return is 0.10. No objective on this protocol could have
+reached 0.05 whatever its effect size. The half that "stands as measured" was
+the half measured with an instrument that has no resolution — while the `lot`
+half, which I withdrew, at least had eight seeds behind it.
+
+**The two halves fail differently and conflating them would have been its own
+error.** `lot` could not have shown an effect at all: the domain vocabulary was
+degenerate, TV 0.0208, so the invariance penalties were satisfied by doing
+nothing. `size` has a genuine vocabulary — TV 0.2592 — and the largest effects
+in the project. Its failure is resolution, not construction.
+
+Then the more interesting thing, which the p-value obscured. `group_dro` sits
+0.1534 below ERM and its own three seeds span **0.1844**. Its range is wider
+than its effect. Checking the rest: **all six objectives on `size` have a seed
+range wider than their distance from ERM.** That is a cleaner statement than any
+p-value, needs no permutation test, and says something different from "worse" —
+these arms are *unstable* under geometry holdout, which is a finding about the
+protocol rather than about the methods.
+
+**A contradiction I nearly shipped.** `WEEKEND.md` said GroupDRO's range and
+ERM's "overlap almost exactly"; `size_power_check.json` said `ranges_overlap:
+false`. Both were computed from the same six numbers. The ranges are *disjoint*
+— ERM's minimum is 0.7612, GroupDRO's maximum 0.7604 — by 0.0008, which is why
+the permutation test bottoms out at its floor rather than landing mid-range. The
+reason that disjointness is not evidence is not overlap; it is that 0.0008 is
+**sixteen times smaller** than `size`'s measured run-to-run floor of 0.0133.
+Disjoint ranges are worthless when the gap is below the floor, and that is
+precisely the case the floor was measured six times over to catch. The prose was
+reaching for the right conclusion through the wrong fact, which is the kind of
+error that survives review because the conclusion is correct.
+
+Three more hand-typed numbers went with it: the four total variations in the
+domain-definition section were typed into the sentence. They live in
+`runs/corpus_stats.json` and are now read from it. I also hand-typed the 0.0133
+floor into my own replacement prose while writing this fix, and caught it on
+re-reading — the habit is not yet automatic even in the middle of an entry about
+the habit.
+
+`scripts/size_complete.sh` takes the seven arms to eight seeds. **H64, before
+the run:** `group_dro` and `logit_adjust` separate from ERM at p < 0.05 and are
+worse; `coral`, `dann`, `irm` and `mixup_domain` do not. The reason it might
+fail in either direction: on `dtime`, eight seeds turned effects of about -0.015
+into p = 0.0017 and p = 0.0051, so small effects do resolve when variance is
+small — but ERM's own spread on `size` is 0.0735 against ±0.0127 on `dtime`.
+Whether that variance falls with seeds or is intrinsic to holding geometry out
+is the actual question, and I do not know the answer.
+
+Until it lands, `size` is **unresolved rather than negative**, and the claim
+that this family is ruled out "on either protocol, with no exception left" has
+been withdrawn to rest on `lot` alone.

@@ -410,14 +410,45 @@ def main():
                 W(table(rows2, ["objective", "vs ERM on `size`",
                                 "its own seed range", "verdict"]))
                 W("")
+                _sp = js("size_power_check.json") or {}
+                _gd = _sp.get("group_dro__macro_f1", {})
+                _fd = js("determinism__size__cnn_bn.json") or {}
+                _fr = _fd.get("range")
+                # this sentence said the two ranges "overlap almost exactly".
+                # They do not overlap at all -- they are disjoint by 0.0008,
+                # which is why the permutation test bottoms out at its floor.
+                # The reason that is not evidence is the size of the gap
+                # against the run-to-run floor, not overlap.
+                _gap = (f"Its seeds and ERM's are in fact *disjoint*, by "
+                        f"{_gd['range_gap']:.4f} — but `size`'s measured "
+                        f"run-to-run floor is {_fr:.4f}, so the separation is "
+                        f"{_fr / _gd['range_gap']:.0f} times smaller than the "
+                        "spread of re-running one configuration unchanged. "
+                        if _gd and _gd.get("range_gap", -1) > 0 and _fr
+                        else "")
                 W("GroupDRO's mean effect is the largest number in this "
                   "repository and it still fails: its seeds span more than its "
-                  "effect, so its range and ERM's overlap almost exactly. It is "
-                  "not a method that loses on geometry shift; it is a method "
-                  "that is *unstable* on geometry shift. **Rules out:** this "
-                  "family of invariance objectives, on this corpus, on either "
-                  "protocol, under either domain definition — with no exception "
-                  "left.")
+                  "effect. " + _gap + "It is not a method that loses on "
+                  "geometry shift; it is a method that is *unstable* on "
+                  "geometry shift.")
+                W("")
+                _ex = (_sp.get("_meta") or {}).get("n_range_exceeds_effect")
+                _no = (_sp.get("_meta") or {}).get("n_objectives")
+                if _ex and _no:
+                    W(f"That is true of **all {_ex} of the {_no}** objectives "
+                      "measured on `size`, not only these two: every arm's own "
+                      "three-seed range is wider than its distance from ERM. "
+                      "At three seeds per arm the exact permutation test also "
+                      "cannot return anything below 0.10, so nothing on this "
+                      "protocol could have reached significance whatever its "
+                      "effect. `scripts/size_complete.sh` takes the seven arms "
+                      "to eight seeds; until it lands, `size` is unresolved "
+                      "rather than negative. **Rules out:** nothing yet on "
+                      "this protocol — the ruling-out below rests on `lot`.")
+                else:
+                    W("**Rules out:** this family of invariance objectives, on "
+                      "this corpus, on either protocol, under either domain "
+                      "definition — with no exception left.")
                 W("")
 
     alb = js("al_budget_check.json")

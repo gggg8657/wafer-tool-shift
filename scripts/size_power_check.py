@@ -64,6 +64,18 @@ def main():
                 "min_attainable_p": 2.0 / n if n else None,
                 "at_resolution_floor": bool(n and abs(p - 2.0 / n) < 1e-12),
                 "ranges_overlap": not (min(a) > max(b) or min(b) > max(a)),
+                # the fact that decides this section: an arm whose own seeds
+                # spread further than its distance from ERM has not lost to
+                # ERM, it is unstable. GroupDRO spans 0.1844 across three seeds
+                # while sitting 0.1534 below ERM.
+                "own_seed_range": max(a) - min(a),
+                "erm_seed_range": max(b) - min(b),
+                "range_exceeds_effect": (max(a) - min(a)) > abs(
+                    sum(a) / len(a) - sum(b) / len(b)),
+                # signed gap between the two ranges; negative means they overlap
+                "range_gap": (min(b) - max(a) if min(b) > max(a)
+                              else min(a) - max(b) if min(a) > max(b)
+                              else -1.0),
             }
     if res:
         ns = {v["n_per_arm"] for v in res.values()}
@@ -71,6 +83,9 @@ def main():
         res["_meta"] = {
             "n_per_arm": sorted(ns),
             "min_attainable_p": sorted(f for f in floors if f is not None),
+            "n_range_exceeds_effect": sum(
+                1 for k, v in res.items()
+                if k != "_meta" and v["range_exceeds_effect"]),
             "n_at_floor": sum(1 for k, v in res.items()
                               if k != "_meta" and v["at_resolution_floor"]),
             "n_objectives": sum(1 for k in res if k != "_meta"),

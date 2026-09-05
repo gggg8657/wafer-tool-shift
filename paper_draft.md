@@ -130,16 +130,20 @@ On `size` the same hash is far less degenerate — 344 geometries into 32 bucket
 
 **This half is unestablished too, and for the opposite reason.** Every arm holds 3 seeds, and a two-sample exact permutation test at 3 per arm admits only 20 arrangements, so the smallest two-sided p it can return is 0.10. Not one of these objectives could have reached 0.05 however large its effect was. 2 of 6 sit exactly on that floor with fully disjoint seed ranges — `group_dro` and `logit_adjust`, at effects several times anything measured on `lot`.
 
-So the `lot` half was withdrawn because the experiment could not have shown an effect, and the `size` half has to be withdrawn because the test could not have certified one. An earlier draft of this section said the `size` half *stood as measured*; that was wrong, and it was wrong in the direction that flattered the result. The effects here are the largest in the paper and they may well be real — though ERM's own three seeds span 0.0735 on this protocol, which is most of the gap being argued about. Eight seeds per arm would settle it; at three, the honest entry is that both halves of the negative result are unresolved.
+**The p-values are not even the sharpest way to say this.** For 6 of these 6 objectives, the arm's own three-seed range is wider than its distance from ERM — `group_dro` spans 0.1844 across its seeds while sitting 0.1534 below ERM, and ERM itself spans 0.0735. An arm that scatters further than it has moved has not lost to ERM; it is unstable on this protocol. That is a different claim from *worse*, and it is the one the data supports.
+
+The one place the two instruments seem to disagree is worth pinning down, because it is easy to misread. `group_dro`'s seeds and ERM's are in fact *disjoint* — by 0.0008 — which is why the permutation test bottoms out at its floor rather than landing mid-range. But `size`'s run-to-run floor, measured over 6 identical invocations of one cell, is 0.0133 — so that separation is 16 times smaller than the noise of re-running the same configuration unchanged. Disjoint ranges are not evidence when the gap is below the floor; this is exactly the case the floor was measured to catch.
+
+So the `lot` half was withdrawn because the experiment could not have shown an effect, and the `size` half has to be withdrawn because the measurement cannot separate an effect from the instability of the arm producing it. An earlier draft of this section said the `size` half *stood as measured*; that was wrong, and it was wrong in the direction that flattered the result. Eight seeds per arm would settle whether the variance falls or is intrinsic to holding geometry out — `scripts/size_complete.sh`. At three, the honest entry is that both halves of the negative result are unresolved.
 
 | objective | domain = `lot % 32` | domain = production decile | difference |
 |---|---|---|---|
 | `erm` | 0.8522 ±0.0069 (n=3) | 0.8585 ±0.0127 (n=8) | +0.0063 |
 | `coral` | 0.8468 ±0.0090 (n=3) | 0.8480 ±0.0131 (n=7) | +0.0011 |
-| `dann` | 0.8517 ±0.0080 (n=3) | 0.8475 ±0.0154 (n=7) | -0.0042 |
+| `dann` | 0.8517 ±0.0080 (n=3) | 0.8487 ±0.0154 (n=8) | -0.0030 |
 | `group_dro` | 0.8535 ±0.0063 (n=3) | 0.8384 ±0.0200 (n=8) | -0.0150 |
 | `hsic` | 0.8527 ±0.0080 (n=3) | 0.8534 ±0.0140 (n=7) | +0.0008 |
-| `irm` | 0.8418 ±0.0094 (n=3) | 0.8523 ±0.0110 (n=7) | +0.0105 |
+| `irm` | 0.8418 ±0.0094 (n=3) | 0.8522 ±0.0105 (n=7) | +0.0103 |
 | `mixup_domain` | 0.8398 ±0.0108 (n=3) | 0.8405 ±0.0168 (n=8) | +0.0007 |
 
 `erm` never reads the domain label, so its two columns are the null control on the plumbing — but read them seed by seed, not as means. The `dtime` arm has since been taken to eight seeds for the objectives that needed resolving while the `lot % 32` arm remains at three, so the two column means average over different seed sets and differ for that reason alone. On the seeds they share the two agree to within the run-to-run floor, which is what the control asserts.
@@ -293,7 +297,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (BatchNorm) | `coral` | — | 3 | 0.8468 | ±0.0090 |
 | `lot` | CNN (BatchNorm) | `coral` | dtime | 7 | 0.8480 | ±0.0131 |
 | `lot` | CNN (BatchNorm) | `dann` | — | 3 | 0.8517 | ±0.0080 |
-| `lot` | CNN (BatchNorm) | `dann` | dtime | 7 | 0.8475 | ±0.0154 |
+| `lot` | CNN (BatchNorm) | `dann` | dtime | 8 | 0.8487 | ±0.0154 |
 | `lot` | CNN (BatchNorm) | `erm` | — | 3 | 0.8522 | ±0.0069 |
 | `lot` | CNN (BatchNorm) | `erm` | dtime | 8 | 0.8585 | ±0.0127 |
 | `lot` | CNN (BatchNorm) | `erm` | gnbn | 8 | 0.8596 | ±0.0143 |
@@ -303,7 +307,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (BatchNorm) | `hsic` | — | 3 | 0.8527 | ±0.0080 |
 | `lot` | CNN (BatchNorm) | `hsic` | dtime | 7 | 0.8534 | ±0.0140 |
 | `lot` | CNN (BatchNorm) | `irm` | — | 3 | 0.8418 | ±0.0094 |
-| `lot` | CNN (BatchNorm) | `irm` | dtime | 7 | 0.8523 | ±0.0110 |
+| `lot` | CNN (BatchNorm) | `irm` | dtime | 7 | 0.8522 | ±0.0105 |
 | `lot` | CNN (BatchNorm) | `mixup_domain` | — | 3 | 0.8398 | ±0.0108 |
 | `lot` | CNN (BatchNorm) | `mixup_domain` | dtime | 8 | 0.8405 | ±0.0168 |
 | `lot` | CNN (GroupNorm) | `erm` | — | 3 | 0.8647 | ±0.0044 |

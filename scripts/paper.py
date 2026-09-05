@@ -509,17 +509,45 @@ def main():
           "`lot`.")
         W("")
         _er = spm.get("erm_seed_range")
+        _ex = spm.get("n_range_exceeds_effect", 0)
+        _no = spm.get("n_objectives", 0)
+        _gd = sp.get("group_dro__macro_f1", {})
+        W("**The p-values are not even the sharpest way to say this.** For "
+          f"{_ex} of these {_no} objectives, the arm's own three-seed range is "
+          "wider than its distance from ERM"
+          + (f" — `group_dro` spans {_gd['own_seed_range']:.4f} across its "
+             f"seeds while sitting {abs(_gd['difference']):.4f} below ERM"
+             if _gd else "")
+          + (f", and ERM itself spans {_er:.4f}" if _er else "")
+          + ". An arm that scatters further than it has moved has not lost to "
+          "ERM; it is unstable on this protocol. That is a different claim "
+          "from *worse*, and it is the one the data supports.")
+        W("")
+        _fd = js("determinism__size__cnn_bn.json") or {}
+        _fl_r, _fl_n = _fd.get("range"), _fd.get("n_repeats")
+        if _gd and _gd.get("range_gap", -1) > 0 and _fl_r:
+            W("The one place the two instruments seem to disagree is worth "
+              "pinning down, because it is easy to misread. `group_dro`'s "
+              f"seeds and ERM's are in fact *disjoint* — by {_gd['range_gap']:.4f} "
+              "— which is why the permutation test bottoms out at its floor "
+              "rather than landing mid-range. But `size`'s run-to-run floor, "
+              f"measured over {_fl_n} identical invocations of one cell, is "
+              f"{_fl_r:.4f} — so that separation is "
+              f"{_fl_r / _gd['range_gap']:.0f} times smaller than the noise of "
+              "re-running the same configuration unchanged. Disjoint ranges "
+              "are not evidence when the gap is below the floor; this is "
+              "exactly the case the floor was measured to catch.")
+            W("")
         W("So the `lot` half was withdrawn because the experiment could not "
           "have shown an effect, and the `size` half has to be withdrawn "
-          "because the test could not have certified one. An earlier draft of "
-          "this section said the `size` half *stood as measured*; that was "
-          "wrong, and it was wrong in the direction that flattered the "
-          "result. The effects here are the largest in the paper and they may "
-          "well be real — "
-          + (f"though ERM's own three seeds span {_er:.4f} on this protocol, "
-             "which is most of the gap being argued about. " if _er else "")
-          + "Eight seeds per arm would settle it; at three, the honest entry "
-          "is that both halves of the negative result are unresolved.")
+          "because the measurement cannot separate an effect from the "
+          "instability of the arm producing it. An earlier draft of this "
+          "section said the `size` half *stood as measured*; that was wrong, "
+          "and it was wrong in the direction that flattered the result. Eight "
+          "seeds per arm would settle whether the variance falls or is "
+          "intrinsic to holding geometry out — `scripts/size_complete.sh`. At "
+          "three, the honest entry is that both halves of the negative result "
+          "are unresolved.")
         W("")
     if dt:
         rows = [[f"`{o}`", fmt(b), fmt(a_),
