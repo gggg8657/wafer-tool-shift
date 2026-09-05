@@ -2627,3 +2627,56 @@ and its baseline is higher. `lot_time` is a genuine null. If `iid` *does* reach
 significance the claim simplifies to "helps where geometry is shared, hurts
 where it is not", which is stronger and cleaner than what I have now, so this is
 one of the few predictions here I would be pleased to lose.
+
+### 56. The Monday document was reporting the weekend's only positive result as unestablished
+
+`WEEKEND.md` §2.0 builds its verdicts from the range test. At three seeds that
+read *separated* on both metrics. The `lot` sweep has since gone to eight, and
+the same code now reads:
+
+| pooling | macro-F1 | vs `mean` | verdict | Scratch | verdict |
+|---|---|---|---|---|---|
+| `meanmax` | 0.8888 (n=8) | +0.0150 | **overlaps** | 0.7764 | **overlaps** |
+
+So the hand-off was reporting an effect with a permutation p of **0.00047** as
+not established, because the criterion it uses becomes stricter as data
+accumulates. Nothing was stale and no number was wrong — the document
+regenerated faithfully from current cells, and the conclusion it drew from them
+inverted while the evidence got stronger.
+
+That is a nastier version of §53. There the hazard was a partial sample making a
+number move; here it is a *correct* number, from a *complete* sample, run
+through a criterion whose failure mode is invisible at the point of use. A
+reader of §2.0 would have seen "overlaps" twice and concluded the weekend
+produced nothing.
+
+Fixed: §2.0 now prints the permutation table under an instruction to ignore the
+range verdicts above it, with the reason. The range criterion stays in the
+tables it is right for — dozens of three-seed cells where a p-value is
+unavailable at any effect size — and is labelled a floor rather than a verdict.
+
+### 57. The control for that result is still at three seeds
+
+The claim is not "mean-and-max scores higher"; it is "mean-and-max scores higher
+*and it is not the extra parameters*". The second half rests entirely on
+`meanmean` — the mean concatenated with itself, identical parameter count, no
+extra information — which is at **three** seeds while the treatment is at eight.
+
+So the load-bearing control for the weekend's only positive result sits at the
+sample size that has been wrong four times, supporting a result measured at
+nearly three times that. This is the third appearance of the same asymmetry and
+the first in the genuinely convenient direction: a control that buys nothing at
+n = 3 is exactly what the claim wants, and I did not extend it while extending
+everything around it.
+
+`scripts/pooling_control_seeds.sh` takes it to eight and runs the permutation
+test on both metrics.
+
+**H56, before the run:** the control stays null. Its three-seed deltas were
+−0.0020 macro-F1 and −0.0082 `Scratch`, both slightly negative, and there is no
+mechanism by which duplicating a vector adds information — the extra head
+parameters see a copy of what they already had. If it comes out positive and
+significant, the pooling result is a capacity result, the mechanism story is
+wrong, and the weekend's one positive finding becomes "a wider classification
+head helps", which is a much less interesting sentence and would have to be the
+one printed.
