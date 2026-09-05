@@ -471,3 +471,53 @@ def test_section_census_catches_a_vanished_section():
                 if n:
                     found.add(n)
         assert found == {"a_summary.json", "b_summary.json"}
+
+
+def test_duplicate_paragraph_detector_catches_a_section_rendered_twice():
+    """The guard for critique entry 67, tested against the defect that caused it.
+
+    `weekend.py` section 2.0 rendered four times for two commits. The cause was
+    one indentation slip: the section body sat inside the `for proto in (...)`
+    loop that was only meant to populate its inputs. Nothing detectable was
+    wrong -- every number came from `runs/`, `section_census.py` saw all inputs
+    present, `coverage_check.py` saw every JSON consumed. Those guards ask about
+    content; this was a defect in shape, and the document was 145 lines where it
+    should have been 41.
+
+    `RESULTS.md` turned out to have the same defect independently, printing one
+    caveat three times, which is how the detector earned its place rather than
+    merely passing a test written for it.
+    """
+    import importlib.util
+    import tempfile
+    from pathlib import Path as _Path
+
+    spec = importlib.util.spec_from_file_location(
+        "lint", _Path(__file__).resolve().parents[1] / "scripts"
+        / "prose_status_lint.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+
+    para = ("A paragraph long enough to count as prose rather than as a "
+            "heading, which is the whole distinction the detector draws and "
+            "so has to be exercised at realistic length.")
+    with tempfile.TemporaryDirectory() as d:
+        clean = _Path(d, "clean.md")
+        clean.write_text(f"# t\n\n{para}\n\nSomething else entirely here, and "
+                         "also long enough to clear the minimum length bar.\n")
+        assert m.duplicated_blocks(clean) == [], "false positive on a clean doc"
+
+        dirty = _Path(d, "dirty.md")
+        dirty.write_text(f"# t\n\n{para}\n\n{para}\n\n{para}\n")
+        assert len(m.duplicated_blocks(dirty)) == 2, "missed a tripled paragraph"
+
+        # tables legitimately repeat rows across protocols; they are not prose
+        rows = "| a | b |\n|---|---|\n| 1 | 2 |"
+        tbl = _Path(d, "tbl.md")
+        tbl.write_text(f"# t\n\n{rows}\n\n{rows}\n")
+        assert m.duplicated_blocks(tbl) == [], "flagged a repeated table"
+
+        # short repeated lines (headers, labels) are not prose either
+        short = _Path(d, "short.md")
+        short.write_text("# t\n\n**Verdict.**\n\n**Verdict.**\n")
+        assert m.duplicated_blocks(short) == [], "flagged a repeated label"

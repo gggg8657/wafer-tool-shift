@@ -122,11 +122,11 @@ On `size` the same hash is far less degenerate — 344 geometries into 32 bucket
 | objective | domain = `lot % 32` | domain = production decile | difference |
 |---|---|---|---|
 | `erm` | 0.8522 ±0.0069 (n=3) | 0.8585 ±0.0127 (n=8) | +0.0063 |
-| `coral` | 0.8468 ±0.0090 (n=3) | 0.8481 ±0.0109 (n=4) | +0.0012 |
-| `dann` | 0.8517 ±0.0080 (n=3) | 0.8458 ±0.0132 (n=4) | -0.0058 |
+| `coral` | 0.8468 ±0.0090 (n=3) | 0.8470 ±0.0131 (n=6) | +0.0001 |
+| `dann` | 0.8517 ±0.0080 (n=3) | 0.8466 ±0.0154 (n=6) | -0.0050 |
 | `group_dro` | 0.8535 ±0.0063 (n=3) | 0.8384 ±0.0200 (n=8) | -0.0150 |
-| `hsic` | 0.8527 ±0.0080 (n=3) | 0.8532 ±0.0123 (n=4) | +0.0005 |
-| `irm` | 0.8418 ±0.0094 (n=3) | 0.8504 ±0.0098 (n=4) | +0.0086 |
+| `hsic` | 0.8527 ±0.0080 (n=3) | 0.8528 ±0.0140 (n=6) | +0.0001 |
+| `irm` | 0.8418 ±0.0094 (n=3) | 0.8503 ±0.0098 (n=6) | +0.0084 |
 | `mixup_domain` | 0.8398 ±0.0108 (n=3) | 0.8405 ±0.0168 (n=8) | +0.0007 |
 
 `erm` never reads the domain label, so its two columns are the null control on the plumbing — but read them seed by seed, not as means. The `dtime` arm has since been taken to eight seeds for the objectives that needed resolving while the `lot % 32` arm remains at three, so the two column means average over different seed sets and differ for that reason alone. On the seeds they share the two agree to within the run-to-run floor, which is what the control asserts.
@@ -278,9 +278,9 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `iid` | descriptors + MLP | `erm` | sess2 | 3 | 0.8443 | ±0.0076 |
 | `iid` | spectral operator | `erm` | sess2 | 3 | 0.8576 | ±0.0142 |
 | `lot` | CNN (BatchNorm) | `coral` | — | 3 | 0.8468 | ±0.0090 |
-| `lot` | CNN (BatchNorm) | `coral` | dtime | 4 | 0.8481 | ±0.0109 |
+| `lot` | CNN (BatchNorm) | `coral` | dtime | 6 | 0.8470 | ±0.0131 |
 | `lot` | CNN (BatchNorm) | `dann` | — | 3 | 0.8517 | ±0.0080 |
-| `lot` | CNN (BatchNorm) | `dann` | dtime | 4 | 0.8458 | ±0.0132 |
+| `lot` | CNN (BatchNorm) | `dann` | dtime | 6 | 0.8466 | ±0.0154 |
 | `lot` | CNN (BatchNorm) | `erm` | — | 3 | 0.8522 | ±0.0069 |
 | `lot` | CNN (BatchNorm) | `erm` | dtime | 8 | 0.8585 | ±0.0127 |
 | `lot` | CNN (BatchNorm) | `erm` | gnbn | 8 | 0.8596 | ±0.0143 |
@@ -288,9 +288,9 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (BatchNorm) | `group_dro` | — | 3 | 0.8535 | ±0.0063 |
 | `lot` | CNN (BatchNorm) | `group_dro` | dtime | 8 | 0.8384 | ±0.0200 |
 | `lot` | CNN (BatchNorm) | `hsic` | — | 3 | 0.8527 | ±0.0080 |
-| `lot` | CNN (BatchNorm) | `hsic` | dtime | 4 | 0.8532 | ±0.0123 |
+| `lot` | CNN (BatchNorm) | `hsic` | dtime | 6 | 0.8528 | ±0.0140 |
 | `lot` | CNN (BatchNorm) | `irm` | — | 3 | 0.8418 | ±0.0094 |
-| `lot` | CNN (BatchNorm) | `irm` | dtime | 4 | 0.8504 | ±0.0098 |
+| `lot` | CNN (BatchNorm) | `irm` | dtime | 6 | 0.8503 | ±0.0098 |
 | `lot` | CNN (BatchNorm) | `mixup_domain` | — | 3 | 0.8398 | ±0.0108 |
 | `lot` | CNN (BatchNorm) | `mixup_domain` | dtime | 8 | 0.8405 | ±0.0168 |
 | `lot` | CNN (GroupNorm) | `erm` | — | 3 | 0.8647 | ±0.0044 |

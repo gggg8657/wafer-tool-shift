@@ -162,6 +162,29 @@ OBJ_NOTE = {
 }
 
 
+def p10_discretization(SEEDS):
+    """How concentrated `p10_domain_macro_f1` is on a few values, over `lot`.
+
+    These two counts used to be typed into the prose below. They were correct
+    when written -- at roughly forty cells -- and were still sitting there at
+    two hundred, understating their own point by a factor of four. A number
+    that describes `runs/` has to be counted from `runs/`, including when it
+    appears in a sentence rather than a table.
+    """
+    import collections
+    c = collections.Counter()
+    for (proto, *_), by_seed in SEEDS.items():
+        if proto != "lot":
+            continue
+        for r in by_seed.values():
+            v = (r.get("test") or {}).get("p10_domain_macro_f1")
+            if v is not None:
+                c[round(v, 4)] += 1
+    tot = sum(c.values())
+    top = c.most_common(2)
+    return tot, top
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", default="runs")
@@ -359,6 +382,7 @@ def main():
 
     # ---- stage B
     objs = [o for o in OBJ_NOTE if o != "erm" and any(k[2] == o for k in R)]
+    p10_warned = False   # the caveat is protocol-independent; say it once
     for p in [x for x in protos if x != "iid"]:
         rows = []
         for e in encs:
@@ -385,18 +409,34 @@ def main():
                   table(rows, ["representation", "objective", "borrowed from",
                                "macro-F1", "vs ERM", "p10 domain F1",
                                "vs ERM", "Scratch F1", "Near-full F1"]), "",
-                  "**Do not rank models by the `p10 domain F1` column.** A lot "
-                  "holds at most 25 wafers, so a per-lot macro-F1 takes very "
-                  "few distinct values -- a 25-wafer lot whose one defect is "
-                  "missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model "
-                  "missed it. Across the cells in `runs/`, 25 separate `lot` "
-                  "cells report that identical 0.4898 and 11 more report "
-                  "exactly 0.5000, so the column is a discretization artefact "
-                  "of lot size rather than a measure of domain robustness. "
-                  "`wts.metrics.summarize` now also emits "
-                  "`mean_domain_macro_f1` and `frac_domains_below_half`, which "
-                  "average over ~1,700 lots and therefore do separate models; "
-                  "cells measured before that change do not carry them.", ""]
+                  ]
+            if not p10_warned:
+                p10_warned = True
+                _tot, _top = p10_discretization(SEEDS)
+                if _tot and len(_top) >= 2:
+                    (_v1, _n1), (_v2, _n2) = _top
+                    _share = 100.0 * (_n1 + _n2) / _tot
+                    _counts = (
+                        f"Across the {_tot} `lot` cells in `runs/` that carry "
+                        f"the column, {_n1} report the identical {_v1:.4f} and "
+                        f"{_n2} more report exactly {_v2:.4f} -- "
+                        f"{_share:.0f}% of them on two values")
+                else:
+                    _counts = ("Across the `lot` cells in `runs/` the column "
+                               "takes very few distinct values")
+                L += ["**Do not rank models by the `p10 domain F1` column.** "
+                      "A lot holds at most 25 wafers, so a per-lot macro-F1 "
+                      "takes very few distinct values -- a 25-wafer lot whose "
+                      "one defect is missed scores exactly (48/49 + 0)/2 = "
+                      "0.4898 whichever model missed it. " + _counts + ", so "
+                      "the column is a discretization artefact of lot size "
+                      "rather than a measure of domain robustness. "
+                      "`wts.metrics.summarize` now also emits "
+                      "`mean_domain_macro_f1` and `frac_domains_below_half`, "
+                      "which average over ~1,700 lots and therefore do "
+                      "separate models; cells measured before that change do "
+                      "not carry them. This applies to every protocol table "
+                      "in this section; it is stated once.", ""]
 
     # ---- TTA
     rows = []

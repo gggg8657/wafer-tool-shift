@@ -3044,3 +3044,63 @@ cannot check and a reader most relies on. The cost of finding six of them was
 about ten minutes of reading, which is cheap enough that it should have been a
 standing item after every result landed rather than something done twice in
 sixty-four entries.
+
+### 65. The lint I wrote to find stale sentences found a section printed four times
+
+Entry 64 ended by saying that reading a document end to end should be a standing
+item rather than something done twice in sixty-four entries. `prose_status_lint.py`
+was the attempt to make it one: scan the generators for sentences that assert a
+*state of the work* rather than a measurement, since every documentation failure
+this project has had was in the prose around the numbers and not in the numbers.
+
+Its first run flagged `weekend.py` L309 — "`iid`, `size` and `lot_time` are
+running" — which was true when written and false for hours afterwards, exactly
+the class it was built for. But grepping that sentence in the rendered document
+returned **four hits**: lines 66, 101, 138 and 177. Section 2.0 spanned lines
+33 to 178. One hundred and forty-five lines for a section that is forty-one.
+
+The cause was mine, from two commits earlier. The section body had been left
+inside the `for proto in ("iid", "lot", "lot_time", "size"):` loop that was only
+meant to populate the dictionary of permutation summaries, so the entire section
+— baseline table, permutation table, mechanism, capacity control, caveat —
+rendered once per protocol.
+
+**What is worth recording is not the slip but why nothing caught it.** Every
+number in the section came from `runs/`. `section_census.py` reported 24/24
+inputs present. `coverage_check.py` reported every family of runs referenced.
+The test suite passed. All of those ask whether the *content* is right, and the
+content was right — four times. Nothing in this repository asked about the
+document's **shape**, and I did not notice across two commits because I was
+reading tables, and each table was correct.
+
+So the lint gained a second pass that reads the rendered documents rather than
+the generator source, with a duplicate-paragraph check. That pass immediately
+found a *second* instance I did not know about: `RESULTS.md` printed the "do not
+rank models by `p10 domain F1`" caveat **three times**, once per protocol table.
+That one is a genuine loop rather than a slip, but the caveat is
+protocol-independent, so it is now stated once.
+
+The document-side pass also justified itself in the other direction: three of
+the generator-side flags (`backfill_metrics.sh is queued`, `domain_def_sweep.sh
+is queued`, `mixed_sweep.sh queued`) are in `else:` branches that only render
+when the JSON is missing. They are dead prose, not stale claims. Scanning source
+cannot tell the two apart; scanning output can.
+
+**And the duplicate check paid for itself a third time.** The `RESULTS.md`
+caveat contained two hand-typed counts — "25 separate `lot` cells report that
+identical 0.4898 and 11 more report exactly 0.5000". Recounting from `runs/`:
+**111 report 0.4898 and 75 report 0.5000, out of 208** — 89% of `lot` cells on
+two values. The numbers were correct when typed at roughly forty cells and had
+been understating their own argument by a factor of four ever since. They are
+now computed by `p10_discretization()`.
+
+That is the sharper version of the brief's rule than I had been applying. "No
+number appears in any file unless a run produced it" is not only about tables. A
+number inside a *sentence* that describes `runs/` decays exactly as fast as one
+inside a table, and is harder to see because prose is not where one looks for
+stale figures. Three of the four defects in this entry are the same defect:
+prose written once against a state of the world that then moved.
+
+`duplicated_blocks()` is tested against the real failure in both directions —
+it must flag a tripled paragraph and must not flag repeated tables or repeated
+short labels, since tables legitimately recur across protocols.

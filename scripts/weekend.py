@@ -204,16 +204,20 @@ def main():
          if v}
     if len(P) == 3:
         W("## 2.0 The one thing that worked: what the encoder pools")
-    W("")
-    pall = {}
-    for proto in ("iid", "lot", "lot_time", "size"):
-        for fn, lab in ((f"pooling_{proto}_perm_macro_f1.json", "macro-F1"),
-                        (f"pooling_{proto}_perm_class_Scratch.json", "Scratch"),
-                        (f"pooling_{proto}_perm.json", "macro-F1"),
-                        (f"pooling_{proto}_perm_scratch.json", "Scratch")):
-            d_ = js(fn)
-            if d_ and (proto, lab) not in pall:
-                pall[(proto, lab)] = d_
+        W("")
+        # collect the eight-seed permutation summaries once, before the body.
+        # An earlier edit left this loop open around the whole section, so 2.0
+        # rendered four times -- once per protocol -- and the document grew from
+        # 36 lines to 145 without any table in it looking wrong.
+        pall = {}
+        for proto in ("iid", "lot", "lot_time", "size"):
+            for fn, lab in ((f"pooling_{proto}_perm_macro_f1.json", "macro-F1"),
+                            (f"pooling_{proto}_perm_class_Scratch.json", "Scratch"),
+                            (f"pooling_{proto}_perm.json", "macro-F1"),
+                            (f"pooling_{proto}_perm_scratch.json", "Scratch")):
+                d_ = js(fn)
+                if d_ and (proto, lab) not in pall:
+                    pall[(proto, lab)] = d_
         W("")
         bx = sorted(r["test"]["macro_f1"] for r in P["poolmean"].values())
         bsc = sorted(r["test"]["per_class_f1"]["Scratch"]
@@ -303,10 +307,17 @@ def main():
           "recover. **The long tail was an architecture problem, not a class-"
           "imbalance problem.** That is the sentence worth taking away.")
         W("")
-        W("*Caveat, and it is the one this repository would insist on: this is "
-          "measured on `lot` with one encoder. A benchmark whose thesis is that "
-          "results move when the protocol changes should not report a "
-          "single-protocol win. `iid`, `size` and `lot_time` are running.*")
+        _sz = pall.get(("size", "Scratch"))
+        _szp = (f"p = {_sz['permutation_test']['p_two_sided']:.5f}"
+                if _sz else "[not measured]")
+        W("*Caveat, resolved. This began as a single-protocol win on `lot` with "
+          "the note that the other three were still running. They have since "
+          "finished and are in the table above, and the caveat was half right: "
+          "the effect replicates on `iid` and `lot_time` and does not survive "
+          f"`size` ({_szp}, and the point estimate is negative). The claim is "
+          "therefore conditional on the geometry being represented in training, "
+          "which is stated as the finding rather than as a limitation. It is "
+          "still one encoder.*")
         W("")
 
     # ---------------------------------------------------------------- withdrawn
