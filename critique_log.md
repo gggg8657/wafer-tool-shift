@@ -2771,3 +2771,52 @@ account it should land between `lot` and `size`.
 `paper_draft.md` §4.3 and the abstract are corrected: "it does not generalize,
 being unestablished on the other three protocols" was true of a three-seed
 reading and is false.
+
+### 60. The headline negative result is under-powered by the standard I just established
+
+§59 showed the three-seed range screen producing a **false negative**: on `iid`
+it called a pooling effect of +0.0113 "below the floor", and the same comparison
+at eight seeds is p = 0.00031.
+
+That has a consequence I would rather not have noticed. The repository's
+headline negative — *not one of seven borrowed objectives separates from ERM
+anywhere* — rests entirely on three-seed cells read with that screen. Comparing
+those effects against the one it just missed:
+
+| objective (under real domains) | vs ERM | larger than the missed +0.0113? |
+|---|---|---|
+| `group_dro` | **−0.0257** | yes |
+| `mixup_domain` | **−0.0143** | yes |
+| `coral` | −0.0071 | no |
+| `dann` | −0.0060 | no |
+| `irm` | −0.0049 | no |
+| `hsic` | −0.0026 | no |
+
+Two of six are larger in magnitude than an effect the same instrument declared
+absent. So the negative result is stated at a confidence its evidence does not
+support, and I have been sharpening rather than softening it for several turns —
+§37 called it "uniform", §56 called it "no exception left".
+
+**This matters more than it would for a positive claim.** A positive result
+asserted from a weak test is wrong and gets caught by the next person who runs
+it. A *null* asserted from an under-powered test is the failure §40 documented
+at length: an experiment with no power returns silence, and silence gets read as
+evidence of absence. I built `verify_stage.py` because of that failure and then
+made the same error in the argument rather than in the plumbing.
+
+`scripts/dg_power_check.sh` takes ERM, `group_dro` and `mixup_domain` under the
+real domain vocabulary to eight seeds and runs the permutation test.
+
+**H60, before the run:** `group_dro` separates from ERM at p < 0.05 and is
+genuinely worse under real domains — it is the largest and most consistent
+effect in that table, and its sign has been stable across three separate
+measurements. `mixup_domain` does not.
+
+If `group_dro` separates, the claim changes from *"nothing is distinguishable
+from ERM"* to *"one objective is established as worse and the other five are
+unestablished"*. That is a different sentence and a better one: it says the
+benchmark can detect a harmful method when there is one, which is the thing a
+uniformly null table cannot demonstrate about itself. It would also mean the
+`size` result I withdrew in §37 — GroupDRO at −0.15 failing to clear that
+protocol's wider floor — was a power failure rather than an absence, and the
+method is simply bad on this corpus in a way three seeds could not show.
