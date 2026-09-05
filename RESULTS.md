@@ -483,8 +483,8 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range | per seed |
 |---|---|---|---|---|---|---|---|
 | iid | CNN on resized 64x64 (BatchNorm) | erm | sess2 | 3 | 0.8625 | +/-0.0042 | 0.8623, 0.8668, 0.8584 |
-| iid | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 5 | 0.8834 | +/-0.0035 | 0.8855, 0.8795, 0.8858, 0.8865, 0.8798 |
-| iid | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 5 | 0.8921 | +/-0.0048 | 0.8933, 0.8946, 0.8899, 0.8865, 0.8961 |
+| iid | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 7 | 0.8832 | +/-0.0057 | 0.8855, 0.8795, 0.8858, 0.8865, 0.8798, 0.8772, 0.8885 |
+| iid | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 7 | 0.8941 | +/-0.0063 | 0.8933, 0.8946, 0.8899, 0.8865, 0.8961, 0.8989, 0.8991 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmean | 3 | 0.8839 | +/-0.0051 | 0.8782, 0.8884, 0.8852 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm | sess2 | 3 | 0.8837 | +/-0.0016 | 0.8820, 0.8838, 0.8852 |
 | iid | size-invariant descriptors + MLP | erm | sess2 | 3 | 0.8443 | +/-0.0076 | 0.8532, 0.8417, 0.8380 |

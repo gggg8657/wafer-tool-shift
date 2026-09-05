@@ -105,7 +105,9 @@ def main():
         head = NM
 
     det = js("determinism.json")
-    floor = (det.get("range", det.get("run_to_run_abs_diff")) if det else None)
+    # per protocol, not one number: `size` is two and a half times `lot`
+    F = floors(a.runs)
+    floor = F.get("_fallback")
 
     W("# Weekend, session S1 — wafer-tool-shift")
     W("")
@@ -117,14 +119,29 @@ def main():
     # ---------------------------------------------------------------- summary
     W("## Read this first")
     W("")
-    if floor is not None and det.get("n_repeats"):
-        W(f"**The same cell, run {det['n_repeats']} times with identical "
-          f"arguments, spans {floor:.4f} macro-F1.** That is the measurement "
-          "floor of this pipeline, and it is larger than most of the effects "
-          "the Friday tables reported as findings. Every verdict below "
-          "requires two cells' seed ranges to be disjoint *and* the margin "
-          "between them to clear that floor. Applying it is what most of this "
-          "weekend consisted of.")
+    meas = {k: v for k, v in F.items() if k != "_fallback"}
+    if meas:
+        W("**Identical invocations of one cell do not give the same number, and "
+          "the spread is larger than most of the effects the Friday tables "
+          "reported as findings.** Measured by re-running one cell several "
+          "times per protocol: "
+          + ", ".join(f"`{k}` {v:.4f}" for k, v in sorted(meas.items()))
+          + ". It is not one number — `size` is two and a half times `lot` — "
+          "and protocols without their own measurement are judged against the "
+          "largest, because being too strict withdraws a claim and being too "
+          "lenient publishes one.")
+        W("")
+        W("**Two standards are used below and it matters which you are "
+          "reading.** Most tables here hold dozens of cells at three seeds, "
+          "where a p-value is unavailable at any effect size — an exact "
+          "permutation test with three per arm has twenty arrangements and a "
+          "smallest attainable two-sided p of 0.1. Those tables ask whether "
+          "the seed ranges are disjoint and the margin clears the floor. That "
+          "is a **screen, not a verdict**: a sample's range grows with the "
+          "sample, so it becomes stricter as evidence accumulates, and at eight "
+          "seeds it calls an effect with p = 0.0005 *overlapping*. Where a "
+          "comparison has been run properly — eight seeds per arm — the "
+          "permutation test is reported and is the one to believe.")
         W("")
     W("Most of what follows is a withdrawal. Six claims the repository made on "
       "Friday do not survive being measured against that floor, and none was "

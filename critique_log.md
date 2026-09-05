@@ -2680,3 +2680,44 @@ significant, the pooling result is a capacity result, the mechanism story is
 wrong, and the weekend's one positive finding becomes "a wider classification
 head helps", which is a much less interesting sentence and would have to be the
 one printed.
+
+### 58. The most-read paragraph described a methodology two later sections contradict
+
+Reading `WEEKEND.md` end to end deliberately — rather than catching things
+incidentally, which is how the last three of these were found — the opening
+"Read this first" was wrong in two ways, and it is the paragraph most likely to
+be the only one anyone reads.
+
+**It stated the floor as one number.** *"The same cell, run 6 times with
+identical arguments, spans 0.0054 macro-F1. That is the measurement floor of
+this pipeline."* §28 established that it is not a pipeline property but a
+protocol property, measured `lot` 0.0054 and `size` 0.0133, and built
+`floors()`/`floor_for()` to use each protocol's own. The opening had never been
+updated, so the document introduced a global constant and then, forty lines
+later, judged `size` cells against a different one without saying why.
+
+**It described the range test as the verdict.** *"Every verdict below requires
+two cells' seed ranges to be disjoint and the margin between them to clear that
+floor."* §56 established that this criterion becomes stricter as evidence
+accumulates and calls an effect with p = 0.00047 *overlapping*, and §2.0 of the
+same document now instructs the reader to ignore it there. A document that opens
+by endorsing a criterion and later tells you to disregard it has not made a
+correction; it has made a contradiction.
+
+Rewritten to state both floors, that they differ by a factor of two and a half,
+and the two-tier standard explicitly: the range test is a **screen** for tables
+of dozens of three-seed cells where a p-value is unavailable at any effect size,
+and the permutation test is the **verdict** wherever a comparison has been run
+at eight seeds per arm. Also fixed `weekend.py` importing `floors` and never
+calling it, which is why the opening had a hardcoded single value at all.
+
+**On the method that found it.** The previous three staleness bugs — the "no
+positive results" line, the `size`-half-stands claim, the range verdict on the
+pooling table — were all caught while doing something else. This one was found
+by reading the deliverable straight through against current data, which took
+about four minutes and is the obvious thing to do before handing something over.
+The generators guarantee that no number is typed by hand. They guarantee nothing
+about whether the sentences around the numbers still describe them, and after
+fifty-eight entries the ratio is not reassuring: every prose claim in these
+documents that I have checked against the data it sits beside has needed
+revision at least once.
