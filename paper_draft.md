@@ -122,14 +122,14 @@ On `size` the same hash is far less degenerate — 344 geometries into 32 bucket
 | objective | domain = `lot % 32` | domain = production decile | difference |
 |---|---|---|---|
 | `erm` | 0.8522 ±0.0069 (n=3) | 0.8585 ±0.0127 (n=8) | +0.0063 |
-| `coral` | 0.8468 ±0.0090 (n=3) | 0.8443 ±0.0098 (n=3) | -0.0025 |
-| `dann` | 0.8517 ±0.0080 (n=3) | 0.8454 ±0.0132 (n=3) | -0.0062 |
+| `coral` | 0.8468 ±0.0090 (n=3) | 0.8481 ±0.0109 (n=4) | +0.0012 |
+| `dann` | 0.8517 ±0.0080 (n=3) | 0.8458 ±0.0132 (n=4) | -0.0058 |
 | `group_dro` | 0.8535 ±0.0063 (n=3) | 0.8384 ±0.0200 (n=8) | -0.0150 |
-| `hsic` | 0.8527 ±0.0080 (n=3) | 0.8488 ±0.0076 (n=3) | -0.0039 |
-| `irm` | 0.8418 ±0.0094 (n=3) | 0.8465 ±0.0052 (n=3) | +0.0047 |
+| `hsic` | 0.8527 ±0.0080 (n=3) | 0.8532 ±0.0123 (n=4) | +0.0005 |
+| `irm` | 0.8418 ±0.0094 (n=3) | 0.8504 ±0.0098 (n=4) | +0.0086 |
 | `mixup_domain` | 0.8398 ±0.0108 (n=3) | 0.8405 ±0.0168 (n=8) | +0.0007 |
 
-`erm` never reads the domain label, so its two columns must agree exactly; it is included as the null control on the plumbing.
+`erm` never reads the domain label, so its two columns are the null control on the plumbing — but read them seed by seed, not as means. The `dtime` arm has since been taken to eight seeds for the objectives that needed resolving while the `lot % 32` arm remains at three, so the two column means average over different seed sets and differ for that reason alone. On the seeds they share the two agree to within the run-to-run floor, which is what the control asserts.
 
 ## 4. Result: our own two contributions fail their own controls
 
@@ -278,9 +278,9 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `iid` | descriptors + MLP | `erm` | sess2 | 3 | 0.8443 | ±0.0076 |
 | `iid` | spectral operator | `erm` | sess2 | 3 | 0.8576 | ±0.0142 |
 | `lot` | CNN (BatchNorm) | `coral` | — | 3 | 0.8468 | ±0.0090 |
-| `lot` | CNN (BatchNorm) | `coral` | dtime | 3 | 0.8443 | ±0.0098 |
+| `lot` | CNN (BatchNorm) | `coral` | dtime | 4 | 0.8481 | ±0.0109 |
 | `lot` | CNN (BatchNorm) | `dann` | — | 3 | 0.8517 | ±0.0080 |
-| `lot` | CNN (BatchNorm) | `dann` | dtime | 3 | 0.8454 | ±0.0132 |
+| `lot` | CNN (BatchNorm) | `dann` | dtime | 4 | 0.8458 | ±0.0132 |
 | `lot` | CNN (BatchNorm) | `erm` | — | 3 | 0.8522 | ±0.0069 |
 | `lot` | CNN (BatchNorm) | `erm` | dtime | 8 | 0.8585 | ±0.0127 |
 | `lot` | CNN (BatchNorm) | `erm` | gnbn | 8 | 0.8596 | ±0.0143 |
@@ -288,9 +288,9 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (BatchNorm) | `group_dro` | — | 3 | 0.8535 | ±0.0063 |
 | `lot` | CNN (BatchNorm) | `group_dro` | dtime | 8 | 0.8384 | ±0.0200 |
 | `lot` | CNN (BatchNorm) | `hsic` | — | 3 | 0.8527 | ±0.0080 |
-| `lot` | CNN (BatchNorm) | `hsic` | dtime | 3 | 0.8488 | ±0.0076 |
+| `lot` | CNN (BatchNorm) | `hsic` | dtime | 4 | 0.8532 | ±0.0123 |
 | `lot` | CNN (BatchNorm) | `irm` | — | 3 | 0.8418 | ±0.0094 |
-| `lot` | CNN (BatchNorm) | `irm` | dtime | 3 | 0.8465 | ±0.0052 |
+| `lot` | CNN (BatchNorm) | `irm` | dtime | 4 | 0.8504 | ±0.0098 |
 | `lot` | CNN (BatchNorm) | `mixup_domain` | — | 3 | 0.8398 | ±0.0108 |
 | `lot` | CNN (BatchNorm) | `mixup_domain` | dtime | 8 | 0.8405 | ±0.0168 |
 | `lot` | CNN (GroupNorm) | `erm` | — | 3 | 0.8647 | ±0.0044 |
@@ -462,10 +462,10 @@ A scratch is thin in units of *dies*, not pixels, and no resampling changes that
 
 ## 8. Threats to validity
 
-1. **Time is a proxy, and the forward-only split is not purely temporal.** WM-811K carries no timestamps; `lot_time` orders lots by the integer in the lot name. Section 2.1 shows the numbering is not arbitrary, but cannot distinguish production order from product blocking — and shows that the forward-only test side is concentrated on a small number of geometries, a sixth of its wafers being of geometries never trained on. Our largest single result is therefore a compound of temporal drift and geometry shift in a proportion that section 2.1 will quantify and currently does not.
-2. **The test split is label-aware.** `_stratified_group_split` skips a candidate held-out group when moving it would leave a class with no training examples. No label reaches the model, but which domains land in test is not independent of the labels; the guard binds almost only on `Near-full` (149 wafers). The size of the resulting bias is [not measured].
+1. **Time is a proxy, and the forward-only split is not purely temporal.** WM-811K carries no timestamps; `lot_time` orders lots by the integer in the lot name. Section 2.1 shows the numbering is not arbitrary but cannot distinguish production order from product blocking. It also decomposes the drop: a third to nearly half is present on a *random* split restricted to the same geometry slice, with no time involved. Meeting geometries never trained on — which we assumed was the expensive part — costs approximately nothing: the unseen half of that test set is no harder than the seen half, and on both CNNs it is easier.
+2. **The test split is label-aware, and it makes no difference.** `_stratified_group_split` skips a candidate held-out group when moving it would leave a class with no training examples, so which domains land in test is not independent of the labels. Two reviewers flagged it. Dropping the guard entirely and comparing the partitions: it fires in 0 of 10 seeds on both group protocols and the splits are identical wafer for wafer — structurally so, since the guard rejects a group only if it holds *all* remaining training examples of a class and no lot holds more than 4.14% of any class. The code path is label-aware; the split is not.
 3. **One architecture family.** Every CNN cell is the same three-block encoder at width 32 and 12 epochs. Whether the protocol ordering survives at a modern backbone and a longer schedule is [not measured].
-4. **Three seeds.** Half-ranges over three seeds are descriptive, not inferential. We report the range we saw and do not attach a p-value to it.
+4. **Most cells are three seeds, and three seeds are not enough.** The screen built on them has produced false positives *and* false negatives here: it called an `iid` pooling effect of +0.0113 absent where eight seeds give p = 0.0003, and called two domain-generalization objectives indistinguishable from ERM where eight seeds give p = 0.0017 and p = 0.0051. Every comparison this paper rests on has been taken to eight seeds per arm and read with an exact permutation test; the three-seed tables are a screen for where to spend that budget and are labelled as such. **A three-seed null in these tables is not evidence of absence.**
 
 ## 9. What is deliberately not claimed
 

@@ -474,8 +474,14 @@ def main():
         W(table(rows, ["objective", "domain = `lot % 32`",
                        "domain = production decile", "difference"]))
         W("")
-        W("`erm` never reads the domain label, so its two columns must agree "
-          "exactly; it is included as the null control on the plumbing.")
+        W("`erm` never reads the domain label, so its two columns are the "
+          "null control on the plumbing — but read them seed by seed, not as "
+          "means. The `dtime` arm has since been taken to eight seeds for the "
+          "objectives that needed resolving while the `lot % 32` arm remains "
+          "at three, so the two column means average over different seed sets "
+          "and differ for that reason alone. On the seeds they share the two "
+          "agree to within the run-to-run floor, which is what the control "
+          "asserts.")
     else:
         W(f"Re-run under a domain vocabulary that carries real shift: {NM}. "
           "`scripts/domain_def_sweep.sh` is queued. Until it lands, the claim "
@@ -1056,26 +1062,38 @@ def main():
     W("## 8. Threats to validity")
     W("")
     W("1. **Time is a proxy, and the forward-only split is not purely "
-      "temporal.** WM-811K carries no timestamps; `lot_time` orders lots by the "
-      "integer in the lot name. Section 2.1 shows the numbering is not "
-      "arbitrary, but cannot distinguish production order from product "
-      "blocking — and shows that the forward-only test side is concentrated on "
-      "a small number of geometries, a sixth of its wafers being of geometries "
-      "never trained on. "
-      "Our largest single result is therefore a compound of temporal drift and "
-      "geometry shift in a proportion that section 2.1 will quantify and "
-      "currently does not.")
-    W("2. **The test split is label-aware.** `_stratified_group_split` skips a "
-      "candidate held-out group when moving it would leave a class with no "
-      "training examples. No label reaches the model, but which domains land in "
-      "test is not independent of the labels; the guard binds almost only on "
-      "`Near-full` (149 wafers). The size of the resulting bias is " + NM + ".")
+      "temporal.** WM-811K carries no timestamps; `lot_time` orders lots by "
+      "the integer in the lot name. Section 2.1 shows the numbering is not "
+      "arbitrary but cannot distinguish production order from product "
+      "blocking. It also decomposes the drop: a third to nearly half is "
+      "present on a *random* split restricted to the same geometry slice, "
+      "with no time involved. Meeting geometries never trained on — which we "
+      "assumed was the expensive part — costs approximately nothing: the "
+      "unseen half of that test set is no harder than the seen half, and on "
+      "both CNNs it is easier.")
+    W("2. **The test split is label-aware, and it makes no difference.** "
+      "`_stratified_group_split` skips a candidate held-out group when moving "
+      "it would leave a class with no training examples, so which domains land "
+      "in test is not independent of the labels. Two reviewers flagged it. "
+      "Dropping the guard entirely and comparing the partitions: it fires in 0 "
+      "of 10 seeds on both group protocols and the splits are identical wafer "
+      "for wafer — structurally so, since the guard rejects a group only if it "
+      "holds *all* remaining training examples of a class and no lot holds "
+      "more than 4.14% of any class. The code path is label-aware; the split "
+      "is not.")
     W("3. **One architecture family.** Every CNN cell is the same three-block "
       "encoder at width 32 and 12 epochs. Whether the protocol ordering "
       "survives at a modern backbone and a longer schedule is " + NM + ".")
-    W("4. **Three seeds.** Half-ranges over three seeds are descriptive, not "
-      "inferential. We report the range we saw and do not attach a p-value to "
-      "it.")
+    W("4. **Most cells are three seeds, and three seeds are not enough.** "
+      "The screen built on them has produced false positives *and* false "
+      "negatives here: it called an `iid` pooling effect of +0.0113 absent "
+      "where eight seeds give p = 0.0003, and called two "
+      "domain-generalization objectives indistinguishable from ERM where "
+      "eight seeds give p = 0.0017 and p = 0.0051. Every comparison this "
+      "paper rests on has been taken to eight seeds per arm and read with an "
+      "exact permutation test; the three-seed tables are a screen for where "
+      "to spend that budget and are labelled as such. **A three-seed null in "
+      "these tables is not evidence of absence.**")
     W("")
 
     W("## 9. What is deliberately not claimed")

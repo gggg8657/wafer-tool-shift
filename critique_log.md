@@ -2983,3 +2983,64 @@ reported 24 false orphans on its first run; this one reported a clean pass on a
 broken repository. The guards are worth having and they are not a substitute for
 reading the output, which is how three of the six silent failures were actually
 found.
+
+### 64. Reading the paper end to end: six stale claims, one contradicted by the table above it
+
+§58 found two errors in `WEEKEND.md` by reading it straight through instead of
+catching things incidentally. The paper had never had that treatment. It has
+8,301 words and results have been landing into it continuously for two days.
+Six claims were wrong.
+
+**The one that should not have survived a single reading.** §3 ends with:
+
+> `erm` never reads the domain label, so its two columns must agree **exactly**;
+> it is included as the null control on the plumbing.
+
+The table immediately above it shows `erm` at 0.8522 (n=3) and 0.8585 (n=8) — a
+difference of +0.0063. The sentence asserts exact agreement and the evidence for
+it is three lines up, disagreeing. The cause is benign: the `dtime` arm went to
+eight seeds during the power check while the `lot % 32` arm stayed at three, so
+the means average over different seed sets. But a null control that is stated as
+"must agree exactly" and then visibly does not is worse than no control, because
+a reader either disbelieves the control or disbelieves the table. Rewritten to
+say the comparison is seed-by-seed, which is what `report.py` already does and
+what `paper.py` should always have.
+
+**Two claims falsified by my own later entries and never propagated.**
+
+* *"The `size` half of the negative result stands as measured."* §37 falsified
+  this — GroupDRO's −0.1534 on `size` fails at a margin of 0.0008 against that
+  protocol's floor of 0.0133, because its own seeds span 0.1844. I corrected it
+  in `WEEKEND.md` and left it in the paper. Third appearance of this particular
+  sentence surviving a correction.
+* *Threat 2: "the size of the resulting bias is [not measured]."* §11 measured
+  it: the guard fires in 0 of 10 seeds, the partitions are identical wafer for
+  wafer, and the bias is exactly zero. The paper was carrying an open question
+  that had been closed for a day and a half, in the section a reviewer reads to
+  find out what the authors are unsure about.
+
+**And one that had inverted.** Threat 1 said the forward-only drop is a compound
+"in a proportion that section 2.1 will quantify and currently does not" — §35
+quantified it (a third to nearly half is the geometry slice) — and described a
+sixth of the test wafers being of unseen geometry as part of the difficulty,
+when the same entry showed the unseen half is *easier* than the seen half on
+both CNNs. The threat was both out of date and pointing the wrong way.
+
+**Threat 4 was the most misleading, because it was modest.** *"Half-ranges over
+three seeds are descriptive, not inferential. We report the range we saw and do
+not attach a p-value to it."* That reads as appropriate caution and is now
+false twice over: exact permutation tests are used throughout, and the
+three-seed screen has since been caught producing false positives *and* false
+negatives. Rewritten to say what the evidence supports — the three-seed tables
+are a screen for where to spend budget, and **a three-seed null in them is not
+evidence of absence**, which is the single most useful sentence for anyone
+reading these tables.
+
+**The pattern across §58 and this entry.** Both documents were regenerating
+faithfully. Every number in them was computed from current cells. What went
+stale is the prose, and specifically the prose that *interprets* — threats,
+controls, and "this means" sentences. Those are exactly the parts a generator
+cannot check and a reader most relies on. The cost of finding six of them was
+about ten minutes of reading, which is cheap enough that it should have been a
+standing item after every result landed rather than something done twice in
+sixty-four entries.
