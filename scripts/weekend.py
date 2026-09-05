@@ -317,11 +317,37 @@ def main():
             W("")
             W(table(rows, ["objective", "macro-F1", "vs ERM", "verdict"]))
             W("")
-            W("**Not one separates from ERM.** So the original claim was "
-              "unearned *and* correct: the experiment as run could not have "
-              "shown otherwise, and the corrected experiment reaches the same "
-              "conclusion honestly.")
+            W("**None of them beats ERM.** So the original claim was unearned "
+              "and its direction was right: the experiment as run could not "
+              "have shown otherwise, and the corrected experiment agrees that "
+              "nothing helps.")
             W("")
+            dg = js("dg_power_check.json")
+            if dg:
+                W("**But \"nothing is distinguishable from ERM\" was wrong, "
+                  "and it was wrong because three seeds cannot see it.** The "
+                  "two largest effects, taken to eight seeds per arm and read "
+                  "with an exact permutation test:")
+                W("")
+                W(table([[f"`{v['objective']}`", v["n_per_arm"],
+                          f"{v['difference']:+.4f}",
+                          "ranges overlap" if v["ranges_overlap"]
+                          else "ranges disjoint",
+                          f"**{v['p_two_sided']:.5f}**"] for v in dg.values()],
+                        ["objective", "seeds/arm", "vs ERM", "range screen",
+                         "exact permutation p"]))
+                W("")
+                W("Both are **significantly worse than ERM**. The corrected "
+                  "claim is that none of the borrowed objectives helps, two are "
+                  "established as actively harmful under a domain definition "
+                  "that carries real shift, and four are genuinely "
+                  "unestablished at this seed budget. That is a better result "
+                  "than the null it replaces: a uniformly null table cannot "
+                  "show that the benchmark would detect a harmful method if one "
+                  "existed, and this does. **Rules out:** this family of "
+                  "invariance objectives on this corpus, now with evidence "
+                  "rather than with silence.")
+                W("")
             sz = {o: (agg(C, ("size", "cnn_bn", o, "sizeseed")),
                       agg(C, ("size", "cnn_bn", "erm", "sizeseed")))
                   for o in ("group_dro", "logit_adjust")}
@@ -542,11 +568,38 @@ def main():
         mx = agg(C, ("lot", "cnn_gn", "erm", "poolmeanmax"))
         mn = agg(C, ("lot", "cnn_gn", "erm", "poolmean"))
         ctl = agg(C, ("lot", "cnn_gn", "erm", "poolmeanmean"))
+        # divide by each arm's own length, not by a hardcoded 3 -- these arms
+        # went from three seeds to eight and the constant stayed behind,
+        # printing 8/3 of the real delta into the Monday document
+        def _sc(tag):
+            v = [r["test"]["per_class_f1"]["Scratch"] for r in P[tag].values()]
+            return sum(v) / len(v)
         surv.append(["**Max pooling beats global average pooling**",
                      f"{mx['mean'] - mn['mean']:+.4f} macro-F1 and "
-                     f"{'+%.4f' % (sum(sorted(r['test']['per_class_f1']['Scratch'] for r in P['poolmeanmax'].values())) / 3 - sum(sorted(r['test']['per_class_f1']['Scratch'] for r in P['poolmean'].values())) / 3)}"
-                     f" on `Scratch`; the capacity control gives "
-                     f"{ctl['mean'] - mn['mean']:+.4f} and overlaps"])
+                     f"{_sc('poolmeanmax') - _sc('poolmean'):+.4f} on "
+                     "`Scratch`; the capacity control gives "
+                     f"{ctl['mean'] - mn['mean']:+.4f} and "
+                     f"{_sc('poolmeanmean') - _sc('poolmean'):+.4f}, neither "
+                     "significant at eight seeds"])
+    pc = {}
+    for fn in ("pooling_lot_control_perm_macro_f1.json",
+               "pooling_lot_control_perm_class_Scratch.json"):
+        d_ = js(fn)
+        if d_:
+            pc[d_["metric"]] = d_
+    if pc:
+        surv.append(["**The pooling gain is not extra parameters**",
+                     "the capacity control at eight seeds gives "
+                     + " and ".join(
+                         f"{v['difference']:+.4f} on {k} (p = {v['p_two_sided']:.3f})"
+                         for k, v in sorted(pc.items()))])
+    dgp = js("dg_power_check.json")
+    if dgp:
+        surv.append(["**Two DG objectives are worse than ERM**",
+                     ", ".join(f"`{v['objective']}` {v['difference']:+.4f} "
+                               f"(p = {v['p_two_sided']:.4f})"
+                               for v in dgp.values())
+                     + ", at eight seeds under real domains"])
     gb = js("gn_vs_bn.json")
     if gb:
         surv.append(["**GroupNorm beats BatchNorm**",

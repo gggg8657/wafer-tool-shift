@@ -1,0 +1,24 @@
+{
+  "group_dro__macro_f1": {
+    "n_per_arm": 8,
+    "objective": "group_dro",
+    "metric": "macro_f1",
+    "mean_objective": 0.8384056067898057,
+    "mean_erm": 0.8584621202650695,
+    "difference": -0.020056513475263826,
+    "p_two_sided": 0.0017094017094017094,
+    "arrangements": 12870,
+    "ranges_overlap": true
+  },
+  "mixup_domain__macro_f1": {
+    "n_per_arm": 8,
+    "objective": "mixup_domain",
+    "metric": "macro_f1",
+    "mean_objective": 0.8405028356881612,
+    "mean_erm": 0.8584621202650695,
+    "difference": -0.01795928457690832,
+    "p_two_sided": 0.005128205128205128,
+    "arrangements": 12870,
+    "ranges_overlap": true
+  }
+}

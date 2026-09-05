@@ -2820,3 +2820,58 @@ uniformly null table cannot demonstrate about itself. It would also mean the
 `size` result I withdrew in §37 — GroupDRO at −0.15 failing to clear that
 protocol's wider floor — was a power failure rather than an absence, and the
 method is simply bad on this corpus in a way three seeds could not show.
+
+### 61. Three verdicts, and the headline negative was wrong
+
+Everything queued has landed. Three hypotheses, scored.
+
+**H54, second half — falsified, and the story gets simpler.** I predicted
+`lot_time` would be "a genuine null". At eight seeds per arm:
+
+| protocol | macro-F1 | p | `Scratch` | p |
+|---|---|---|---|---|
+| `iid` | +0.0113 | **0.00031** | +0.0389 | **0.00093** |
+| `lot` | +0.0150 | **0.01197** | +0.0473 | **0.00047** |
+| `lot_time` | +0.0038 | 0.43046 | **+0.0391** | **0.00031** |
+| `size` | −0.0281 | 0.16177 | −0.0427 | 0.20230 |
+
+Right on macro-F1, wrong on `Scratch`. The clean statement is not about
+macro-F1 at all: **max pooling improves `Scratch` on all three protocols where
+the test wafers share their geometry with training, at p ≤ 0.001 on each, and
+fails only on the one that holds geometry out.** macro-F1 tracks it where the
+protocol is easy enough for one class to move the nine-class average and does
+not on `lot_time`, where it cannot. The mechanism named `Scratch` before any of
+this ran, and `Scratch` is where the effect is.
+
+**H56 — confirmed.** The capacity control at eight seeds: +0.0055 macro-F1
+(p = 0.360) and +0.0063 `Scratch` (p = 0.591). Both null at the same sample
+size and the same test as the treatment. The pooling gain is max pooling, not
+parameters, and that is now established rather than assumed from three seeds.
+
+**H60 — half right, and it overturns the headline.** I predicted `group_dro`
+would separate and `mixup_domain` would not. Both do:
+
+| objective | vs ERM | range screen | permutation p |
+|---|---|---|---|
+| `group_dro` | −0.0201 | ranges overlap | **0.00171** |
+| `mixup_domain` | −0.0180 | ranges overlap | **0.00513** |
+
+So **"not one of seven borrowed objectives separates from ERM anywhere" is
+false.** Two are significantly worse than ERM under a domain vocabulary that
+carries real shift, and the three-seed screen called both unestablished — the
+second and third confirmed false negatives from that instrument.
+
+The corrected claim is better than the one it replaces. *None of them beats
+ERM; two are established as actively harmful; four are genuinely unestablished
+at this seed budget.* A uniformly null table cannot demonstrate that the
+benchmark would detect a harmful method if one existed. This one does.
+
+**And a bug in my own hand-off, of exactly the kind this weekend is about.** The
+`WEEKEND.md` survivors table printed `+0.1260 on Scratch` for the pooling
+result. The row divided by a hardcoded `3` — written when the arms had three
+seeds, left behind when they went to eight, printing 8/3 of the real +0.0473
+into the document a tired person is supposed to trust. It was caught by reading
+the regenerated output rather than by any check, because no check I have looks
+for a number that is merely wrong rather than missing. `verify_stage.py` counts
+files; the numeric lint looks for hand-typed constants; neither sees a live
+computation with a stale divisor.

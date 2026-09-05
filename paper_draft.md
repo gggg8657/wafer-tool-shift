@@ -6,9 +6,9 @@
 
 Wafer-map defect classification is usually reported on a random split of WM-811K. We rebuild it as a domain-generalization benchmark on the same 172,948 labelled wafers, 10,762 lots and 344 geometries, with four protocols differing only in what is held out. Holding out whole lots costs a GroupNorm CNN 0.8855 → 0.8647 ±0.0044 (n=3) macro-F1. Holding out *future* lots under a purged, embargoed, forward-only split costs 0.6985 ±0.0045 (n=3) — but a third to nearly half of that is not temporal at all: the forward-only test side is a narrow geometry slice, and scoring the *random-split* models on that same slice reproduces much of the drop with no time involved. Meeting geometries never trained on, which we had assumed was the expensive part, costs approximately nothing.
 
-The rest of the paper is a sequence of our own claims failing their own controls, and we think that is the contribution. Nine borrowed invariance objectives fail to beat ERM — a finding the first version of the experiment could not have produced otherwise, since it handed every objective a domain vocabulary of 32 buckets whose class distributions differ by a total variation of 0.02. The 6 of them re-run against production-order deciles carrying nine times that shift all still fail, and so does every objective on the geometry-holdout protocol once its own reproducibility floor is measured: **not one separates from ERM anywhere.** Two methods we built for this corpus do not survive either. An RPCA lot-signature channel is matched by a fourth channel of zeros — and could not have been otherwise, because the encoder is handed an untouched copy of what the decomposition removes; the knob has no setting that yields a non-trivial decomposition on a representative sample, and the sweep that said it did was run on forty lots taken as a slice. Lot-adversarial self-supervised pretraining is worse than random initialization at every learning rate. Our active-learning result compared heuristics that had bought a fifth of the labels random had.
+The rest of the paper is a sequence of our own claims failing their own controls, and we think that is the contribution. Nine borrowed invariance objectives fail to beat ERM — a finding the first version of the experiment could not have produced otherwise, since it handed every objective a domain vocabulary of 32 buckets whose class distributions differ by a total variation of 0.02. Re-run against production-order deciles carrying nine times that shift, none of the six beats ERM — and taken to eight seeds per arm, **two are established as significantly worse than it**: GroupDRO and domain-mixup, at p = 0.0017 and p = 0.0051. Our own three-seed screen had called both unestablished; it was under-powered, and a null asserted from an under-powered test is the failure mode this paper spends most of its length on. Two methods we built for this corpus do not survive either. An RPCA lot-signature channel is matched by a fourth channel of zeros — and could not have been otherwise, because the encoder is handed an untouched copy of what the decomposition removes; the knob has no setting that yields a non-trivial decomposition on a representative sample, and the sweep that said it did was run on forty lots taken as a slice. Lot-adversarial self-supervised pretraining is worse than random initialization at every learning rate. Our active-learning result compared heuristics that had bought a fifth of the labels random had.
 
-Two things survive. First, replacing the encoder's global average pooling with a mean-and-max moves macro-F1 by +0.0150 (n=8 vs 8) on the lot-disjoint split while a capacity control with identical parameter count moves it by -0.0020 (n=3), with the gain concentrated in the hardest class exactly as the mechanism predicted before the run — and it is protocol-dependent, holding on both splits where test wafers share their geometry with training and turning negative where geometry is held out. Second, GroupNorm beats BatchNorm by +0.0130 (permutation p = 0.011 at 8 seeds per arm), which the seed-range criterion used elsewhere in this paper cannot resolve and never could.
+Two things survive. First, replacing the encoder's global average pooling with a mean-and-max moves macro-F1 by +0.0150 (n=8 vs 8) on the lot-disjoint split while a capacity control with identical parameter count moves it by +0.0055 (n=8), with the gain concentrated in the hardest class exactly as the mechanism predicted before the run — and it is protocol-dependent, holding on both splits where test wafers share their geometry with training and turning negative where geometry is held out. Second, GroupNorm beats BatchNorm by +0.0130 (permutation p = 0.011 at 8 seeds per arm), which the seed-range criterion used elsewhere in this paper cannot resolve and never could.
 
 Underneath all of it is a measurement problem we did not know we had. Two identical invocations of one cell differ by more than most of the effects the first version of these tables reported, that spread is not one number but a property of each protocol, and three seeds — the budget behind essentially every published wafer-map comparison we are aware of, including our own first draft — are enough to get the sign of an effect right and nowhere near enough to get its size right. Four separate three-seed results in this paper shrank or vanished when taken to eight.
 
@@ -121,13 +121,13 @@ On `size` the same hash is far less degenerate — 344 geometries into 32 bucket
 
 | objective | domain = `lot % 32` | domain = production decile | difference |
 |---|---|---|---|
-| `erm` | 0.8522 ±0.0069 (n=3) | 0.8514 ±0.0073 (n=3) | -0.0008 |
+| `erm` | 0.8522 ±0.0069 (n=3) | 0.8585 ±0.0127 (n=8) | +0.0063 |
 | `coral` | 0.8468 ±0.0090 (n=3) | 0.8443 ±0.0098 (n=3) | -0.0025 |
 | `dann` | 0.8517 ±0.0080 (n=3) | 0.8454 ±0.0132 (n=3) | -0.0062 |
-| `group_dro` | 0.8535 ±0.0063 (n=3) | 0.8257 ±0.0139 (n=3) | -0.0277 |
+| `group_dro` | 0.8535 ±0.0063 (n=3) | 0.8384 ±0.0200 (n=8) | -0.0150 |
 | `hsic` | 0.8527 ±0.0080 (n=3) | 0.8488 ±0.0076 (n=3) | -0.0039 |
 | `irm` | 0.8418 ±0.0094 (n=3) | 0.8465 ±0.0052 (n=3) | +0.0047 |
-| `mixup_domain` | 0.8398 ±0.0108 (n=3) | 0.8371 ±0.0138 (n=3) | -0.0027 |
+| `mixup_domain` | 0.8398 ±0.0108 (n=3) | 0.8405 ±0.0168 (n=8) | +0.0007 |
 
 `erm` never reads the domain label, so its two columns must agree exactly; it is included as the null control on the plumbing.
 
@@ -209,13 +209,13 @@ What was left is that `CnnResized.embed` is a global average over the final feat
 | protocol | pooling | macro-F1 vs `mean` | verdict | Scratch F1 vs `mean` | verdict |
 |---|---|---|---|---|---|
 | `lot` | `meanmax` (treatment) | +0.0150 | overlaps | +0.0473 | overlaps |
-| `lot` | `meanmean` (**control**) | -0.0020 | overlaps | -0.0082 | overlaps |
+| `lot` | `meanmean` (**control**) | +0.0055 | overlaps | +0.0063 | overlaps |
 | `iid` | `meanmax` (treatment) | +0.0113 | overlaps | +0.0389 | overlaps |
 | `iid` | `meanmean` (**control**) | +0.0006 | overlaps | +0.0094 | overlaps |
 | `size` | `meanmax` (treatment) | -0.0281 | overlaps | -0.0427 | overlaps |
 | `size` | `meanmean` (**control**) | -0.0036 | overlaps | +0.0129 | overlaps |
-| `lot_time` | `meanmax` (treatment) | +0.0067 | overlaps | +0.0318 | overlaps |
-| `lot_time` | `meanmean` (**control**) | +0.0160 | overlaps | +0.0028 | overlaps |
+| `lot_time` | `meanmax` (treatment) | +0.0038 | overlaps | +0.0391 | overlaps |
+| `lot_time` | `meanmean` (**control**) | +0.0135 | overlaps | +0.0045 | overlaps |
 
 On `lot` the treatment clears the floor on both macro-F1 and `Scratch`, and the control clears neither — so the gain is max pooling and not a wider head. That is the question the RPCA fourth channel failed, asked here before the claim rather than after it.
 
@@ -223,8 +223,6 @@ On `lot` the treatment clears the floor on both macro-F1 and `Scratch`, and the 
 
 | protocol | metric | seeds/arm | difference | range test | exact permutation p |
 |---|---|---|---|---|---|
-| `iid` | Scratch | 8 | +0.0389 | ranges overlap | **0.00093** |
-| `iid` | macro-F1 | 8 | +0.0113 | ranges overlap | **0.00031** |
 | `lot` | Scratch | 8 | +0.0473 | ranges overlap | **0.00047** |
 | `lot` | macro-F1 | 8 | +0.0150 | ranges overlap | **0.01197** |
 | `size` | macro-F1 | 8 | -0.0281 | ranges overlap | **0.16177** |
@@ -279,23 +277,23 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (BatchNorm) | `dann` | — | 3 | 0.8517 | ±0.0080 |
 | `lot` | CNN (BatchNorm) | `dann` | dtime | 3 | 0.8454 | ±0.0132 |
 | `lot` | CNN (BatchNorm) | `erm` | — | 3 | 0.8522 | ±0.0069 |
-| `lot` | CNN (BatchNorm) | `erm` | dtime | 3 | 0.8514 | ±0.0073 |
+| `lot` | CNN (BatchNorm) | `erm` | dtime | 8 | 0.8585 | ±0.0127 |
 | `lot` | CNN (BatchNorm) | `erm` | gnbn | 8 | 0.8596 | ±0.0143 |
 | `lot` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.8543 | ±0.0045 |
 | `lot` | CNN (BatchNorm) | `group_dro` | — | 3 | 0.8535 | ±0.0063 |
-| `lot` | CNN (BatchNorm) | `group_dro` | dtime | 3 | 0.8257 | ±0.0139 |
+| `lot` | CNN (BatchNorm) | `group_dro` | dtime | 8 | 0.8384 | ±0.0200 |
 | `lot` | CNN (BatchNorm) | `hsic` | — | 3 | 0.8527 | ±0.0080 |
 | `lot` | CNN (BatchNorm) | `hsic` | dtime | 3 | 0.8488 | ±0.0076 |
 | `lot` | CNN (BatchNorm) | `irm` | — | 3 | 0.8418 | ±0.0094 |
 | `lot` | CNN (BatchNorm) | `irm` | dtime | 3 | 0.8465 | ±0.0052 |
 | `lot` | CNN (BatchNorm) | `mixup_domain` | — | 3 | 0.8398 | ±0.0108 |
-| `lot` | CNN (BatchNorm) | `mixup_domain` | dtime | 3 | 0.8371 | ±0.0138 |
+| `lot` | CNN (BatchNorm) | `mixup_domain` | dtime | 8 | 0.8405 | ±0.0168 |
 | `lot` | CNN (GroupNorm) | `erm` | — | 3 | 0.8647 | ±0.0044 |
 | `lot` | CNN (GroupNorm) | `erm` | cw | 2 | 0.8692 | ±0.0044 |
 | `lot` | CNN (GroupNorm) | `erm` | gnbn | 8 | 0.8726 | ±0.0160 |
 | `lot` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8738 | ±0.0163 |
 | `lot` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.8888 | ±0.0116 |
-| `lot` | CNN (GroupNorm) | `erm` | poolmeanmean | 3 | 0.8717 | ±0.0081 |
+| `lot` | CNN (GroupNorm) | `erm` | poolmeanmean | 8 | 0.8793 | ±0.0171 |
 | `lot` | CNN (GroupNorm) | `erm` | rpca2_3ch | 3 | 0.8703 | ±0.0096 |
 | `lot` | CNN (GroupNorm) | `erm` | scratch_lr1e-3 | 2 | 0.8690 | ±0.0009 |
 | `lot` | CNN (GroupNorm) | `erm` | scratch_lr2e-4 | 2 | 0.7993 | ±0.0020 |
@@ -324,8 +322,8 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | spectral operator | `erm` | sess2 | 3 | 0.8405 | ±0.0216 |
 | `lot_time` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.6438 | ±0.0017 |
 | `lot_time` | CNN (GroupNorm) | `erm` | — | 3 | 0.6985 | ±0.0045 |
-| `lot_time` | CNN (GroupNorm) | `erm` | poolmean | 5 | 0.7055 | ±0.0117 |
-| `lot_time` | CNN (GroupNorm) | `erm` | poolmeanmax | 5 | 0.7122 | ±0.0145 |
+| `lot_time` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.7081 | ±0.0117 |
+| `lot_time` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.7119 | ±0.0145 |
 | `lot_time` | CNN (GroupNorm) | `erm` | poolmeanmean | 3 | 0.7215 | ±0.0055 |
 | `lot_time` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.7002 | ±0.0043 |
 | `lot_time` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.6345 | ±0.0225 |

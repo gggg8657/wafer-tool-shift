@@ -494,23 +494,23 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot | CNN on resized 64x64 (BatchNorm) | dann | - | 3 | 0.8517 | +/-0.0080 | 0.8596, 0.8436, 0.8518 |
 | lot | CNN on resized 64x64 (BatchNorm) | dann | dtime | 3 | 0.8454 | +/-0.0132 | 0.8583, 0.8319, 0.8460 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm | - | 3 | 0.8522 | +/-0.0069 | 0.8587, 0.8448, 0.8530 |
-| lot | CNN on resized 64x64 (BatchNorm) | erm | dtime | 3 | 0.8514 | +/-0.0073 | 0.8583, 0.8438, 0.8521 |
+| lot | CNN on resized 64x64 (BatchNorm) | erm | dtime | 8 | 0.8585 | +/-0.0127 | 0.8583, 0.8438, 0.8521, 0.8629, 0.8664, 0.8505, 0.8644, 0.8692 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm | gnbn | 8 | 0.8596 | +/-0.0143 | 0.8569, 0.8532, 0.8563, 0.8599, 0.8689, 0.8455, 0.8621, 0.8740 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm | sess2 | 3 | 0.8543 | +/-0.0045 | 0.8600, 0.8521, 0.8510 |
 | lot | CNN on resized 64x64 (BatchNorm) | group_dro | - | 3 | 0.8535 | +/-0.0063 | 0.8615, 0.8501, 0.8488 |
-| lot | CNN on resized 64x64 (BatchNorm) | group_dro | dtime | 3 | 0.8257 | +/-0.0139 | 0.8402, 0.8125, 0.8244 |
+| lot | CNN on resized 64x64 (BatchNorm) | group_dro | dtime | 8 | 0.8384 | +/-0.0200 | 0.8402, 0.8125, 0.8244, 0.8461, 0.8524, 0.8417, 0.8471, 0.8427 |
 | lot | CNN on resized 64x64 (BatchNorm) | hsic | - | 3 | 0.8527 | +/-0.0080 | 0.8628, 0.8484, 0.8469 |
 | lot | CNN on resized 64x64 (BatchNorm) | hsic | dtime | 3 | 0.8488 | +/-0.0076 | 0.8568, 0.8417, 0.8479 |
 | lot | CNN on resized 64x64 (BatchNorm) | irm | - | 3 | 0.8418 | +/-0.0094 | 0.8536, 0.8371, 0.8348 |
 | lot | CNN on resized 64x64 (BatchNorm) | irm | dtime | 3 | 0.8465 | +/-0.0052 | 0.8529, 0.8424, 0.8443 |
 | lot | CNN on resized 64x64 (BatchNorm) | mixup_domain | - | 3 | 0.8398 | +/-0.0108 | 0.8541, 0.8330, 0.8324 |
-| lot | CNN on resized 64x64 (BatchNorm) | mixup_domain | dtime | 3 | 0.8371 | +/-0.0138 | 0.8522, 0.8246, 0.8347 |
+| lot | CNN on resized 64x64 (BatchNorm) | mixup_domain | dtime | 8 | 0.8405 | +/-0.0168 | 0.8522, 0.8246, 0.8347, 0.8492, 0.8582, 0.8317, 0.8362, 0.8373 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.8647 | +/-0.0044 | 0.8671, 0.8680, 0.8591 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | cw | 2 | 0.8692 | +/-0.0044 | 0.8736, 0.8648 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | gnbn | 8 | 0.8726 | +/-0.0160 | 0.8734, 0.8680, 0.8589, 0.8705, 0.8708, 0.8736, 0.8750, 0.8908 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 8 | 0.8738 | +/-0.0163 | 0.8729, 0.8668, 0.8601, 0.8758, 0.8897, 0.8574, 0.8773, 0.8901 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 8 | 0.8888 | +/-0.0116 | 0.8862, 0.8796, 0.8860, 0.8857, 0.8983, 0.8815, 0.8903, 0.9027 |
-| lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmean | 3 | 0.8717 | +/-0.0081 | 0.8709, 0.8802, 0.8641 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmean | 8 | 0.8793 | +/-0.0171 | 0.8709, 0.8802, 0.8641, 0.8769, 0.8982, 0.8715, 0.8803, 0.8920 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | rpca2_3ch | 3 | 0.8703 | +/-0.0096 | 0.8812, 0.8679, 0.8619 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | scratch_lr1e-3 | 2 | 0.8690 | +/-0.0009 | 0.8699, 0.8681 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | scratch_lr2e-4 | 2 | 0.7993 | +/-0.0020 | 0.8012, 0.7973 |
@@ -539,8 +539,8 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot | spectral operator, native resolution | erm | sess2 | 3 | 0.8405 | +/-0.0216 | 0.8551, 0.8118, 0.8547 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | erm | sess2 | 3 | 0.6438 | +/-0.0017 | 0.6458, 0.6423, 0.6434 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.6985 | +/-0.0045 | 0.6935, 0.6993, 0.7026 |
-| lot_time | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 5 | 0.7055 | +/-0.0117 | 0.6958, 0.7191, 0.6990, 0.7159, 0.6976 |
-| lot_time | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 5 | 0.7122 | +/-0.0145 | 0.7093, 0.7071, 0.7127, 0.7304, 0.7015 |
+| lot_time | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 8 | 0.7081 | +/-0.0117 | 0.6958, 0.7191, 0.6990, 0.7159, 0.6976, 0.7092, 0.7154, 0.7125 |
+| lot_time | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 8 | 0.7119 | +/-0.0145 | 0.7093, 0.7071, 0.7127, 0.7304, 0.7015, 0.7026, 0.7126, 0.7186 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmean | 3 | 0.7215 | +/-0.0055 | 0.7216, 0.7269, 0.7160 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | sess2 | 3 | 0.7002 | +/-0.0043 | 0.6997, 0.7047, 0.6961 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | + lot-adversarial SSL initialization | 3 | 0.6345 | +/-0.0225 | 0.6120, 0.6569, 0.6345 |
@@ -782,15 +782,17 @@ Every group-aware objective was originally handed `lot % 32` as its domain: 10,7
 
 | objective | representation | `lot % 32` (TV 0.021) | vs ERM | production decile (TV 0.182) | vs ERM | vs ERM under real domains |
 |---|---|---|---|---|---|---|
-| `coral` | CNN on resized 64x64 (BatchNorm) | 0.8468 ±0.0090 | -0.0053 | 0.8443 ±0.0098 | -0.0071 | ranges overlap |
-| `dann` | CNN on resized 64x64 (BatchNorm) | 0.8517 ±0.0080 | -0.0005 | 0.8454 ±0.0132 | -0.0060 | ranges overlap |
-| `erm` | CNN on resized 64x64 (BatchNorm) | 0.8522 ±0.0069 | +0.0000 | 0.8514 ±0.0073 | +0.0000 | ranges overlap |
-| `group_dro` | CNN on resized 64x64 (BatchNorm) | 0.8535 ±0.0063 | +0.0013 | 0.8257 ±0.0139 | -0.0257 | below the floor (margin 0.0035 < 0.0054) |
-| `hsic` | CNN on resized 64x64 (BatchNorm) | 0.8527 ±0.0080 | +0.0005 | 0.8488 ±0.0076 | -0.0026 | ranges overlap |
-| `irm` | CNN on resized 64x64 (BatchNorm) | 0.8418 ±0.0094 | -0.0103 | 0.8465 ±0.0052 | -0.0049 | ranges overlap |
-| `mixup_domain` | CNN on resized 64x64 (BatchNorm) | 0.8398 ±0.0108 | -0.0124 | 0.8371 ±0.0138 | -0.0143 | ranges overlap |
+| `coral` | CNN on resized 64x64 (BatchNorm) | 0.8468 ±0.0090 | -0.0053 | 0.8443 ±0.0098 | -0.0141 | ranges overlap |
+| `dann` | CNN on resized 64x64 (BatchNorm) | 0.8517 ±0.0080 | -0.0005 | 0.8454 ±0.0132 | -0.0130 | ranges overlap |
+| `erm` | CNN on resized 64x64 (BatchNorm) | 0.8522 ±0.0069 | +0.0000 | 0.8585 ±0.0127 | +0.0000 | ranges overlap |
+| `group_dro` | CNN on resized 64x64 (BatchNorm) | 0.8535 ±0.0063 | +0.0013 | 0.8384 ±0.0200 | -0.0201 | ranges overlap |
+| `hsic` | CNN on resized 64x64 (BatchNorm) | 0.8527 ±0.0080 | +0.0005 | 0.8488 ±0.0076 | -0.0097 | ranges overlap |
+| `irm` | CNN on resized 64x64 (BatchNorm) | 0.8418 ±0.0094 | -0.0103 | 0.8465 ±0.0052 | -0.0119 | ranges overlap |
+| `mixup_domain` | CNN on resized 64x64 (BatchNorm) | 0.8398 ±0.0108 | -0.0124 | 0.8405 ±0.0168 | -0.0180 | ranges overlap |
 
-The last column asks whether the objective's seed range and ERM's seed range overlap under the *real* domain definition. This is the question H4 was posed to answer: were these methods tying with ERM because they had been switched off by a degenerate domain vocabulary? The answer is no. Given domains that carry an order of magnitude more label shift, six of the seven still cannot be separated from ERM, and the one that can is **worse**. The negative result survives a much stronger test than the one that produced it.
+The last column asks whether the objective's seed range and ERM's seed range overlap under the *real* domain definition. This is the question H4 was posed to answer: were these methods tying with ERM because they had been switched off by a degenerate domain vocabulary? The answer is no — none of them beats ERM under a vocabulary carrying nine times the label shift.
+
+**But the verdicts in the last column are a three-seed screen and it is under-powered.** Taken to eight seeds per arm and read with an exact permutation test, the two largest effects in this table are not unestablished at all — they are significant, and negative. See *Are these objectives merely tied with ERM, or worse than it?* below.
 
 **Null control.** `erm` never reads the domain label, so its two columns must agree; they differ by at most 0.0010, against a measured same-code-path floor of about 0.002. The domain machinery did not change ERM, so the other rows are differences in the objective and not in the plumbing. If this line ever exceeds the floor, nothing else in the table can be read.
 
@@ -802,7 +804,7 @@ Class imbalance was measured and discarded — focal loss over five values of ga
 |---|---|---|---|---|---|---|
 | `mean` (global average, the original) | 0.8738 (n=8) | — | — | 0.7292 | — | — |
 | `meanmax` (mean + max) — treatment | 0.8888 (n=8) | +0.0150 | ranges overlap | 0.7764 | +0.0473 | ranges overlap |
-| `meanmean` (mean + mean) — **control** | 0.8717 (n=3) | -0.0020 | ranges overlap | 0.7210 | -0.0082 | ranges overlap |
+| `meanmean` (mean + mean) — **control** | 0.8793 (n=8) | +0.0055 | ranges overlap | 0.7354 | +0.0063 | ranges overlap |
 
 **Read the verdict column with care, and prefer the permutation test below it.** Those verdicts come from whether the seed ranges overlap, which is the right conservative default for a table of three-seed cells and the wrong tool once a comparison has been run properly: a sample's range grows with the sample, so adding seeds makes non-overlap strictly harder. At eight seeds per arm this comparison reads *ranges overlap* on both metrics while an exact permutation test puts one of them below 0.001.
 
@@ -814,6 +816,19 @@ Class imbalance was measured and discarded — focal loss over five values of ga
 The effect is concentrated in `Scratch`, whose p is more than twenty times smaller than macro-F1's — which is what the mechanism predicts, since a thin connected line is precisely the structure a mean over the wafer destroys and a max preserves. That concentration was predicted before the run rather than observed after it.
 
 **`meanmean` is why this is a result rather than a number.** It has exactly the parameter count of `meanmax` and carries the mean concatenated with itself, so it separates "max pooling helps" from "a wider head helps". It buys nothing, and it moves `Scratch` by −0.0006. The RPCA channel died on precisely this question.
+
+### Are these objectives merely tied with ERM, or worse than it?
+
+The table above reads every objective as unestablished against ERM. That reading comes from a three-seed screen, and the same screen was caught producing a false negative elsewhere in this document: it called a pooling effect of +0.0113 *below the floor*, and at eight seeds that comparison is p = 0.0003. Two objectives here have effects larger than the one it missed, so they were re-run at eight seeds per arm against ERM measured the same way.
+
+| objective | seeds/arm | objective | ERM | difference | range test | exact permutation p |
+|---|---|---|---|---|---|---|
+| `group_dro` | 8 | 0.8384 | 0.8585 | -0.0201 | ranges overlap | **0.00171** |
+| `mixup_domain` | 8 | 0.8405 | 0.8585 | -0.0180 | ranges overlap | **0.00513** |
+
+**Both are significantly worse than ERM.** The claim that no borrowed objective is distinguishable from ERM was a consequence of insufficient seeds, not of the methods being indistinguishable. The corrected statement is that none of them *beats* ERM, two are established as actively harmful under a domain definition that carries real shift, and the remaining four are genuinely unestablished at the seed budget run here.
+
+This is a better result than the null it replaces. A uniformly null table cannot demonstrate that the benchmark would detect a harmful method if one existed; this shows it does.
 
 ## The entropic-OT objective: a broken method, or a bad default?
 

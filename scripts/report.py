@@ -800,11 +800,15 @@ def main():
               "ERM's seed range overlap under the *real* domain definition. "
               "This is the question H4 was posed to answer: were these methods "
               "tying with ERM because they had been switched off by a "
-              "degenerate domain vocabulary? The answer is no. Given domains "
-              "that carry an order of magnitude more label shift, six of the "
-              "seven still cannot be separated from ERM, and the one that can "
-              "is **worse**. The negative result survives a much stronger test "
-              "than the one that produced it.", ""]
+              "degenerate domain vocabulary? The answer is no — none of them "
+              "beats ERM under a vocabulary carrying nine times the label "
+              "shift.", "",
+              "**But the verdicts in the last column are a three-seed screen "
+              "and it is under-powered.** Taken to eight seeds per arm and read "
+              "with an exact permutation test, the two largest effects in this "
+              "table are not unestablished at all — they are significant, and "
+              "negative. See *Are these objectives merely tied with ERM, or "
+              "worse than it?* below.", ""]
         # the plumbing check, printed rather than trusted
         nulls = []
         for k in sorted(dt):
@@ -906,6 +910,39 @@ def main():
                   "pooling helps\" from \"a wider head helps\". It buys "
                   "nothing, and it moves `Scratch` by −0.0006. The RPCA channel "
                   "died on precisely this question.", ""]
+
+    # ---- the eight-seed follow-up on the two largest DG effects
+    dgp = Path("runs/dg_power_check.json")
+    if dgp.exists():
+        d = json.loads(dgp.read_text())
+        rows = [[f"`{v['objective']}`", v["n_per_arm"], f(v["mean_objective"]),
+                 f(v["mean_erm"]), f"{v['difference']:+.4f}",
+                 "ranges overlap" if v["ranges_overlap"] else "ranges disjoint",
+                 f"**{v['p_two_sided']:.5f}**"] for v in d.values()]
+        L += ["### Are these objectives merely tied with ERM, or worse than it?",
+              "",
+              "The table above reads every objective as unestablished against "
+              "ERM. That reading comes from a three-seed screen, and the same "
+              "screen was caught producing a false negative elsewhere in this "
+              "document: it called a pooling effect of +0.0113 *below the "
+              "floor*, and at eight seeds that comparison is p = 0.0003. Two "
+              "objectives here have effects larger than the one it missed, so "
+              "they were re-run at eight seeds per arm against ERM measured "
+              "the same way.", "",
+              table(rows, ["objective", "seeds/arm", "objective", "ERM",
+                           "difference", "range test",
+                           "exact permutation p"]), "",
+              "**Both are significantly worse than ERM.** The claim that no "
+              "borrowed objective is distinguishable from ERM was a "
+              "consequence of insufficient seeds, not of the methods being "
+              "indistinguishable. The corrected statement is that none of them "
+              "*beats* ERM, two are established as actively harmful under a "
+              "domain definition that carries real shift, and the remaining "
+              "four are genuinely unestablished at the seed budget run here.",
+              "",
+              "This is a better result than the null it replaces. A uniformly "
+              "null table cannot demonstrate that the benchmark would detect a "
+              "harmful method if one existed; this shows it does.", ""]
 
     # ---- the OT weight sweep: is the collapsed cell a broken method or a
     #      badly chosen default?
