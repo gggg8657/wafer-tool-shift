@@ -63,7 +63,20 @@ def main():
     ap.add_argument("--arm-b", default=None)
     ap.add_argument("--label-a", default=None)
     ap.add_argument("--label-b", default=None)
+    # Which number to test. The tool only ever compared macro-F1, which would
+    # have made half of H50 -- "a smaller p on Scratch, because Scratch is where
+    # the mechanism says the effect lives" -- untestable with the instrument
+    # that was supposed to score it. Dropping the inconvenient half of a
+    # prediction because the tool cannot reach it is how predictions stop
+    # constraining anything.
+    ap.add_argument("--metric", default="macro_f1",
+                    help="macro_f1, or a per-class F1 as 'class:Scratch'")
     a = ap.parse_args()
+
+    def read(r):
+        if a.metric.startswith("class:"):
+            return r["test"]["per_class_f1"][a.metric.split(":", 1)[1]]
+        return r["test"][a.metric]
 
     def collect(spec, fallback_tag):
         enc, _, tg = spec.partition(":")
@@ -72,7 +85,7 @@ def main():
         for f in glob.glob(f"{a.runs}/{a.protocol}__{enc}__{a.objective}"
                            f"__{tg}__s*.json"):
             r = json.loads(Path(f).read_text())
-            out[r["seed"]] = r["test"]["macro_f1"]
+            out[r["seed"]] = read(r)
         return out, f"{a.protocol}/{enc}/{tg}"
 
     if a.arm_a and a.arm_b:
@@ -82,7 +95,7 @@ def main():
         got = {"cnn_gn": {}, "cnn_bn": {}}
         for f in glob.glob(f"{a.runs}/lot__cnn_*__erm__{a.tag}__s*.json"):
             r = json.loads(Path(f).read_text())
-            got[r["encoder"]][r["seed"]] = r["test"]["macro_f1"]
+            got[r["encoder"]][r["seed"]] = read(r)
         ga, gb = got["cnn_gn"], got["cnn_bn"]
         na, nb = "cnn_gn", "cnn_bn"
     na, nb = (a.label_a or na), (a.label_b or nb)
@@ -106,6 +119,7 @@ def main():
               (min(gn) - max(bn) if min(gn) > max(bn) else max(gn) - min(bn)))
     rec = {
         "cell": f"{a.protocol} / {a.objective} / one session",
+        "metric": a.metric,
         "arm_a": na, "arm_b": nb,
         "n_per_arm": len(gn),
         "cnn_gn": gn, "cnn_bn": bn,

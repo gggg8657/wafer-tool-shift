@@ -386,3 +386,50 @@ def test_permutation_tool_reports_an_empty_match_loudly():
     assert rc == 2, "an empty match must not look like success"
     assert "ERROR" in buf.getvalue()
     assert not _Path("/tmp/_perm_should_not_exist.json").exists()
+
+
+def test_permutation_tool_can_test_a_per_class_metric():
+    """H50 predicted a smaller p on `Scratch` than on macro-F1, and the tool
+    meant to score it could only read macro-F1. A prediction whose inconvenient
+    half is unreachable by the instrument stops constraining anything, so the
+    per-class path is pinned here.
+    """
+    import importlib.util
+    import json as _json
+    import tempfile
+    from pathlib import Path as _Path
+
+    spec = importlib.util.spec_from_file_location(
+        "gnbn3", _Path(__file__).resolve().parents[1] / "scripts" / "gn_vs_bn.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+
+    with tempfile.TemporaryDirectory() as d:
+        for enc, tag, f1, sc in (("cnn_gn", "a", 0.90, 0.70),
+                                 ("cnn_bn", "b", 0.80, 0.75)):
+            for seed in range(3):
+                cell = {"protocol": "p", "encoder": enc, "objective": "erm",
+                        "tag": tag, "seed": seed,
+                        "test": {"macro_f1": f1 + 0.001 * seed,
+                                 "per_class_f1": {"Scratch": sc + 0.001 * seed}}}
+                _Path(d, f"p__{enc}__erm__{tag}__s{seed}.json").write_text(
+                    _json.dumps(cell))
+
+        def run(metric, out):
+            argv = sys.argv
+            try:
+                sys.argv = ["x", "--runs", d, "--protocol", "p",
+                            "--arm-a", f"cnn_gn:a", "--arm-b", f"cnn_bn:b",
+                            "--metric", metric, "--out", out]
+                m.main()
+            finally:
+                sys.argv = argv
+            return _json.loads(_Path(out).read_text())
+
+        macro = run("macro_f1", str(_Path(d, "m.json")))
+        scr = run("class:Scratch", str(_Path(d, "s.json")))
+
+    # macro-F1: arm a is higher; Scratch: arm a is lower. The tool must follow
+    # the metric it was asked for rather than always reading macro-F1.
+    assert macro["difference"] > 0 and scr["difference"] < 0
+    assert macro["metric"] == "macro_f1" and scr["metric"] == "class:Scratch"

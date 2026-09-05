@@ -508,8 +508,8 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.8647 | +/-0.0044 | 0.8671, 0.8680, 0.8591 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | cw | 2 | 0.8692 | +/-0.0044 | 0.8736, 0.8648 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | gnbn | 8 | 0.8726 | +/-0.0160 | 0.8734, 0.8680, 0.8589, 0.8705, 0.8708, 0.8736, 0.8750, 0.8908 |
-| lot | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 3 | 0.8666 | +/-0.0064 | 0.8729, 0.8668, 0.8601 |
-| lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 3 | 0.8839 | +/-0.0033 | 0.8862, 0.8796, 0.8860 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 5 | 0.8731 | +/-0.0148 | 0.8729, 0.8668, 0.8601, 0.8758, 0.8897 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 5 | 0.8871 | +/-0.0093 | 0.8862, 0.8796, 0.8860, 0.8857, 0.8983 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmean | 3 | 0.8717 | +/-0.0081 | 0.8709, 0.8802, 0.8641 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | rpca2_3ch | 3 | 0.8703 | +/-0.0096 | 0.8812, 0.8679, 0.8619 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | scratch_lr1e-3 | 2 | 0.8690 | +/-0.0009 | 0.8699, 0.8681 |
@@ -800,9 +800,9 @@ Class imbalance was measured and discarded — focal loss over five values of ga
 
 | pooling | macro-F1 | vs `mean` | verdict | Scratch F1 | vs `mean` | verdict |
 |---|---|---|---|---|---|---|
-| `mean` (global average, the original) | 0.8666 | — | — | 0.7216 | — | — |
-| `meanmax` (mean + max) — treatment | 0.8839 | +0.0173 | **separated** (margin 0.0067 > floor 0.0054) | 0.7782 | +0.0566 | **separated** (margin 0.0180 > floor 0.0054) |
-| `meanmean` (mean + mean) — **control** | 0.8717 | +0.0052 | ranges overlap | 0.7210 | -0.0006 | ranges overlap |
+| `mean` (global average, the original) | 0.8731 | — | — | 0.7300 | — | — |
+| `meanmax` (mean + max) — treatment | 0.8871 | +0.0141 | ranges overlap | 0.7794 | +0.0493 | **separated** (margin 0.0077 > floor 0.0054) |
+| `meanmean` (mean + mean) — **control** | 0.8717 | -0.0013 | ranges overlap | 0.7210 | -0.0090 | ranges overlap |
 
 **`meanmean` is why this is a result rather than a number.** It has exactly the parameter count of `meanmax` and carries the mean concatenated with itself, so it separates "max pooling helps" from "a wider head helps". It buys nothing, and it moves `Scratch` by −0.0006. The RPCA channel died on precisely this question.
 

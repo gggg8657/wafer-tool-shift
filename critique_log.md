@@ -2470,3 +2470,43 @@ macro-F1 margin (0.0067) which cleared 0.0054 by a hair.
 If it does not survive, the weekend produced no positive result at all, and
 `WEEKEND.md` goes back to the sentence I removed from it two turns ago. I would
 rather find that out now than have it found in a review.
+
+### 52. The instrument could not reach half of the prediction it was meant to score
+
+H50 has two parts: the `lot` pooling effect survives eight seeds with a
+permutation p below 0.05 on macro-F1, **and** a smaller p on `Scratch`, because
+`Scratch` is where the mechanism says the effect lives and its three-seed margin
+was nearly three times the floor while macro-F1's cleared by a hair.
+
+The permutation tool reads `test.macro_f1` and nothing else. The sweep I
+launched last turn calls it once, on macro-F1. So the `Scratch` half of the
+prediction would have arrived unscoreable, and the likely outcome is obvious:
+report the macro-F1 result, quietly not mention the other half, and nobody
+including me notices that a prediction was made and then half-abandoned because
+the tool was inconvenient.
+
+That is a small version of a failure this log has documented at larger scale
+four times — an absence produced at a boundary, invisible because nothing fails.
+Here the boundary is between what I predicted and what the instrument can
+measure.
+
+`--metric` now takes `macro_f1` or `class:<name>`. The legacy path is verified
+unchanged (GroupNorm vs BatchNorm reproduces p = 0.01057 and the same difference
+to six decimals), a test pins that the tool follows the metric it is asked for
+rather than always reading macro-F1, and `chain_s15.sh` runs the `Scratch`
+comparison when the sweep finishes, behind `verify_stage.py`.
+
+**A number that fell out of building it.** The `size` sweep, re-read on
+`Scratch` at eight seeds: `meanmax` 0.6660 against `mean` 0.7087, difference
+−0.0427, **p = 0.202**. So `size` is unestablished on *both* metrics, not just
+macro-F1, which makes §50's conclusion firmer than it was — the three-seed
+`Scratch` figure of −0.0777 was as much an overestimate as the macro-F1 one.
+
+Two things about that worth saying plainly. First, it is a number I would not
+have had if the tool had stayed single-metric, and I only got it because
+building the option let me point it at existing data for free. Second, the
+direction is stable across metrics and sample sizes while the magnitude is not,
+which is now the fourth instance of the same pattern and probably the most
+useful single generalization this weekend produced: **on this corpus, three
+seeds are enough to get the sign right and not nearly enough to get the size
+right.**
