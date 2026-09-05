@@ -433,3 +433,41 @@ def test_permutation_tool_can_test_a_per_class_metric():
     # the metric it was asked for rather than always reading macro-F1.
     assert macro["difference"] > 0 and scr["difference"] < 0
     assert macro["metric"] == "macro_f1" and scr["metric"] == "class:Scratch"
+
+
+def test_section_census_catches_a_vanished_section():
+    """The guard for the failure in critique entry 62, tested against it.
+
+    Its first version reported "21/21 present" when the file was removed,
+    because it only matched `js("literal")` and the real call site passes
+    filenames through a tuple. A guard that has never been made to fail is not
+    a guard.
+    """
+    import importlib.util
+    import json as _json
+    import tempfile
+    from pathlib import Path as _Path
+
+    spec = importlib.util.spec_from_file_location(
+        "census", _Path(__file__).resolve().parents[1] / "scripts"
+        / "section_census.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+
+    # outputs are not inputs; everything else under runs/ is
+    assert m.normalise("RESULTS.md") is None
+    assert m.normalise("runs/determinism.json") == "determinism.json"
+    assert m.normalise('Path(a.runs) / "x.json"'.split('"')[1]) == "x.json"
+
+    # the tuple form that defeated version one must be found
+    src = 'for fn in ("a_summary.json", "b_summary.json"):\n    d = js(fn)\n'
+    with tempfile.TemporaryDirectory() as d:
+        f = _Path(d, "gen.py")
+        f.write_text(src)
+        found = set()
+        for pat in m.PATTERNS:
+            for raw in pat.findall(f.read_text()):
+                n = m.normalise(raw)
+                if n:
+                    found.add(n)
+        assert found == {"a_summary.json", "b_summary.json"}

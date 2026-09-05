@@ -2936,3 +2936,50 @@ their geometry with training, and fails only where geometry is held out
 entirely. That is a much cleaner statement than the macro-F1 version, which
 tracks it on `iid` and `lot` and disappears on `lot_time` — because one class
 moving 0.039 cannot move a nine-class average that is already at 0.71.
+
+### 63. A guard for the vanished section, and it failed its own first test
+
+§62 ended by naming the gap: every check in this repository detects an absent
+file or a bad literal, and none detects a document quietly shorter than it
+should be. `scripts/section_census.py` closes it — it walks each generator for
+the optional inputs it reads and reports which are missing, since a missing
+optional input *is* a section that did not render.
+
+**It did not work.** Built, run, clean: `22/22 optional inputs present`. Then
+tested against the actual bug — rename the file exactly as the trailing
+underscore had — and it printed `21/21 present`. It had stopped *looking for*
+the file rather than reporting it missing, because the first version matched
+`js("literal")` and the real call site passes the names through a tuple:
+
+```python
+for fn in ("pooling_lot_control_perm_macro_f1.json", ...):
+    d_ = js(fn)
+```
+
+so the name never appears inside `js(...)`. Had I shipped it on the strength of
+a clean run, I would have added a guard that provides confidence and no
+detection — worse than none, because the next silent omission would have
+happened under a check that said everything was fine.
+
+Second version matches every `.json` string literal anywhere in the generator
+and normalises the three path forms in use. It now reports
+`weekend.py: 22/23` with the missing file named, and `--strict` exits 1.
+Restored, it exits 0. Both directions verified rather than assumed, and
+`tests/test_smoke.py` pins the tuple form that defeated version one.
+
+**Two things I want on record.**
+
+First, the only reason this was tested at all is that §62 was fresh enough that
+I still had the failing state to hand. A guard written a day after the bug would
+have been validated against a repository where the bug no longer existed, which
+is to say not validated. **The moment to test a check is while the thing it
+catches is still broken.**
+
+Second, this is now the fourth instrument in the repository — `verify_stage.py`,
+`coverage_check.py`, the numeric lint, and this — and the honest summary is that
+each was built after a failure it could not have prevented, catches a narrow
+class, and has at least once needed correcting itself. `coverage_check.py`
+reported 24 false orphans on its first run; this one reported a clean pass on a
+broken repository. The guards are worth having and they are not a substitute for
+reading the output, which is how three of the six silent failures were actually
+found.
