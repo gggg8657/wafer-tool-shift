@@ -2412,3 +2412,61 @@ there because I very nearly made that mistake myself with H33 — a void
 experiment returned a clean null that agreed with everything I already believed,
 and I would have kept it if it had not contradicted a mechanism I had measured
 directly.
+
+### 50. H47 falsified: the `size` pooling effect halves and does not survive
+
+Eight seeds per arm, one session, read with the exact permutation test:
+
+| arm | seeds | mean |
+|---|---|---|
+| `meanmax` | 0.8039, 0.7357, 0.8046, 0.8076, 0.8758, 0.8191, 0.8601, 0.8383 | 0.8181 |
+| `mean` | 0.8231, 0.8114, 0.8868, 0.8088, 0.8756, 0.8202, 0.8871, 0.8568 | 0.8462 |
+
+Difference **−0.0281**, ranges overlap, permutation **p = 0.162** over 12,870
+arrangements.
+
+I predicted the −0.0590 was real and would give p < 0.05. It does not, and the
+effect **halved** as seeds were added: −0.0590 at n=3, −0.0281 at n=8. The
+three-seed estimate was off by more than the eight-seed effect is large. So max
+pooling on the geometry-holdout protocol is **not established either way**, and
+the fallback position I wrote into the script before running it is the one that
+stands: the weekend's positive finding holds on one protocol out of four and is
+unmeasured on the rest.
+
+Worth being explicit that this is the third time a striking three-seed number
+has shrunk or vanished under more seeds — GroupDRO's −0.27 on `size`, the RPCA
+residual's −0.005 within-session subgroup, and now this. Each time the direction
+survived and the magnitude did not, and each time the three-seed version was the
+one that would have been quotable.
+
+### 51. Applying my own standard to my own positive result
+
+There is an asymmetry in what I have just done and it needs fixing rather than
+noting.
+
+I took the `size` effect to eight seeds because I suspected it was noise, and it
+was. The `lot` effect — `meanmax` +0.0173 macro-F1 and +0.0566 on `Scratch`,
+the one positive result of the weekend — is still at **three seeds**, the sample
+size that has been wrong three times, and I have been quoting it in `WEEKEND.md`
+and `paper_draft.md` as the headline finding.
+
+Demanding eight seeds of a result I expected to be negative while accepting
+three for one I expected to be positive is not scepticism, it is a preference
+wearing scepticism's clothes. §43 caught the same asymmetry running the other
+way — a hand-off that under-reported the positive result because I had spent the
+weekend learning to distrust positives. Both are the same error: letting what I
+expect decide what standard applies.
+
+`scripts/pooling_lot_seeds.sh` takes both arms on `lot` to eight seeds and reads
+them with the same permutation test, and ends with `verify_stage.py` on both the
+cells and the summary, so it cannot log completion having produced nothing.
+
+**H50, recorded before the run.** The `lot` effect survives with a permutation
+p below 0.05 on macro-F1, and a smaller p on `Scratch` — because `Scratch` is
+where the mechanism says the effect should live, and its three-seed margin
+(0.0180) was nearly three times the floor rather than barely over it, unlike the
+macro-F1 margin (0.0067) which cleared 0.0054 by a hair.
+
+If it does not survive, the weekend produced no positive result at all, and
+`WEEKEND.md` goes back to the sentence I removed from it two turns ago. I would
+rather find that out now than have it found in a review.
