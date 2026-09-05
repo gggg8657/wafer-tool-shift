@@ -119,45 +119,78 @@ def main():
     W("Wafer-map defect classification is usually reported on a random split of "
       "WM-811K. We rebuild it as a domain-generalization benchmark on the same "
       "172,948 labelled wafers, 10,762 lots and 344 geometries, with four "
-      "protocols that differ only in what is held out, and we find that the "
-      "axis the literature worries about is not the expensive one. Holding out "
-      "whole lots costs a GroupNorm CNN "
-      f"{fmt(iid)} → {fmt(lot)} macro-F1; holding out *future* lots under a "
-      f"purged, embargoed, forward-only split costs {fmt(lt)} — though we then "
-      "show that split is not purely temporal, since its test side is a narrow "
-      "geometry slice with a seventh of its wafers of geometries never trained "
-      "on.")
+      "protocols differing only in what is held out. Holding out whole lots "
+      f"costs a GroupNorm CNN {fmt(iid)} → {fmt(lot)} macro-F1. Holding out "
+      f"*future* lots under a purged, embargoed, forward-only split costs "
+      f"{fmt(lt)} — but a third to nearly half of that is not temporal at all: "
+      "the forward-only test side is a narrow geometry slice, and scoring the "
+      "*random-split* models on that same slice reproduces much of the drop "
+      "with no time involved. Meeting geometries never trained on, which we "
+      "had assumed was the expensive part, costs approximately nothing.")
     W("")
     n_obj = len({k[2] for k in C if k[2] not in ("erm", "focal")})
-    words = {7: "Seven", 8: "Eight", 9: "Nine", 10: "Ten", 11: "Eleven"}
-    n_word = words.get(n_obj, str(n_obj))
-    # How many of the re-run objectives have actually landed, so the abstract
-    # cannot assert an outcome the sweep has not produced yet.
-    done = sorted({k[2] for k in C if k[3] == "dtime" and k[2] != "erm"})
-    redone = (f" So far {len(done)} of them have been re-run against a domain "
-              f"vocabulary that carries real shift ({', '.join(done)}), and "
-              "the ones that move, move *down* — which strengthens the "
-              "negative result rather than rescuing the methods."
-              if done else
-              " The re-run against a domain vocabulary that carries real shift "
-              "is in progress and no conclusion is drawn from it here.")
+    words = {7: "Seven", 8: "Eight", 9: "Nine", 10: "Ten"}
+    dt_done = sorted({k[2] for k in C if k[3] == "dtime" and k[2] != "erm"})
     W("The rest of the paper is a sequence of our own claims failing their own "
-      f"controls, and we think that is the contribution. {n_word} borrowed "
-      "invariance objectives fail to beat ERM — but on the lot protocol that "
-      "finding is an artefact of how `domain` was defined in our own harness, "
-      "which bucketed 10,762 lots into 32 near-identical groups."
-      + redone +
-      " Two methods we built for this corpus do not survive their "
-      "controls: an RPCA lot-signature channel is matched by a fourth channel "
-      "of zeros, and lot-adversarial self-supervised pretraining is worse than "
-      "random initialization. Our active-learning result compared heuristics "
-      "that had bought a fifth of the labels random had. And the "
-      "representation ranking the benchmark exists to produce is not "
-      "resolvable at three seeds: across the adjacent pairs on four protocols, "
-      "only the die-graph GNN is clearly separated from anything. We report "
-      "seed spread and a run-to-run reproducibility floor throughout, because "
-      "both are larger than most of the effects the first version of this "
-      "table reported.")
+      "controls, and we think that is the contribution. "
+      f"{words.get(n_obj, n_obj)} borrowed invariance objectives fail to beat "
+      "ERM — a finding the first version of the experiment could not have "
+      "produced otherwise, since it handed every objective a domain vocabulary "
+      "of 32 buckets whose class distributions differ by a total variation of "
+      f"0.02. The {len(dt_done)} of them re-run against production-order "
+      "deciles carrying nine times that shift all still fail, and so does every "
+      "objective on the geometry-holdout protocol once its own reproducibility "
+      "floor is measured: **not one separates from ERM anywhere.** Two methods "
+      "we built "
+      "for this corpus do not survive either. An RPCA lot-signature channel is "
+      "matched by a fourth channel of zeros — and could not have been "
+      "otherwise, because the encoder is handed an untouched copy of what the "
+      "decomposition removes; the knob has no setting that yields a "
+      "non-trivial decomposition on a representative sample, and the sweep "
+      "that said it did was run on forty lots taken as a slice. "
+      "Lot-adversarial self-supervised pretraining is worse than random "
+      "initialization at every learning rate. Our active-learning result "
+      "compared heuristics that had bought a fifth of the labels random had.")
+    W("")
+    gb = None
+    gbp = Path(a.runs) / "gn_vs_bn.json"
+    if gbp.exists():
+        gb = json.loads(gbp.read_text())
+    mx = stat(C, ("lot", "cnn_gn", "erm", "poolmeanmax"))
+    mn = stat(C, ("lot", "cnn_gn", "erm", "poolmean"))
+    ctl = stat(C, ("lot", "cnn_gn", "erm", "poolmeanmean"))
+    bits = []
+    if mx and mn and ctl:
+        # n is printed because these documents regenerate from runs/ at any
+        # moment, including while a sweep is still filling in seeds -- a
+        # regeneration mid-sweep is current and partial at the same time, and
+        # the only defence is showing the sample size next to the number
+        bits.append(
+            "replacing the encoder's global average pooling with a "
+            f"mean-and-max moves macro-F1 by {mx['mean'] - mn['mean']:+.4f} "
+            f"(n={mx['n']} vs {mn['n']}) on the lot-disjoint split while a "
+            "capacity control with identical parameter count moves it by "
+            f"{ctl['mean'] - mn['mean']:+.4f} (n={ctl['n']}) — and it does not "
+            "generalize, being unestablished on the other three protocols")
+    if gb:
+        bits.append(
+            f"GroupNorm beats BatchNorm by {gb['difference']:+.4f} "
+            f"(permutation p = {gb['permutation_test']['p_two_sided']:.3f} at "
+            f"{gb['n_per_arm']} seeds per arm), which the seed-range criterion "
+            "used elsewhere in this paper cannot resolve and never could")
+    if bits:
+        W("Two things survive. First, " + bits[0] + ". Second, "
+          + (bits[1] if len(bits) > 1 else "") + ".")
+        W("")
+    W("Underneath all of it is a measurement problem we did not know we had. "
+      "Two identical invocations of one cell differ by more than most of the "
+      "effects the first version of these tables reported, that spread is not "
+      "one number but a property of each protocol, and three seeds — the "
+      "budget behind essentially every published wafer-map comparison we are "
+      "aware of, including our own first draft — are enough to get the sign of "
+      "an effect right and nowhere near enough to get its size right. Four "
+      "separate three-seed results in this paper shrank or vanished when taken "
+      "to eight.")
     W("")
 
     # ---------------------------------------------------------------- protocols

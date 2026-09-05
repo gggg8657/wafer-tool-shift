@@ -2510,3 +2510,56 @@ which is now the fourth instance of the same pattern and probably the most
 useful single generalization this weekend produced: **on this corpus, three
 seeds are enough to get the sign right and not nearly enough to get the size
 right.**
+
+### 53. A document regenerated during a sweep is current and partial at the same time
+
+Rewriting the abstract exposed a property of the "prose in the script, numbers
+from JSON" design that I had not thought about. The generators read `runs/` at
+the moment they are invoked. If a sweep is in flight, they read *some* of it.
+
+The pooling figure moved while I was editing the paragraph that quotes it:
++0.0173 at three seeds when the sweep was queued, +0.0158 partway through,
++0.0154 at seven of eight. Every one of those is honestly computed from cells
+that exist, and every one is a different number in the abstract of a document
+that claims to be regenerated rather than typed.
+
+Nothing here is wrong. That is what makes it worth writing down: the guarantee
+the design offers is "no number was typed by hand", which is not the same as
+"this number is the one the experiment will produce". A reader who diffs two
+regenerations of `paper_draft.md` an hour apart will find figures that moved
+with no commit explaining why, and the explanation is that the experiment was
+still running.
+
+The fix is small and general: **print the sample size next to the number.**
+`fmt()` already did for the stat helper; the pooling tables in all three
+generators did not, and now do. A reader who sees `+0.0154 (n=7 vs 7)` against a
+sweep specified as eight per arm can tell at a glance that they are looking at a
+partial result, and a reader who sees `(n=3)` next to the capacity control can
+tell it was not extended.
+
+Worth connecting to §49: `verify_stage.py` counts files at the *end* of a stage
+to catch absences. This is the same problem sampled at a different time — the
+count is right eventually, and any document generated before "eventually" is
+partial without saying so. Both are instances of a general shape: **in a system
+where reports are derived continuously from an evolving directory, "regenerated
+from data" is a claim about provenance and not about completeness.**
+
+For the hand-off: if a figure in `RESULTS.md`, `paper_draft.md` or `WEEKEND.md`
+disagrees with one in `critique_log.md`, check the `n`. The critique log records
+what was measured at the moment it was written and is deliberately not
+regenerated; the other three are always current, which during a sweep means
+always partial.
+
+**Addendum, one regeneration later.** At seven seeds per arm the `lot` pooling
+comparison now reads *ranges overlap* on both macro-F1 and `Scratch`, where at
+three it read *separated* on both. Nothing about the effect changed direction —
++0.0154 macro-F1 and +0.0488 `Scratch`, against +0.0173 and +0.0566 at n=3 — but
+the range criterion has stopped resolving it, exactly as the arithmetic said it
+would: a sample's range grows with the sample, so adding seeds makes non-overlap
+strictly harder to achieve.
+
+This is the situation the permutation test was built for, and the fact that it
+arrived on the weekend's one positive result rather than on a convenient
+negative is the best available check that the instrument was not chosen to suit
+a conclusion. The verdict on H50 will come from a test that does not punish
+extra data, and I will take whatever it says.

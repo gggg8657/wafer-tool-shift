@@ -199,7 +199,7 @@ def main():
             sc = sorted(r["test"]["per_class_f1"]["Scratch"]
                         for r in P[t].values())
             rows.append([
-                lab, f"{sum(xs)/len(xs):.4f}",
+                lab, f"{sum(xs)/len(xs):.4f} (n={len(xs)})",
                 "—" if t == "poolmean" else f"{sum(xs)/len(xs)-sum(bx)/len(bx):+.4f}",
                 "—" if t == "poolmean" else sep(xs, bx, floor)[0],
                 f"{sum(sc)/len(sc):.4f}",

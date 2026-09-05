@@ -846,7 +846,7 @@ def main():
                             for r in v.values())
                 bsc = sorted(r["test"]["per_class_f1"]["Scratch"]
                              for r in base.values())
-                rows.append([lab, f(sum(xs) / len(xs)),
+                rows.append([lab, f"{sum(xs) / len(xs):.4f} (n={len(xs)})",
                              "—" if tg == "poolmean" else
                              f"{sum(xs)/len(xs) - sum(bx)/len(bx):+.4f}",
                              separation(xs, bx, floor_for(F, "lot"))[0]
