@@ -192,11 +192,27 @@ def audit_sign_flip_test():
         "identical arms, and a perfectly balanced set, must give p = 1"
 
 
+def audit_floor_min_repeats():
+    """A floor from too few repeats must be refused, not served as zero."""
+    import json as _json
+    m = load("rep2", "scripts/report.py")
+    with tempfile.TemporaryDirectory() as d:
+        Path(d, "determinism__good__x.json").write_text(
+            _json.dumps({"range": 0.01, "n_repeats": 6}))
+        Path(d, "determinism__thin__x.json").write_text(
+            _json.dumps({"range": 0.0, "n_repeats": 1}))
+        F = m.floors(d)
+        return ("thin" not in F and "good" in F
+                and m.floor_for(F, "thin") == 0.01), \
+            "a one-repeat range of 0.0000 offered as a protocol's floor"
+
+
 AUDITS = [
     ("verify_stage.py", audit_verify_stage),
     ("prose_status_lint.py duplicated_blocks", audit_duplicated_blocks),
     ("section_census.py", audit_section_census),
     ("report.py separation (floor screen)", audit_floor_screen),
+    ("report.py floors (min repeats)", audit_floor_min_repeats),
     ("gn_vs_bn.py perm_p", audit_permutation_test),
     ("dg_family_test.py sign_flip_p", audit_sign_flip_test),
     ("coverage_check.py", audit_coverage_check),

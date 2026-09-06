@@ -3840,3 +3840,59 @@ similar margin — dilation itself is the problem, and geometry-adaptivity is
 exonerated. If instead fixed d = 2 lands near plain `meanmax`, then adapting the
 receptive field per wafer is what costs, which is the more interesting outcome
 and the one I do not expect.
+
+### 78. Reverting a running script does not un-run it, and the damage was a floor of zero
+
+Both missing floors landed and both are wrong.
+
+| file | n_repeats | range |
+|---|---|---|
+| `determinism__lot_time__cnn_gn.json` | 4 of 6 | 0.0162 |
+| `determinism__iid__cnn_gn.json` | **1** of 6 | **0.0000** |
+
+A range over one invocation is not a range. And `floors()` served that 0.0000 as
+the `iid` threshold, so **every `iid` margin cleared the floor**: the screen was
+vacuous on that protocol, in the documents, while I was writing entries about
+vacuous guards. The failure direction is the bad one. A *missing* floor falls
+back to the largest measured anywhere, which withdraws claims that might be
+true; a floor of zero publishes claims that are not.
+
+**Why they were truncated is my fault, and not in the way I recorded last
+entry.** Entry 76 says I appended a stage to `chain_after_size.sh` while bash
+was executing it, reverted within a minute, and moved the stage to `chain3.sh`.
+I wrote that as a near-miss. `ps` says otherwise: `null_power_fix.sh` is running
+as a **child of `chain_after_size.sh`**, so the appended bytes had already been
+read before the revert. Two stages then held GPUs 0 and 1 at once, and the
+floor repeats were killed under contention.
+
+So the correction to entry 76 is that the mistake was not caught in time; it was
+caught in the log and not in its effects. **Reverting a running script does not
+un-run it** — the file on disk and the process are independent once bash has
+read past the edit point, and "I reverted quickly" is not a mitigation, it is
+a description of the file.
+
+Three things now stop the zero-floor class of error, all asserted in tests and
+in `guard_audit.py` (now 9 of 10):
+
+  * `floors()` refuses any floor from fewer than three repeats and records what
+    it rejected, so an unmeasured protocol is screened conservatively rather
+    than trivially;
+  * `determinism_repeats.sh` refuses to *write* a summary from fewer than three,
+    exiting 2 instead;
+  * `paper_draft.md` names the rejected protocols and the count they were
+    measured over, rather than silently showing a fallback.
+
+**And the stage's own verification passed the whole time.** It ran
+`verify_stage.py --glob "$OUT" --expect 1`, which asks whether the summary file
+exists — not whether it summarises anything. That is the same proxy-for-
+completion error I catalogued for other stages two entries ago and then wrote
+into this one: a log says a script ran, a file says it produced output, and only
+a count of what is *inside* the file says it produced what it promised. I have
+now made this mistake at three different levels — log content, file existence,
+and file contents — which suggests the lesson is not "check the artifact" but
+"name the quantity the stage was supposed to produce, and check that".
+
+`chain5.sh` re-measures both floors at six repeats once the lease is free.
+Meanwhile `lot_time` at n=4 is above the three-repeat bar and is used, which is
+worth knowing when reading it: it is the largest floor in the project and it is
+currently doing the work of the fallback for every unmeasured protocol.

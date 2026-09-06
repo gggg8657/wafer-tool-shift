@@ -30,6 +30,9 @@ def f(x, n=4):
     return "-" if x is None else f"{x:.{n}f}"
 
 
+MIN_REPEATS = 3          # a range needs at least three draws to mean anything
+
+
 def floors(run_dir="runs"):
     """Run-to-run spread per protocol, from `runs/determinism__<proto>__*.json`.
 
@@ -42,12 +45,25 @@ def floors(run_dir="runs"):
     publishes one.
     """
     out = {}
+    floors.rejected = {}
     for p in Path(run_dir).glob("determinism__*.json"):
         d = json.loads(p.read_text())
         proto = p.stem.split("__")[1]
         v = d.get("range", d.get("run_to_run_abs_diff"))
-        if v is not None:
-            out[proto] = v
+        n = d.get("n_repeats", d.get("n", 0)) or 0
+        # A range over fewer than MIN_REPEATS invocations is not a floor. The
+        # `iid` file was written with n_repeats = 1 after two stages ended up
+        # sharing the GPU lease and the repeats were killed; its "range" was
+        # 0.0000, and floors() served that as the iid threshold, so every iid
+        # margin cleared it and the screen was vacuous on that protocol. A
+        # missing floor falls back to the largest measured, which is
+        # conservative; a floor of zero is the opposite of conservative.
+        if v is None:
+            continue
+        if n < MIN_REPEATS:
+            floors.rejected[proto] = {"n_repeats": n, "range": v}
+            continue
+        out[proto] = v
     legacy = Path(run_dir) / "determinism.json"
     if not out and legacy.exists():
         d = json.loads(legacy.read_text())

@@ -65,7 +65,7 @@ The forward-only test side holds 19 geometries against 338 in training, and 14.1
 
 Every verdict in this section requires two things: the two cells' seed ranges must not overlap, **and** the margin between them must exceed the run-to-run spread between *identical* invocations of one cell — because seeds are run back to back on one pair of GPUs, so a seed range measures the seed and not the pipeline.
 
-That spread is **not one number**. Measured per protocol where it has been measured: `iid` 0.0000, `lot` 0.0054, `lot_time` 0.0162, `size` 0.0133. Protocols without their own measurement fall back to 0.0162, the largest measured, since being too strict withdraws a claim and being too lenient publishes one. Observed *seed* ranges differ by protocol far more than that: 0.009–0.019 on `lot` against 0.069–0.072 on `size`.
+That spread is **not one number**. Measured per protocol where it has been measured: `lot` 0.0054, `lot_time` 0.0162, `size` 0.0133. Protocols without their own measurement fall back to 0.0162, the largest measured, since being too strict withdraws a claim and being too lenient publishes one. A floor is only used if it came from at least 3 identical invocations: `iid` was measured over 1 and is rejected, so it is screened against the fallback instead. A range over one draw is 0.0000, and a floor of zero is cleared by everything. Observed *seed* ranges differ by protocol far more than that: 0.009–0.019 on `lot` against 0.069–0.072 on `size`.
 
 **Protocol `lot`** (deltas against the same encoder under ERM):
 
@@ -358,10 +358,10 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (GroupNorm) | `erm` | sslinit_lr1e-3 | 2 | 0.7755 | ±0.0022 |
 | `lot` | CNN (GroupNorm) | `erm` | sslinit_lr2e-4 | 2 | 0.6529 | ±0.0087 |
 | `lot` | CNN (GroupNorm) | `erm` | sslinit_lr5e-4 | 2 | 0.7427 | ±0.0013 |
-| `lot` | CNN (GroupNorm) | `focal` | focal0.0 | 2 | 0.8730 | ±0.0050 |
+| `lot` | CNN (GroupNorm) | `focal` | focal0.0 | 4 | 0.8720 | ±0.0065 |
 | `lot` | CNN (GroupNorm) | `focal` | focal0.5 | 2 | 0.8759 | ±0.0001 |
 | `lot` | CNN (GroupNorm) | `focal` | focal1.0 | 2 | 0.8729 | ±0.0019 |
-| `lot` | CNN (GroupNorm) | `focal` | focal2.0 | 2 | 0.8701 | ±0.0048 |
+| `lot` | CNN (GroupNorm) | `focal` | focal2.0 | 4 | 0.8696 | ±0.0063 |
 | `lot` | CNN (GroupNorm) | `focal` | focal5.0 | 2 | 0.8745 | ±0.0051 |
 | `lot` | descriptors + MLP | `erm` | sess2 | 3 | 0.8338 | ±0.0067 |
 | `lot` | die-graph GNN | `erm` | sess2 | 3 | 0.7524 | ±0.0036 |
@@ -369,9 +369,9 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN + 4th channel | `erm` | failmask | 3 | 0.8692 | ±0.0065 |
 | `lot` | CNN + 4th channel | `erm` | hideraw2_failmask | 3 | 0.8705 | ±0.0035 |
 | `lot` | CNN + 4th channel | `erm` | hideraw2_residual | 3 | 0.8434 | ±0.0089 |
-| `lot` | CNN + 4th channel | `erm` | rpca2_failmask | 3 | 0.8712 | ±0.0057 |
-| `lot` | CNN + 4th channel | `erm` | rpca2_residual | 3 | 0.8701 | ±0.0098 |
-| `lot` | CNN + 4th channel | `erm` | rpca2_zeros | 3 | 0.8669 | ±0.0065 |
+| `lot` | CNN + 4th channel | `erm` | rpca2_failmask | 5 | 0.8775 | ±0.0132 |
+| `lot` | CNN + 4th channel | `erm` | rpca2_residual | 5 | 0.8734 | ±0.0114 |
+| `lot` | CNN + 4th channel | `erm` | rpca2_zeros | 5 | 0.8733 | ±0.0147 |
 | `lot` | CNN + 4th channel | `erm` | sess2 | 3 | 0.8717 | ±0.0079 |
 | `lot` | CNN + 4th channel | `erm` | zerochan | 3 | 0.8689 | ±0.0075 |
 | `lot` | spectral operator | `erm` | sess2 | 3 | 0.8405 | ±0.0216 |

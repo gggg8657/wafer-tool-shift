@@ -630,3 +630,45 @@ def test_sign_flip_test_is_exact_and_matches_independent_enumeration():
     for _ in range(50):
         v = [rng.gauss(0, 1) for _ in range(7)]
         assert abs(m.sign_flip_p(v)[0] - brute(v)) < 1e-12
+
+
+def test_floors_refuses_a_floor_measured_from_too_few_repeats():
+    """A range over one invocation is not a range, and zero is not a floor.
+
+    `determinism_repeats.sh` wrote `determinism__iid__cnn_gn.json` with
+    `n_repeats: 1` after two stages ended up sharing the GPU lease and the
+    other five repeats were killed. Its `range` was 0.0000, and `floors()`
+    served that as the `iid` threshold, so every `iid` margin cleared the floor
+    and the screen was vacuous on that protocol.
+
+    The failure direction matters. A *missing* floor falls back to the largest
+    measured anywhere, which is conservative: it withdraws claims that might be
+    true. A floor of zero does the opposite, and publishes claims that are not.
+    """
+    import importlib.util
+    import json as _json
+    import tempfile
+    from pathlib import Path as _Path
+
+    spec = importlib.util.spec_from_file_location(
+        "rep", _Path(__file__).resolve().parents[1] / "scripts" / "report.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+
+    with tempfile.TemporaryDirectory() as d:
+        _Path(d, "determinism__good__cnn_gn.json").write_text(
+            _json.dumps({"range": 0.0100, "n_repeats": 6}))
+        _Path(d, "determinism__thin__cnn_gn.json").write_text(
+            _json.dumps({"range": 0.0000, "n_repeats": 1}))
+        F = m.floors(d)
+
+        assert "good" in F, "a properly measured floor must be used"
+        assert "thin" not in F, "a one-repeat 'range' must not become a floor"
+        assert m.floors.rejected["thin"]["n_repeats"] == 1
+        # and the fallback must remain the largest *measured* one
+        assert F["_fallback"] == 0.0100
+
+        # the point of the rule: an unmeasured protocol is screened
+        # conservatively, never trivially
+        assert m.floor_for(F, "thin") == 0.0100
+        assert m.floor_for(F, "thin") > 0.0

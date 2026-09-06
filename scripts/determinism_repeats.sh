@@ -43,7 +43,7 @@ done
 if [ ${#pids[@]} -gt 0 ]; then wait "${pids[@]}" || true; fi
 
 $PY - "$WORK" "$STORED" "$OUT" "$PROTO / $ENC" <<'PYEOF'
-import json, sys, glob, statistics
+import json, sys, glob, os, statistics
 d, stored_p, out, cell = sys.argv[1:5]
 xs = sorted(json.load(open(p))["test"]["macro_f1"]
             for p in glob.glob(f"{d}/r*/*__erm__s0.json"))
@@ -70,6 +70,16 @@ rec = {
              "estimated the same quantity from a single pair of runs, which "
              "understated it."),
 }
+# Refuse to write a floor that was not actually measured. The `iid` run wrote
+# n_repeats = 1 with a "range" of 0.0000 after its repeats were killed, and
+# `floors()` served that zero as the iid threshold, so every iid margin cleared
+# it. The stage's own verify step passed, because it checked that the summary
+# file existed rather than that it summarised anything.
+if len(xs) < int(os.environ.get("MIN_REPEATS", "3")):
+    print(f"ERROR: only {len(xs)} invocations produced a value; "
+          f"a range over {len(xs)} draw(s) is not a floor. Refusing to write "
+          f"{out}.")
+    sys.exit(2)
 json.dump(rec, open(out, "w"), indent=2)
 print(json.dumps(rec, indent=2))
 PYEOF

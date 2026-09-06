@@ -19,7 +19,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from wts.data import CLASSES                                    # noqa: E402
-from scripts.report import floor_for, floors                    # noqa: E402
+from scripts.report import MIN_REPEATS, floor_for, floors        # noqa: E402
 
 NM = "[not measured]"
 
@@ -381,6 +381,8 @@ def main():
     det = json.loads((Path(a.runs) / "determinism.json").read_text()) \
         if (Path(a.runs) / "determinism.json").exists() else None
     F = floors(a.runs)
+    rejected = getattr(floors, "rejected", {})
+    floors_min_repeats = MIN_REPEATS
     floor = F.get("_fallback")
 
     W("## 3. Result: the invariance toolbox does not beat ERM — the first "
@@ -400,7 +402,15 @@ def main():
           + ", ".join(f"`{k}` {v:.4f}" for k, v in sorted(meas.items()))
           + f". Protocols without their own measurement fall back to "
           f"{floor:.4f}, the largest measured, since being too strict "
-          "withdraws a claim and being too lenient publishes one. Observed "
+          "withdraws a claim and being too lenient publishes one."
+          + (" A floor is only used if it came from at least "
+             f"{floors_min_repeats} identical invocations: "
+             + ", ".join(f"`{k}` was measured over {v['n_repeats']} and is "
+                         f"rejected" for k, v in sorted(rejected.items()))
+             + ", so it is screened against the fallback instead. A range over "
+               "one draw is 0.0000, and a floor of zero is cleared by "
+               "everything." if rejected else "")
+          + " Observed "
           "*seed* ranges differ by protocol far more than that: 0.009–0.019 on "
           "`lot` against 0.069–0.072 on `size`.")
         W("")
