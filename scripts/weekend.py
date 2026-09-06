@@ -287,6 +287,31 @@ def main():
               "it came from, so the statistic that recovers a thin structure "
               "is the one that does not transfer across geometry.")
             W("")
+            pm = js("pooling_mechanism.json")
+            if pm:
+                _a = pm["after_removing_fail_fraction"]
+                _n = pm["native_resolution_control"]
+                W("**That mechanism was a story told after the fact, so it was "
+                  "tested on its own, with no model involved.** `resize_nearest` "
+                  "upsamples by indexing and 97.7% of wafers are upsampled, so "
+                  "a one-die scratch arrives as a band about 64/w pixels wide "
+                  "— a width set by native geometry. Over four oriented line "
+                  f"filters on the {pm['n_wafers']} `{pm['class']}` wafers in "
+                  f"the {pm['n_geometries']} geometries with at least "
+                  f"{pm['min_wafers_per_geometry']} each, failure fraction "
+                  "removed, geometry explains "
+                  f"**{100 * _a['eta_sq_geometry_on_max_pool']:.0f}%** of the "
+                  "max-pooled response and "
+                  f"{100 * _a['eta_sq_geometry_on_mean_pool']:.0f}% of the "
+                  "mean-pooled one. Run again at *native* resolution, where a "
+                  "one-die scratch is one die wide on every geometry, the "
+                  "max-pooled figure collapses to "
+                  f"{_n['eta_sq_geometry_on_max_pool']:.4f}. **The resize "
+                  "creates the geometry dependence; it is not a property of "
+                  "the wafers** — and so the one thing that worked is not "
+                  "inherently geometry-bound. A scale-aware max is the obvious "
+                  "next experiment and this weekend did not run it.")
+                W("")
         W("`CnnResized.embed` was a global average over the final feature map. "
           "A `Scratch` is a thin connected line; averaged over the wafer it is "
           "close to a slightly elevated background failure rate, which is "

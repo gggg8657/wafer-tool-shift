@@ -3224,3 +3224,68 @@ This is now the strongest positive claim about a negative result in the project,
 and it arrived from asking a question about the *shape* of a table — all six the
 same sign — rather than about any cell in it. The same instinct that found the
 duplicated section in entry 65.
+
+### 68. H65: the mechanism behind the one positive result, tested without a model
+
+Every claim in this project has been punished for being an explanation rather
+than a measurement, and the pooling result — the only thing that worked — was
+resting on one:
+
+    "A max over a resampled feature map depends on the die density of the wafer
+     it came from, so the statistic that recovers a thin structure is the one
+     that does not transfer across geometry."
+
+That sentence appears in three places across two documents and had never been
+tested. It was assembled after the fact from four protocol points, which is
+exactly the shape of the RPCA justification that turned out to be a slice of
+forty lots.
+
+It is also testable with **no trained network**, because the claim is about the
+pooling operators and the resampling rather than about anything learned.
+`resize_nearest` upsamples by indexing and 97.7% of wafers are upsampled, so a
+one-die-wide scratch reaches the encoder as a band roughly 64/w pixels across —
+a width set entirely by native geometry.
+
+**H65, before the run:** for a fixed line-detecting filter, geometry explains
+substantially more of the variance in the **max** response than in the **mean**
+response, on `Scratch` wafers, after removing each wafer's failure fraction.
+
+| response, fail fraction removed | mean-pooled η² | max-pooled η² |
+|---|---|---|
+| at 64x64, as the CNN sees it | 0.1485 | **0.7689** |
+| at native resolution (control) | 0.1030 | 0.0629 |
+
+577 `Scratch` wafers, 11 geometries with at least 30 each, four oriented
+zero-mean 3x3 line filters on the binary fail plane. Geometry explains 77% of
+the max-pooled variance against 15% of the mean-pooled — a factor of 5.2.
+
+**The control is the part that matters, and it could have killed the claim.**
+Geometry tracks fab, product and era, so scratches on different geometries may
+simply differ, and an η² of 0.77 would look identical either way. At native
+resolution a one-die scratch is one die wide on every geometry, so if the
+resize is the cause the dependence must collapse there. It does: 0.7689 to
+**0.0629**, a drop of 0.7060, ending *below* the mean-pooled figure. The resize
+creates the geometry dependence; it is not a property of the wafers.
+
+I want to be clear about what would have happened without that control. H65
+"passed" on the first table, 5.2x is a satisfying number, and I could have
+written it up as confirmation and moved on. The RPCA channel died precisely
+because its control was asked for after the fact instead of before, and the
+`meanmean` capacity control is the reason the pooling result is a result at all.
+Running the control *in the same script* as the hypothesis is the only version
+of this that is reliable, because a control you have to remember to run is one
+you will skip on the turn you are most convinced.
+
+**What it changes.** The `size` failure stops being a brute fact about the
+method and becomes a property of the *preprocessing*: the pooling gain is not
+inherently geometry-bound. A max over a window scaled by 64/w, or a resize that
+does not vary a defect's apparent width, would be expected to keep the `Scratch`
+gain and drop the `size` penalty. That is now the sharpest untested prediction
+in the repository, and both documents say it is untested.
+
+It also makes the input-resolution result from earlier read differently. Finer
+input was refuted as a lever on the grounds that 97.7% of wafers are already
+upsampled and a finer grid has nothing to recover. That is still true about
+*information*, and it is now clear the same fact is doing harm through a
+different channel — not by hiding detail but by making the apparent width of a
+defect a function of the wafer it came from.

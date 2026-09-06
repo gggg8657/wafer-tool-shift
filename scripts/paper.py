@@ -874,10 +874,61 @@ def main():
           "+0.005 and −0.059. A max over a resampled feature map depends on the "
           "die density of the wafer it came from, and a geometry the model has "
           "never seen resamples differently — so the statistic that helps when "
-          "geometry is shared is the one that breaks when it is not. That is a "
-          "story assembled after the fact from four points and it is offered as "
-          "a hypothesis, not a result.")
+          "geometry is shared is the one that breaks when it is not.")
         W("")
+        pm = js("pooling_mechanism.json")
+        if pm:
+            _a = pm["after_removing_fail_fraction"]
+            _n = pm["native_resolution_control"]
+            W("**That was assembled after the fact from four points, so we "
+              "tested it separately, with no model involved.** The claim is "
+              "about the pooling operators and the resampling, not about "
+              "anything learned. `resize_nearest` upsamples by indexing, and "
+              "97.7% of wafers are upsampled, so a one-die-wide scratch "
+              "reaches the encoder as a band roughly 64/w pixels across — a "
+              "width set by the wafer's native geometry. Taking four oriented "
+              "zero-mean line filters over the binary fail plane, on the "
+              f"{pm['n_wafers']} `{pm['class']}` wafers belonging to the "
+              f"{pm['n_geometries']} geometries with at least "
+              f"{pm['min_wafers_per_geometry']} of them, and removing each "
+              "wafer's failure fraction first:")
+            W("")
+            W(table([
+                ["at 64x64, as the CNN sees it",
+                 f"{_a['eta_sq_geometry_on_mean_pool']:.4f}",
+                 f"**{_a['eta_sq_geometry_on_max_pool']:.4f}**"],
+                ["at native resolution (control)",
+                 f"{_n['eta_sq_geometry_on_mean_pool']:.4f}",
+                 f"{_n['eta_sq_geometry_on_max_pool']:.4f}"]],
+                ["response measured", "mean-pooled η²(geometry)",
+                 "max-pooled η²(geometry)"]))
+            W("")
+            _r = pm.get("ratio_max_over_mean_residualised")
+            W("Native geometry explains "
+              f"{100 * _a['eta_sq_geometry_on_max_pool']:.0f}% of the variance "
+              "in the max-pooled response and "
+              f"{100 * _a['eta_sq_geometry_on_mean_pool']:.0f}% of the "
+              f"mean-pooled one"
+              + (f", a factor of {_r:.1f}" if _r else "") + ". The control is "
+              "what makes this an explanation rather than a correlation: "
+              "geometry also tracks fab, product and era, so scratches on "
+              "different geometries might simply differ. At native resolution "
+              "a one-die scratch is one die wide on every geometry, and there "
+              "the max-pooled dependence collapses to "
+              f"{_n['eta_sq_geometry_on_max_pool']:.4f} — "
+              f"{pm['max_pool_eta_sq_drop_at_native']:.4f} lower, and below "
+              "the mean-pooled figure. **The resize creates the geometry "
+              "dependence; it is not a property of the wafers.**")
+            W("")
+            W("This is the one mechanism in the paper that was proposed and "
+              "then tested rather than proposed and left standing, and it "
+              "carries a concrete consequence: the pooling gain is not "
+              "inherently geometry-bound. A max taken over a window scaled by "
+              "64/w, or a resize that does not vary the apparent width of a "
+              "defect, would be expected to keep the `Scratch` gain and lose "
+              "the `size` penalty. That is a prediction this paper does not "
+              "test and states so.")
+            W("")
         W("The claim, at the strength the data supports: **on a lot-disjoint "
           "split, replacing global average pooling with mean-and-max moves the "
           "hardest class by 0.057 while its capacity control moves it by "

@@ -1,0 +1,26 @@
+{
+  "what": "does native geometry explain more of the max-pooled filter response than of the mean-pooled one, with no model involved",
+  "class": "Scratch",
+  "n_wafers": 577,
+  "n_geometries": 11,
+  "min_wafers_per_geometry": 30,
+  "filter": "four oriented zero-mean 3x3 line detectors, max over orientation, on the binary fail plane at 64x64",
+  "raw": {
+    "eta_sq_geometry_on_mean_pool": 0.4712600719510726,
+    "eta_sq_geometry_on_max_pool": 0.8519545977075491
+  },
+  "after_removing_fail_fraction": {
+    "eta_sq_geometry_on_mean_pool": 0.14854201824156274,
+    "eta_sq_geometry_on_max_pool": 0.76891906943546
+  },
+  "native_resolution_control": {
+    "why": "if nearest-neighbour upsampling causes the geometry dependence, it must be much weaker at native resolution, where a one-die scratch is one die wide on every geometry. If it survives here the dependence is intrinsic to the wafers and the resize explanation is wrong.",
+    "eta_sq_geometry_on_mean_pool": 0.10298858222771369,
+    "eta_sq_geometry_on_max_pool": 0.06291557237859102
+  },
+  "note": "eta-squared is the between-geometry share of total variance. The mean-pooled response is close to the failure fraction, which nearest-neighbour upsampling preserves; the max-pooled response is a peak whose width in pixels is set by 64/w.",
+  "ratio_max_over_mean_residualised": 5.176441511552809,
+  "h65_supported": true,
+  "max_pool_eta_sq_drop_at_native": 0.7060034970568689,
+  "resize_explains_it": true
+}

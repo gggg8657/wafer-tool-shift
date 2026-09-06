@@ -255,7 +255,18 @@ The picture that survives is simpler and stronger than the one we had. Max pooli
 
 Two readings were proposed in advance and both are wrong. The first, that a richer statistic should help most where train and test match, predicts the largest effect on `iid`; it is smaller there than on `lot`. The second, formed after seeing `iid` — that max pooling buys generalization, so the benefit should grow with shift — predicts the largest effect on `size` and `lot_time`; `size` is the one place it is negative.
 
-What the four protocols do line up with is **how much geometry the test set shares with training**: 99.95% on `iid`, 99.7% on `lot`, 86% on `lot_time`, 0% on `size`, against effects of +0.009, +0.017, +0.005 and −0.059. A max over a resampled feature map depends on the die density of the wafer it came from, and a geometry the model has never seen resamples differently — so the statistic that helps when geometry is shared is the one that breaks when it is not. That is a story assembled after the fact from four points and it is offered as a hypothesis, not a result.
+What the four protocols do line up with is **how much geometry the test set shares with training**: 99.95% on `iid`, 99.7% on `lot`, 86% on `lot_time`, 0% on `size`, against effects of +0.009, +0.017, +0.005 and −0.059. A max over a resampled feature map depends on the die density of the wafer it came from, and a geometry the model has never seen resamples differently — so the statistic that helps when geometry is shared is the one that breaks when it is not.
+
+**That was assembled after the fact from four points, so we tested it separately, with no model involved.** The claim is about the pooling operators and the resampling, not about anything learned. `resize_nearest` upsamples by indexing, and 97.7% of wafers are upsampled, so a one-die-wide scratch reaches the encoder as a band roughly 64/w pixels across — a width set by the wafer's native geometry. Taking four oriented zero-mean line filters over the binary fail plane, on the 577 `Scratch` wafers belonging to the 11 geometries with at least 30 of them, and removing each wafer's failure fraction first:
+
+| response measured | mean-pooled η²(geometry) | max-pooled η²(geometry) |
+|---|---|---|
+| at 64x64, as the CNN sees it | 0.1485 | **0.7689** |
+| at native resolution (control) | 0.1030 | 0.0629 |
+
+Native geometry explains 77% of the variance in the max-pooled response and 15% of the mean-pooled one, a factor of 5.2. The control is what makes this an explanation rather than a correlation: geometry also tracks fab, product and era, so scratches on different geometries might simply differ. At native resolution a one-die scratch is one die wide on every geometry, and there the max-pooled dependence collapses to 0.0629 — 0.7060 lower, and below the mean-pooled figure. **The resize creates the geometry dependence; it is not a property of the wafers.**
+
+This is the one mechanism in the paper that was proposed and then tested rather than proposed and left standing, and it carries a concrete consequence: the pooling gain is not inherently geometry-bound. A max taken over a window scaled by 64/w, or a resize that does not vary the apparent width of a defect, would be expected to keep the `Scratch` gain and lose the `size` penalty. That is a prediction this paper does not test and states so.
 
 The claim, at the strength the data supports: **on a lot-disjoint split, replacing global average pooling with mean-and-max moves the hardest class by 0.057 while its capacity control moves it by −0.001. On the other three protocols it is not established, and on geometry holdout its mean effect is negative.** An architectural change that reads as a general improvement turns out to be protocol-specific — which is the thing this benchmark was built to detect, applied for once to our own result.
 
@@ -356,14 +367,14 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot_time` | CNN + 4th channel | `erm` | sess2 | 3 | 0.7149 | ±0.0030 |
 | `lot_time` | CNN + 4th channel | `erm` | zerochan | 3 | 0.7018 | ±0.0030 |
 | `lot_time` | spectral operator | `erm` | sess2 | 3 | 0.6530 | ±0.0242 |
-| `size` | CNN (BatchNorm) | `coral` | sizeseed | 3 | 0.7714 | ±0.0137 |
-| `size` | CNN (BatchNorm) | `dann` | sizeseed | 3 | 0.7744 | ±0.0382 |
+| `size` | CNN (BatchNorm) | `coral` | sizeseed | 4 | 0.7657 | ±0.0202 |
+| `size` | CNN (BatchNorm) | `dann` | sizeseed | 4 | 0.7570 | ±0.0572 |
 | `size` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.7843 | ±0.0312 |
 | `size` | CNN (BatchNorm) | `erm` | sizeseed | 4 | 0.7724 | ±0.0598 |
 | `size` | CNN (BatchNorm) | `group_dro` | sizeseed | 3 | 0.6381 | ±0.0922 |
-| `size` | CNN (BatchNorm) | `irm` | sizeseed | 3 | 0.7657 | ±0.0617 |
+| `size` | CNN (BatchNorm) | `irm` | sizeseed | 4 | 0.7569 | ±0.0617 |
 | `size` | CNN (BatchNorm) | `logit_adjust` | sizeseed | 3 | 0.6798 | ±0.0680 |
-| `size` | CNN (BatchNorm) | `mixup_domain` | sizeseed | 3 | 0.7803 | ±0.0405 |
+| `size` | CNN (BatchNorm) | `mixup_domain` | sizeseed | 4 | 0.7616 | ±0.0617 |
 | `size` | CNN (GroupNorm) | `erm` | — | 3 | 0.8467 | ±0.0346 |
 | `size` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8462 | ±0.0391 |
 | `size` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.8181 | ±0.0700 |
