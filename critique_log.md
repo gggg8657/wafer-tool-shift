@@ -3649,3 +3649,74 @@ writing about the danger of typing numbers. It now comes from
 `pooling_iid_perm_macro_f1.json` and the count is back to 44. A guard that
 catches its author within one commit of being built is the only kind worth
 having.
+
+### 75. H64 scored six of six, and it falsified a criterion I invented two entries ago
+
+`size_complete.sh` finished. All seven arms at eight seeds.
+
+**H64, on record before the run:** `group_dro` and `logit_adjust` separate from
+ERM at p < 0.05 and are worse; `coral`, `dann`, `irm` and `mixup_domain` do not.
+
+| objective | vs ERM | p at n=8 | H64 | outcome |
+|---|---|---|---|---|
+| `group_dro` | -0.1291 | 0.0019 | separates | right |
+| `logit_adjust` | -0.0887 | 0.0050 | separates | right |
+| `dann` | -0.0225 | 0.3085 | does not | right |
+| `irm` | -0.0181 | 0.4123 | does not | right |
+| `coral` | -0.0093 | 0.6286 | does not | right |
+| `mixup_domain` | -0.0087 | 0.7033 | does not | right |
+
+**Six of six.** Against H63's two of four, on a weaker prior — which is mostly
+luck and worth saying so: the four negatives were predicted from effect sizes
+that themselves moved (`dann` went from -0.0171 to -0.0225, `irm` from -0.0258
+to -0.0181) and any of them could have crossed.
+
+The substantive result is that `size` **resolves**, and against the objectives.
+Two are clearly worse than ERM at effects several times anything on `lot`. At
+three seeds the exact test could not return below 0.10 at any effect size; at
+eight its floor is 0.0002. The earlier null was a property of the seed budget.
+
+**But the important thing this run did was falsify a criterion I invented in
+entry 66 and put into both documents.** Seeing that all six `size` arms had a
+seed range wider than their own distance from ERM, I wrote that "an arm that
+scatters further than it has moved has not lost to ERM; it is unstable" — and
+called it a sharper statement than the p-values.
+
+It is not sharper. It is wrong. At eight seeds **all six arms still scatter
+wider than their effect** — `group_dro` spans 0.2220 while sitting 0.1291 below
+ERM, and ERM itself spans 0.1211 — and `group_dro` separates anyway at
+p = 0.0019. A difference of means is estimated far more precisely than a single
+draw, so wide arms and a resolved difference are entirely compatible. My
+criterion compares a per-draw dispersion against a between-means quantity, which
+is a units error dressed up as an insight.
+
+**This is the range-overlap error, committed by me, one section after
+diagnosing it.** Both times the appeal is the same: a statement about spread
+that feels more honest than a p-value because it refers to something visible in
+the raw numbers. Both times it answers a different question from the one asked.
+I had written three entries about why the range screen is a floor and not a
+verdict, and then invented a second screen with the same defect and preferred it
+to the test *in the same paragraph where the test disagreed with it*.
+
+The one part worth keeping is the observation that produced it: these arms are
+genuinely unstable and `size` is by far the noisiest protocol here. That is true
+and it belongs in the paper. It is simply not the same claim as "not worse", and
+conflating them is how a real observation becomes a wrong conclusion.
+
+Both halves of the DG result now end differently and both end negatively. On
+`lot` the original experiment could not have shown an effect because the domain
+vocabulary was degenerate; re-run against a real one, the family is worse than
+ERM in aggregate. On `size` the vocabulary was always real and only the seed
+budget was missing; supplied, two objectives are individually worse. **Rules
+out:** this family on this corpus, on both protocols, negatively established
+rather than merely unobserved.
+
+**Postscript to 75.** The ratchet fired again, at 46 against a baseline of 44,
+and again on this entry's own text: I typed `p = 0.0019` and `p = 0.0050` into
+the five-minute summary in the same commit that describes withdrawing a
+criterion for being asserted rather than computed. Both now come from
+`size_power_check.json`. That is two consecutive commits in which the guard
+caught its author, which says less about the guard than about how strong the
+pull is to type a number you have just read off a terminal — it feels like
+quoting a measurement, and it is not; it is copying one out of the only place
+that stays current.

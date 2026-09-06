@@ -167,6 +167,13 @@ def main():
     # detail is not deleted; it moves below a stop marker, and the reading time
     # of the part above that marker is measured into the text rather than
     # claimed, on the same principle as every other number here.
+    _spq = js("size_power_check.json") or {}
+    _spsig = sorted((v for k, v in _spq.items()
+                     if k != "_meta" and v["p_two_sided"] < 0.05),
+                    key=lambda z: z["difference"])
+    _size_sig = (", ".join(f"`{v['objective']}` (p = {v['p_two_sided']:.4f})"
+                           for v in _spsig) + " are"
+                 if _spsig else "no objective is")
     _iidd = js("pooling_iid_perm_macro_f1.json") or {}
     _iidp = (_iidd.get("permutation_test", _iidd) or {}).get("p_two_sided")
     W("## The five-minute version")
@@ -256,9 +263,14 @@ def main():
          "meeting an unseen geometry costs approximately nothing. It measures "
          "forward-only deployment (§2.4)"),
         ("Nothing separates from ERM on `size`",
-         "unresolved rather than negative — at three seeds the exact test "
-         "cannot return below 0.10, and every arm's seed range is wider than "
-         "its own effect (§2.1)"),
+         "false. At three seeds the exact test could not return below 0.10; "
+         f"at eight, {_size_sig} clearly worse than ERM. The null was a "
+         "property of the seed budget (§2.1)"),
+        ("An arm scattering wider than its effect is unstable, not worse",
+         "our own criterion, and wrong. At eight seeds all six `size` arms "
+         "still scatter wider than their effect and `group_dro` separates "
+         "anyway — a difference of means is estimated far more precisely "
+         "than a single draw (§2.1)"),
     ):
         W(f"- **{_c}** — {_r}")
     W("")
@@ -679,36 +691,45 @@ def main():
                 # which is why the permutation test bottoms out at its floor.
                 # The reason that is not evidence is the size of the gap
                 # against the run-to-run floor, not overlap.
-                _gap = (f"Its seeds and ERM's are in fact *disjoint*, by "
-                        f"{_gd['range_gap']:.4f} — but `size`'s measured "
-                        f"run-to-run floor is {_fr:.4f}, so the separation is "
-                        f"{_fr / _gd['range_gap']:.0f} times smaller than the "
-                        "spread of re-running one configuration unchanged. "
-                        if _gd and _gd.get("range_gap", -1) > 0 and _fr
-                        else "")
-                W("GroupDRO's mean effect is the largest number in this "
-                  "repository and it still fails: its seeds span more than its "
-                  "effect. " + _gap + "It is not a method that loses on "
-                  "geometry shift; it is a method that is *unstable* on "
-                  "geometry shift.")
-                W("")
+                _sig = [v for k, v in _sp.items()
+                        if k != "_meta" and v["p_two_sided"] < 0.05]
                 _ex = (_sp.get("_meta") or {}).get("n_range_exceeds_effect")
                 _no = (_sp.get("_meta") or {}).get("n_objectives")
-                if _ex and _no:
-                    W(f"That is true of **all {_ex} of the {_no}** objectives "
-                      "measured on `size`, not only these two: every arm's own "
-                      "three-seed range is wider than its distance from ERM. "
-                      "At three seeds per arm the exact permutation test also "
-                      "cannot return anything below 0.10, so nothing on this "
-                      "protocol could have reached significance whatever its "
-                      "effect. `scripts/size_complete.sh` takes the seven arms "
-                      "to eight seeds; until it lands, `size` is unresolved "
-                      "rather than negative. **Rules out:** nothing yet on "
-                      "this protocol — the ruling-out below rests on `lot`.")
-                else:
-                    W("**Rules out:** this family of invariance objectives, on "
-                      "this corpus, on either protocol, under either domain "
-                      "definition — with no exception left.")
+                _np = ((_sp.get("_meta") or {}).get("n_per_arm") or [0])[0]
+                _fp = ((_sp.get("_meta") or {}).get("min_attainable_p")
+                       or [None])[0]
+                if _sig:
+                    W(f"**At {_np} seeds per arm it resolves, and it resolves "
+                      "against the objectives.** "
+                      + ", ".join(f"`{v['objective']}` ({v['difference']:+.4f}, "
+                                  f"p = {v['p_two_sided']:.4f})"
+                                  for v in sorted(_sig,
+                                                  key=lambda z: z["difference"]))
+                      + f" — worse than ERM, at effects several times "
+                      "anything measured on `lot`. At three seeds the exact "
+                      "test could not return below 0.10 at any effect size; "
+                      f"at {_np} its floor is {_fp:.4f}. The earlier null was "
+                      "a property of the seed budget, not of the methods.")
+                    W("")
+                if _ex and _gd:
+                    W("**And a criterion this document proposed has to be "
+                      f"withdrawn.** At three seeds all {_no} arms had a seed "
+                      "range wider than their own distance from ERM, and we "
+                      "wrote that an arm scattering further than it has moved "
+                      "is *unstable* rather than worse. That is wrong. At "
+                      f"{_np} seeds all {_ex} still scatter wider than their "
+                      f"effect — `group_dro` spans {_gd['own_seed_range']:.4f} "
+                      f"while sitting {abs(_gd['difference']):.4f} below ERM "
+                      f"— and it separates anyway at "
+                      f"p = {_gd['p_two_sided']:.4f}. A difference of means is "
+                      "estimated far more precisely than a single draw. It is "
+                      "the range-overlap error again, made by us, one section "
+                      "after diagnosing it.")
+                    W("")
+                W("**Rules out:** this family of invariance objectives on this "
+                  "corpus, on both protocols — negatively established on "
+                  "`lot` in aggregate and on `size` for two objectives "
+                  "individually, rather than merely unobserved.")
                 W("")
 
     alb = js("al_budget_check.json")

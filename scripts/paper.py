@@ -520,58 +520,61 @@ def main():
                         "exact permutation p", ""]))
         W("")
         _f = _fl[0]
-        W("**This half is unestablished too, and for the opposite reason.** "
-          f"Every arm holds {_n[0]} seeds, and a two-sample exact permutation "
-          f"test at {_n[0]} per arm admits only "
-          f"{sp[[k for k in sp if k != '_meta'][0]]['arrangements']} "
-          "arrangements, so the smallest two-sided p it can return is "
-          f"{_f:.2f}. Not one of these objectives could have reached 0.05 "
-          "however large its effect was. "
-          f"{spm.get('n_at_floor', 0)} of {spm.get('n_objectives', 0)} sit "
-          "exactly on that floor with fully disjoint seed ranges — `group_dro` "
-          "and `logit_adjust`, at effects several times anything measured on "
-          "`lot`.")
-        W("")
-        _er = spm.get("erm_seed_range")
+        _n_sig = sum(1 for k, v in sp.items()
+                     if k != "_meta" and v["p_two_sided"] < 0.05)
         _ex = spm.get("n_range_exceeds_effect", 0)
         _no = spm.get("n_objectives", 0)
+        _er = spm.get("erm_seed_range")
         _gd = sp.get("group_dro__macro_f1", {})
-        W("**The p-values are not even the sharpest way to say this.** For "
-          f"{_ex} of these {_no} objectives, the arm's own three-seed range is "
-          "wider than its distance from ERM"
-          + (f" — `group_dro` spans {_gd['own_seed_range']:.4f} across its "
-             f"seeds while sitting {abs(_gd['difference']):.4f} below ERM"
-             if _gd else "")
-          + (f", and ERM itself spans {_er:.4f}" if _er else "")
-          + ". An arm that scatters further than it has moved has not lost to "
-          "ERM; it is unstable on this protocol. That is a different claim "
-          "from *worse*, and it is the one the data supports.")
+        W(f"**At {_n[0]} seeds per arm this half resolves, and it resolves "
+          f"against the objectives.** {_n_sig} of {_no} separate from ERM at "
+          "p < 0.05 and both are worse: `group_dro` and `logit_adjust`, at "
+          "effects several times anything measured on `lot`. The exact test "
+          f"now admits {sp[[k for k in sp if k != '_meta'][0]]['arrangements']:,} "
+          f"arrangements, so its floor is {_f:.4f} rather than the 0.10 that "
+          "three seeds imposed — which is the whole reason this could not be "
+          "answered before.")
         W("")
-        _fd = js("determinism__size__cnn_bn.json") or {}
-        _fl_r, _fl_n = _fd.get("range"), _fd.get("n_repeats")
-        if _gd and _gd.get("range_gap", -1) > 0 and _fl_r:
-            W("The one place the two instruments seem to disagree is worth "
-              "pinning down, because it is easy to misread. `group_dro`'s "
-              f"seeds and ERM's are in fact *disjoint* — by {_gd['range_gap']:.4f} "
-              "— which is why the permutation test bottoms out at its floor "
-              "rather than landing mid-range. But `size`'s run-to-run floor, "
-              f"measured over {_fl_n} identical invocations of one cell, is "
-              f"{_fl_r:.4f} — so that separation is "
-              f"{_fl_r / _gd['range_gap']:.0f} times smaller than the noise of "
-              "re-running the same configuration unchanged. Disjoint ranges "
-              "are not evidence when the gap is below the floor; this is "
-              "exactly the case the floor was measured to catch.")
+        W("**An earlier draft of this section said the `size` half *stood as "
+          "measured*, and a later one said it was unresolvable. Both were "
+          "wrong, in opposite directions.** The first asserted a null from a "
+          "test whose smallest attainable p was 0.10; the second concluded "
+          "from that same underpowered state that the effects could not be "
+          "certified at all, when what was needed was simply more seeds.")
+        W("")
+        if _ex and _gd:
+            W("**And one criterion this paper proposed for `size` has to be "
+              f"withdrawn.** At three seeds, all {_no} arms had a seed range "
+              "wider than their own distance from ERM, and we wrote that an "
+              "arm which scatters further than it has moved is unstable rather "
+              "than worse. That reasoning is wrong, and its own data now says "
+              f"so: at {_n[0]} seeds all {_ex} arms *still* have a range wider "
+              f"than their effect — `group_dro` spans "
+              f"{_gd['own_seed_range']:.4f} while sitting "
+              f"{abs(_gd['difference']):.4f} below ERM"
+              + (f", and ERM itself spans {_er:.4f}" if _er else "")
+              + f" — and yet it separates at p = {_gd['p_two_sided']:.4f}. A "
+              "difference of means is estimated far more precisely than a "
+              "single draw, so wide arms and a resolved difference are "
+              "perfectly compatible.")
             W("")
-        W("So the `lot` half was withdrawn because the experiment could not "
-          "have shown an effect, and the `size` half has to be withdrawn "
-          "because the measurement cannot separate an effect from the "
-          "instability of the arm producing it. An earlier draft of this "
-          "section said the `size` half *stood as measured*; that was wrong, "
-          "and it was wrong in the direction that flattered the result. Eight "
-          "seeds per arm would settle whether the variance falls or is "
-          "intrinsic to holding geometry out — `scripts/size_complete.sh`. At "
-          "three, the honest entry is that both halves of the negative result "
-          "are unresolved.")
+            W("That is the same error as the range-overlap screen, committed "
+              "one section after diagnosing it: an intuitive statement about "
+              "dispersion, standing in for a test that answers the actual "
+              "question. It was appealing because it pointed at a real "
+              "property — these arms *are* unstable, and `size` is the "
+              "noisiest protocol here — but instability and inferiority are "
+              "separate claims, and only one of them is what the data "
+              "establishes.")
+            W("")
+        W("So the two halves end differently. On `lot` the original "
+          "experiment could not have shown an effect at all, because the "
+          "domain vocabulary was degenerate; re-run against one that carries "
+          "real shift, the family is worse than ERM. On `size` the vocabulary "
+          "was always real and only the seed budget was missing; supplied, it "
+          "shows two objectives clearly worse and four unestablished. Neither "
+          "half supports the claim these methods help, and the `size` half now "
+          "supports a stronger claim than the null it replaced.")
         W("")
     if dt:
         rows = [[f"`{o}`", fmt(b), fmt(a_),

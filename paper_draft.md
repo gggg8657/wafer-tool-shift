@@ -121,20 +121,22 @@ On `size` the same hash is far less degenerate — 344 geometries into 32 bucket
 
 | objective on `size` | vs ERM (macro-F1) | exact permutation p |  |
 |---|---|---|---|
-| `group_dro` | -0.1534 | 0.1000 | **at floor** |
-| `logit_adjust` | -0.1117 | 0.1000 | **at floor** |
-| `irm` | -0.0258 | 0.6000 |  |
-| `coral` | -0.0200 | 0.7000 |  |
-| `dann` | -0.0171 | 0.6000 |  |
-| `mixup_domain` | -0.0112 | 0.6000 |  |
+| `group_dro` | -0.1291 | 0.0019 |  |
+| `logit_adjust` | -0.0887 | 0.0050 |  |
+| `dann` | -0.0225 | 0.3085 |  |
+| `irm` | -0.0181 | 0.4123 |  |
+| `coral` | -0.0093 | 0.6286 |  |
+| `mixup_domain` | -0.0087 | 0.7033 |  |
 
-**This half is unestablished too, and for the opposite reason.** Every arm holds 3 seeds, and a two-sample exact permutation test at 3 per arm admits only 20 arrangements, so the smallest two-sided p it can return is 0.10. Not one of these objectives could have reached 0.05 however large its effect was. 2 of 6 sit exactly on that floor with fully disjoint seed ranges — `group_dro` and `logit_adjust`, at effects several times anything measured on `lot`.
+**At 8 seeds per arm this half resolves, and it resolves against the objectives.** 2 of 6 separate from ERM at p < 0.05 and both are worse: `group_dro` and `logit_adjust`, at effects several times anything measured on `lot`. The exact test now admits 12,870 arrangements, so its floor is 0.0002 rather than the 0.10 that three seeds imposed — which is the whole reason this could not be answered before.
 
-**The p-values are not even the sharpest way to say this.** For 6 of these 6 objectives, the arm's own three-seed range is wider than its distance from ERM — `group_dro` spans 0.1844 across its seeds while sitting 0.1534 below ERM, and ERM itself spans 0.0735. An arm that scatters further than it has moved has not lost to ERM; it is unstable on this protocol. That is a different claim from *worse*, and it is the one the data supports.
+**An earlier draft of this section said the `size` half *stood as measured*, and a later one said it was unresolvable. Both were wrong, in opposite directions.** The first asserted a null from a test whose smallest attainable p was 0.10; the second concluded from that same underpowered state that the effects could not be certified at all, when what was needed was simply more seeds.
 
-The one place the two instruments seem to disagree is worth pinning down, because it is easy to misread. `group_dro`'s seeds and ERM's are in fact *disjoint* — by 0.0008 — which is why the permutation test bottoms out at its floor rather than landing mid-range. But `size`'s run-to-run floor, measured over 6 identical invocations of one cell, is 0.0133 — so that separation is 16 times smaller than the noise of re-running the same configuration unchanged. Disjoint ranges are not evidence when the gap is below the floor; this is exactly the case the floor was measured to catch.
+**And one criterion this paper proposed for `size` has to be withdrawn.** At three seeds, all 6 arms had a seed range wider than their own distance from ERM, and we wrote that an arm which scatters further than it has moved is unstable rather than worse. That reasoning is wrong, and its own data now says so: at 8 seeds all 6 arms *still* have a range wider than their effect — `group_dro` spans 0.2220 while sitting 0.1291 below ERM, and ERM itself spans 0.1211 — and yet it separates at p = 0.0019. A difference of means is estimated far more precisely than a single draw, so wide arms and a resolved difference are perfectly compatible.
 
-So the `lot` half was withdrawn because the experiment could not have shown an effect, and the `size` half has to be withdrawn because the measurement cannot separate an effect from the instability of the arm producing it. An earlier draft of this section said the `size` half *stood as measured*; that was wrong, and it was wrong in the direction that flattered the result. Eight seeds per arm would settle whether the variance falls or is intrinsic to holding geometry out — `scripts/size_complete.sh`. At three, the honest entry is that both halves of the negative result are unresolved.
+That is the same error as the range-overlap screen, committed one section after diagnosing it: an intuitive statement about dispersion, standing in for a test that answers the actual question. It was appealing because it pointed at a real property — these arms *are* unstable, and `size` is the noisiest protocol here — but instability and inferiority are separate claims, and only one of them is what the data establishes.
+
+So the two halves end differently. On `lot` the original experiment could not have shown an effect at all, because the domain vocabulary was degenerate; re-run against one that carries real shift, the family is worse than ERM. On `size` the vocabulary was always real and only the seed budget was missing; supplied, it shows two objectives clearly worse and four unestablished. Neither half supports the claim these methods help, and the `size` half now supports a stronger claim than the null it replaced.
 
 | objective | domain = `lot % 32` | domain = production decile | difference |
 |---|---|---|---|
@@ -334,6 +336,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (GroupNorm) | `erm` | gnbn | 8 | 0.8726 | ±0.0160 |
 | `lot` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8738 | ±0.0163 |
 | `lot` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.8888 | ±0.0116 |
+| `lot` | CNN (GroupNorm) | `erm` | poolmeanmaxSA | 3 | 0.7800 | ±0.0218 |
 | `lot` | CNN (GroupNorm) | `erm` | poolmeanmean | 8 | 0.8793 | ±0.0171 |
 | `lot` | CNN (GroupNorm) | `erm` | rpca2_3ch | 3 | 0.8703 | ±0.0096 |
 | `lot` | CNN (GroupNorm) | `erm` | scratch_lr1e-3 | 2 | 0.8690 | ±0.0009 |
@@ -381,11 +384,12 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `size` | CNN (BatchNorm) | `erm` | sizeseed | 8 | 0.7931 | ±0.0606 |
 | `size` | CNN (BatchNorm) | `group_dro` | sizeseed | 8 | 0.6640 | ±0.1110 |
 | `size` | CNN (BatchNorm) | `irm` | sizeseed | 8 | 0.7751 | ±0.0617 |
-| `size` | CNN (BatchNorm) | `logit_adjust` | sizeseed | 7 | 0.6962 | ±0.0684 |
+| `size` | CNN (BatchNorm) | `logit_adjust` | sizeseed | 8 | 0.7044 | ±0.0693 |
 | `size` | CNN (BatchNorm) | `mixup_domain` | sizeseed | 8 | 0.7845 | ±0.0654 |
 | `size` | CNN (GroupNorm) | `erm` | — | 3 | 0.8467 | ±0.0346 |
 | `size` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8462 | ±0.0391 |
 | `size` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.8181 | ±0.0700 |
+| `size` | CNN (GroupNorm) | `erm` | poolmeanmaxSA | 3 | 0.7193 | ±0.0545 |
 | `size` | CNN (GroupNorm) | `erm` | poolmeanmean | 3 | 0.8426 | ±0.0290 |
 | `size` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.8413 | ±0.0369 |
 | `size` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.7711 | ±0.0265 |
