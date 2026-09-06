@@ -178,7 +178,14 @@ def main():
               "stored. But a derived number should be computed in the "
               "generator, not typed, for the same reason a measured one "
               "should -- the inputs move.")
-    return 1 if (a.strict and (n_bad or breach)) else 0
+    # --strict gates on the ratchet only. It used to include `n_bad`, the count
+    # of literals no run matches -- but that half of this script is measurably
+    # vacuous (it accepts ~86% of random four-digit decimals), and an unmatched
+    # literal is often a legitimately derived value: a ratio, a percentage, a
+    # difference between two measured numbers. Gating on it left the check
+    # permanently red, which trains a reader to ignore it. A check that always
+    # fails is worth as little as one that always passes.
+    return 1 if (a.strict and breach) else 0
 
 
 if __name__ == "__main__":

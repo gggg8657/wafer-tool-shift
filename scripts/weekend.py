@@ -1130,6 +1130,7 @@ def main():
     W("nvidia-smi                           # devices 0,1 only; 2,3 are another loop's")
     W("ls -t runs/*.json | head             # newest cells")
     W("python scripts/report.py && python scripts/paper.py && python scripts/weekend.py")
+    W("python scripts/check_all.py          # <- run this one; it runs the rest")
     W("python tests/run_tests.py            # no pytest in the shared pdeno env, by design")
     W("python scripts/guard_audit.py        # do the checks themselves catch anything?")
     W("```")
@@ -1199,6 +1200,13 @@ def main():
       "run-to-run floor. A guard that passes its own broken input is reported "
       "as **VACUOUS**, which is worse than a failing one: it means every green "
       "result it has produced was uninformative.")
+    W("")
+    W("`python scripts/check_all.py` runs all six checks and prints one "
+      "verdict with one exit code. That exists because reading six separate "
+      "outputs is how a failing check got past this loop: the ratchet below "
+      "was red, a fix was applied, it stayed red, and the commit went in "
+      "anyway because the line that was read came from the patch script "
+      "rather than the guard. If you inherit this, run the one command.")
     W("")
     W("Run it before trusting anything below. One check is currently vacuous "
       "by construction and says so: `number_provenance.py`'s traceability "

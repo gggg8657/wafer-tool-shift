@@ -3905,3 +3905,47 @@ as good as the reading of it, and "I ran the check" is not the same as "the chec
 passed". Corrected in the following commit: the literal was `0.0000` in a
 sentence asserting that a range over one draw is zero, which is arithmetic
 rather than measurement and reads better as a word.
+
+### 79. Six checks with six tails is a reading problem, and reading problems are not fixed by care
+
+Entries 76, 77 and 78 all end the same way: the code was right and I read it
+wrong, or checked the wrong thing. The ratchet failure in 78 is the clearest —
+I ran the guard, saw 45 against 44, patched, saw it *still* read 45, and
+committed, because the line I read was the `ok` printed by my own patch script
+several hundred characters earlier in a combined stdout.
+
+Resolving to read more carefully is not a fix. `scripts/check_all.py` runs all
+six checks, prints one line each, and ends with one verdict and one exit code.
+Each entry names the *question* it answers rather than the script, because
+"section_census passed" tells a reader nothing they can act on:
+
+    PASS  do the unit tests pass?
+    PASS  do the guards themselves catch a defect they claim to catch?
+    PASS  is every input a generator reads present?
+    PASS  is every family of runs reported in some document?
+    PASS  does any document duplicate a section?
+    PASS  has anyone typed a new number into generator prose?
+
+**Its first run failed, correctly, on something I would have shipped.**
+`number_provenance.py --strict` was exiting nonzero on the *traceability* half —
+the half I had already measured as vacuous, since it accepts ~86% of random
+four-digit decimals — because I left `n_bad` in the strict condition when I
+added the ratchet. An unmatched literal is frequently a legitimately derived
+value: a ratio, a percentage, a difference between two measured numbers. So the
+check was permanently red.
+
+That is worth as much as permanently green, and arguably less: **a check that
+always fails trains you to stop reading it**, and I have three entries of
+evidence about what happens when I stop reading one. `--strict` now gates on the
+ratchet alone, which is the half that can distinguish.
+
+The aggregator is tested in both directions, because an aggregator that reported
+PASS while a member failed would be strictly worse than the six tails it
+replaces — it would carry more authority. The test asserts a nonzero member
+makes the run FAIL and preserves the exit code, that a check marked
+informational (`guard_audit`, which has one known-vacuous entry) does *not* fail
+the run, and that every check in the real list is phrased as a question.
+
+`WEEKEND.md` now opens its runbook with this command and says why it exists,
+including the specific failure. Someone inheriting this should not have to
+discover on their own that the interesting output is six tails deep.

@@ -128,7 +128,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | die-graph GNN (wafer-only subgraph) | erm | - | 0.7557 | - | 0.4898 | - | 0.1269 | 0.8889 |
 | CNN + RPCA lot-signature channel | erm | - | 0.8813 | - | 0.5000 | - | 0.7466 | 0.9315 |
 
-**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the 236 `lot` cells in `runs/` that carry the column, 123 report the identical 0.4898 and 86 more report exactly 0.5000 -- 89% of them on two values, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them. This applies to every protocol table in this section; it is stated once.
+**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the 240 `lot` cells in `runs/` that carry the column, 123 report the identical 0.4898 and 88 more report exactly 0.5000 -- 88% of them on two values, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them. This applies to every protocol table in this section; it is stated once.
 
 ## Borrowed objectives vs ERM -- protocol `lot_time`
 
@@ -521,7 +521,7 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot | CNN on resized 64x64 (GroupNorm) | erm | sslinit_lr1e-3 | 2 | 0.7755 | +/-0.0022 | 0.7733, 0.7777 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | sslinit_lr2e-4 | 2 | 0.6529 | +/-0.0087 | 0.6615, 0.6442 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | sslinit_lr5e-4 | 2 | 0.7427 | +/-0.0013 | 0.7414, 0.7440 |
-| lot | CNN on resized 64x64 (GroupNorm) | focal | focal0.0 | 5 | 0.8750 | +/-0.0109 | 0.8781, 0.8680, 0.8651, 0.8769, 0.8868 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal | focal0.0 | 6 | 0.8726 | +/-0.0129 | 0.8781, 0.8680, 0.8651, 0.8769, 0.8868, 0.8609 |
 | lot | CNN on resized 64x64 (GroupNorm) | focal | focal0.5 | 2 | 0.8759 | +/-0.0001 | 0.8760, 0.8758 |
 | lot | CNN on resized 64x64 (GroupNorm) | focal | focal1.0 | 2 | 0.8729 | +/-0.0019 | 0.8748, 0.8710 |
 | lot | CNN on resized 64x64 (GroupNorm) | focal | focal2.0 | 5 | 0.8729 | +/-0.0115 | 0.8654, 0.8749, 0.8628, 0.8755, 0.8858 |
@@ -532,9 +532,9 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot | CNN + RPCA lot-signature channel | erm | 4th channel = raw failed-die mask (RPCA control) | 3 | 0.8692 | +/-0.0065 | 0.8765, 0.8678, 0.8634 |
 | lot | CNN + RPCA lot-signature channel | erm | hideraw2_failmask | 3 | 0.8705 | +/-0.0035 | 0.8750, 0.8684, 0.8680 |
 | lot | CNN + RPCA lot-signature channel | erm | hideraw2_residual | 3 | 0.8434 | +/-0.0089 | 0.8450, 0.8515, 0.8336 |
-| lot | CNN + RPCA lot-signature channel | erm | rpca2_failmask | 5 | 0.8775 | +/-0.0132 | 0.8771, 0.8709, 0.8657, 0.8815, 0.8921 |
-| lot | CNN + RPCA lot-signature channel | erm | rpca2_residual | 5 | 0.8734 | +/-0.0114 | 0.8826, 0.8631, 0.8647, 0.8709, 0.8859 |
-| lot | CNN + RPCA lot-signature channel | erm | rpca2_zeros | 5 | 0.8733 | +/-0.0147 | 0.8720, 0.8694, 0.8591, 0.8773, 0.8886 |
+| lot | CNN + RPCA lot-signature channel | erm | rpca2_failmask | 6 | 0.8745 | +/-0.0163 | 0.8771, 0.8709, 0.8657, 0.8815, 0.8921, 0.8595 |
+| lot | CNN + RPCA lot-signature channel | erm | rpca2_residual | 6 | 0.8729 | +/-0.0114 | 0.8826, 0.8631, 0.8647, 0.8709, 0.8859, 0.8705 |
+| lot | CNN + RPCA lot-signature channel | erm | rpca2_zeros | 6 | 0.8738 | +/-0.0147 | 0.8720, 0.8694, 0.8591, 0.8773, 0.8886, 0.8761 |
 | lot | CNN + RPCA lot-signature channel | erm | sess2 | 3 | 0.8717 | +/-0.0079 | 0.8819, 0.8662, 0.8669 |
 | lot | CNN + RPCA lot-signature channel | erm | 4th channel = zeros (RPCA control) | 3 | 0.8689 | +/-0.0075 | 0.8772, 0.8673, 0.8622 |
 | lot | spectral operator, native resolution | erm | sess2 | 3 | 0.8405 | +/-0.0216 | 0.8551, 0.8118, 0.8547 |

@@ -672,3 +672,44 @@ def test_floors_refuses_a_floor_measured_from_too_few_repeats():
         # conservatively, never trivially
         assert m.floor_for(F, "thin") == 0.0100
         assert m.floor_for(F, "thin") > 0.0
+
+
+def test_check_all_reports_failure_when_any_check_fails():
+    """The aggregator must not swallow a failing check.
+
+    `check_all.py` exists because reading six separate check outputs is how the
+    typed-decimal ratchet got past me: I read the `ok` from my own patch script
+    instead of the guard's line and committed with the check red. An aggregator
+    that reported PASS while a member failed would be strictly worse than the
+    six tails it replaces, since it would carry more authority.
+
+    Also asserts the non-strict path: `guard_audit.py` is informational (one
+    known-vacuous entry) and must not fail the run, or the whole thing goes
+    permanently red -- which is how a check stops being read at all.
+    """
+    import importlib.util
+    import sys as _sys
+    from pathlib import Path as _Path
+
+    spec = importlib.util.spec_from_file_location(
+        "chk", _Path(__file__).resolve().parents[1] / "scripts"
+        / "check_all.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+
+    ok_cmd = [_sys.executable, "-c", "print('fine')"]
+    bad_cmd = [_sys.executable, "-c", "import sys; sys.exit(3)"]
+
+    rows = m.run([("a passing check", ok_cmd, True),
+                  ("a failing check", bad_cmd, True)])
+    assert [r[1] for r in rows] == [True, False], "a nonzero exit must be FAIL"
+    assert rows[1][2] == 3, "the exit code must be preserved for the report"
+
+    # a check marked non-strict must be reported as PASS even when nonzero,
+    # and its output must still be captured so the summary can quote it
+    rows = m.run([("an informational check", bad_cmd, False)])
+    assert rows[0][1] is True, "non-strict checks must not fail the run"
+
+    # and the real check list must name questions, not scripts
+    assert all("?" in q for q, _, _ in m.CHECKS), \
+        "each check should state the question it answers"
