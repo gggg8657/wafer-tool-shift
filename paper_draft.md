@@ -65,7 +65,7 @@ The forward-only test side holds 19 geometries against 338 in training, and 14.1
 
 Every verdict in this section requires two things: the two cells' seed ranges must not overlap, **and** the margin between them must exceed the run-to-run spread between *identical* invocations of one cell — because seeds are run back to back on one pair of GPUs, so a seed range measures the seed and not the pipeline.
 
-That spread is **not one number**. Measured per protocol where it has been measured: `lot` 0.0054, `lot_time` 0.0162, `size` 0.0133. Protocols without their own measurement fall back to 0.0162, the largest measured, since being too strict withdraws a claim and being too lenient publishes one. A floor is only used if it came from at least 3 identical invocations: `iid` was measured over 1 and is rejected, so it is screened against the fallback instead. A range over one draw is 0.0000, and a floor of zero is cleared by everything. Observed *seed* ranges differ by protocol far more than that: 0.009–0.019 on `lot` against 0.069–0.072 on `size`.
+That spread is **not one number**. Measured per protocol where it has been measured: `lot` 0.0054, `lot_time` 0.0162, `size` 0.0133. Protocols without their own measurement fall back to 0.0162, the largest measured, since being too strict withdraws a claim and being too lenient publishes one. A floor is only used if it came from at least 3 identical invocations: `iid` was measured over 1 and is rejected, so it is screened against the fallback instead. A range over one draw is zero, and a floor of zero is cleared by everything. Observed *seed* ranges differ by protocol far more than that: 0.009–0.019 on `lot` against 0.069–0.072 on `size`.
 
 **Protocol `lot`** (deltas against the same encoder under ERM):
 

@@ -408,7 +408,7 @@ def main():
              + ", ".join(f"`{k}` was measured over {v['n_repeats']} and is "
                          f"rejected" for k, v in sorted(rejected.items()))
              + ", so it is screened against the fallback instead. A range over "
-               "one draw is 0.0000, and a floor of zero is cleared by "
+               "one draw is zero, and a floor of zero is cleared by "
                "everything." if rejected else "")
           + " Observed "
           "*seed* ranges differ by protocol far more than that: 0.009–0.019 on "

@@ -3896,3 +3896,12 @@ and file contents — which suggests the lesson is not "check the artifact" but
 Meanwhile `lot_time` at n=4 is above the three-repeat bar and is used, which is
 worth knowing when reading it: it is the largest floor in the project and it is
 currently doing the work of the fallback for every unmeasured protocol.
+
+**Postscript to 78.** I committed that entry with the ratchet reading 45 against
+44, having run the check, seen it fail, applied a fix, seen it still read 45, and
+committed anyway — the string replacement had silently not matched and I read
+the `ok` from my own patch script rather than the guard's output. A guard is only
+as good as the reading of it, and "I ran the check" is not the same as "the check
+passed". Corrected in the following commit: the literal was `0.0000` in a
+sentence asserting that a range over one draw is zero, which is arithmetic
+rather than measurement and reads better as a word.
