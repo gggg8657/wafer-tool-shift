@@ -3786,3 +3786,57 @@ and the capacity control's floor. They now come from `size_power_check.json` and
 carelessness; it is the measured rate at which I type a number I have just read
 off a terminal. The guard has caught 100% of them, which is the only reason the
 rate is knowable at all.
+
+### 77. H66 falsified hard: the fix for the pooling confound is worse than the confound
+
+`scale_aware_sweep.sh` produced all sixteen cells and its **scoring step failed
+loudly** — `ERROR: need >=2 seeds present in BOTH arms; ... shared 0`. The arm
+spec for `gn_vs_bn.py` is `encoder[:tag]` and I passed a bare tag, so it globbed
+for an encoder named `poolmeanmaxSA` and matched nothing. This is the same
+zero-match bug that once silently omitted a row from `WEEKEND.md` and hid a
+crash behind it; the guard added then is the only reason it announced itself
+this time instead of writing an empty file and returning 0.
+
+Scored properly, at eight seeds per arm on `Scratch` F1:
+
+| protocol | vs `meanmax` | p | vs `mean` | p |
+|---|---|---|---|---|
+| `lot` | -0.1758 | 0.00016 | -0.1285 | 0.00016 |
+| `size` | -0.1094 | 0.01523 | -0.1521 | 0.00031 |
+
+**H66 predicted it would beat `meanmax` on `size` and change little on `lot`. It
+is dramatically worse than both `meanmax` and plain `mean`, on both protocols.**
+That is the largest miss of the weekend and the least ambiguous.
+
+**I checked the implementation before believing the result, and the check
+mattered because the magnitude did not fit the mechanism.** The dilation is 2
+for 77.9% of wafers, 1 for 15.8%, 3 for 6.2%, and never exceeds 5; a 3x3 filter
+at d = 2 spans five pixels. A change that small costing 0.18 of a class F1 looks
+far more like a bug than a finding. So: the grouped path matches a per-sample
+reference to **7.5e-09**, reduces bit-exactly to the unscaled path at dilation
+1, is invariant to batch order, gradients reach the first conv, and the training
+curve shows normal learning to a lower plateau (0.82 against 0.90) rather than a
+collapse. The result is real.
+
+**What it costs and what it does not.** The H65 measurement is untouched: the
+resize does make a defect's apparent width a function of its geometry, measured
+on the corpus with no model and surviving a native-resolution control that could
+have killed it. What fails is the step from *a property of the input* to *a fix
+in the architecture*. The honest position is now weaker and less satisfying than
+the one this section carried for a day: we identified a real confound and have
+not shown it is removable.
+
+There is a reading I want to flag without asserting it, because it is the kind
+of story that sounds good and has not been tested. The dilated filter is
+geometry-invariant — η² fell from 0.7689 to 0.0361 — and it is also much worse
+at the task. It is tempting to conclude that the confound and the signal are the
+same information. **They may not be**; the alternative is simply that a dilated
+first block is bad for this architecture whatever the dilation. Those have
+opposite consequences and one cheap run separates them, so H69 and
+`--dilate-fixed 2` exist rather than a paragraph of speculation.
+
+**H69, before the run:** fixed d = 2 is also worse than plain `meanmax` by a
+similar margin — dilation itself is the problem, and geometry-adaptivity is
+exonerated. If instead fixed d = 2 lands near plain `meanmax`, then adapting the
+receptive field per wafer is what costs, which is the more interesting outcome
+and the one I do not expect.

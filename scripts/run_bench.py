@@ -260,7 +260,8 @@ class Runner:
             m = CnnResized(n, width=self.a.width,
                            norm="bn" if self.a.encoder == "cnn_bn" else "gn",
                            pool=self.a.pool,
-                           scale_aware=self.a.scale_aware)
+                           scale_aware=self.a.scale_aware,
+                           dilate_fixed=self.a.dilate_fixed)
         return m.to(self.dev)
 
     def run(self):
@@ -364,7 +365,8 @@ class Runner:
             "domain_def": a.domain_def, "n_invariance_domains": self.n_dom,
             "focal_gamma": a.focal_gamma, "class_weight": a.class_weight,
             "pool": a.pool,
-            "scale_aware": a.scale_aware, "hide_raw_fail": a.hide_raw_fail,
+            "scale_aware": a.scale_aware, "dilate_fixed": a.dilate_fixed,
+            "hide_raw_fail": a.hide_raw_fail,
             "ot_lambda": a.ot_lambda,
             "seed": a.seed, "epochs": a.epochs,
             "n_train": len(self.tr), "n_val": len(self.va), "n_test": len(self.te),
@@ -472,7 +474,8 @@ class Runner:
         for sel in batches:
             b = self.batch_of(sel)
             logits = (model(b["x"], b["hw"])
-                      if getattr(model, "scale_aware", False)
+                      if (getattr(model, "scale_aware", False)
+                          or getattr(model, "dilate_fixed", 0))
                       else model(b["x"], b["mask"])
                       if self.a.encoder in ("spectral", "graph")
                       else model(b["x"]))
@@ -539,7 +542,8 @@ class Runner:
             e = (model.embed(b["x"], b["mask"])
                  if self.a.encoder in ("spectral", "graph")
                  else model.embed(b["x"], b["hw"])
-                 if getattr(model, "scale_aware", False)
+                 if (getattr(model, "scale_aware", False)
+                     or getattr(model, "dilate_fixed", 0))
                  else model.embed(b["x"]))
             out.append(e.float().cpu())
         return torch.cat(out)
@@ -599,6 +603,10 @@ def main():
     p.add_argument("--hsic-lambda", type=float, default=1.0)
     p.add_argument("--ot-lambda", type=float, default=1.0)
     p.add_argument("--anchor-gamma", type=float, default=4.0)
+    p.add_argument("--dilate-fixed", type=int, default=0,
+                   help="constant dilation for the first conv block, the "
+                        "control for --scale-aware: it isolates dilating at "
+                        "all from adapting the dilation to 64/w.")
     p.add_argument("--scale-aware", action="store_true",
                    help="dilate the first conv block by round(64/w) per "
                         "wafer, so its receptive field spans the same number "

@@ -997,12 +997,58 @@ def main():
                   "cost a training run, which is the argument for testing a "
                   "mechanism at the level it is stated.")
                 W("")
-                W("Whether a CNN whose dilation tracks 64/w actually recovers "
-                  "the `Scratch` gain on `size` is **[not measured]**: these "
-                  "are fixed filters on the input plane, not a trained "
-                  "encoder, and a network can learn to compensate in ways this "
-                  "test cannot see.")
-                W("")
+                _sa = {k: js(f"scale_aware_{k}.json") for k in
+                       ("size_class_Scratch", "lot_class_Scratch")}
+                _sam = {k: js(f"scale_aware_vs_mean_{k}.json") for k in
+                        ("size_class_Scratch", "lot_class_Scratch")}
+                if all(_sa.values()) and all(_sam.values()):
+                    W("**We built it, and it fails — badly, and on both "
+                      "protocols.** `--scale-aware` dilates the first conv "
+                      "block by round(64/w) per wafer. It adds no parameters, "
+                      "reduces bit-exactly to the unscaled path at w = 64, is "
+                      "invariant to batch order, and its grouped convolution "
+                      "matches a per-sample reference to 7.5e-09, all asserted "
+                      "before training. Against plain `meanmax` on `Scratch` "
+                      "F1 at eight seeds per arm:")
+                    W("")
+                    W(table([
+                        [f"`{pr}`",
+                         f"{_sa[f'{pr}_class_Scratch']['difference']:+.4f}",
+                         f"**{_sa[f'{pr}_class_Scratch']['permutation_test']['p_two_sided']:.5f}**",
+                         f"{_sam[f'{pr}_class_Scratch']['difference']:+.4f}",
+                         f"**{_sam[f'{pr}_class_Scratch']['permutation_test']['p_two_sided']:.5f}**"]
+                        for pr in ("size", "lot")],
+                        ["protocol", "vs `meanmax`", "p", "vs `mean`", "p"]))
+                    W("")
+                    W("It is worse than the baseline it was meant to rescue, "
+                      "and worse than the plain average pooling that baseline "
+                      "improved on. The prediction was that it would help on "
+                      "`size` and change little on `lot`; it does neither.")
+                    W("")
+                    W("**And the dilation is not extreme, which is what makes "
+                      "this interesting rather than merely negative.** It is 2 "
+                      "for 77.9% of wafers, 1 for 15.8%, 3 for 6.2%, and never "
+                      "exceeds 5 — a 3x3 filter at d = 2 spans five pixels. "
+                      "A change that small costing 0.18 of a class F1 is not "
+                      "what the mechanism predicts, and we do not have an "
+                      "explanation we can defend. Two candidates remain live: "
+                      "dilating the first block hurts whatever the dilation "
+                      "is, or *adapting* it per wafer hurts because the "
+                      "encoder can no longer rely on a fixed relationship "
+                      "between pixels and dies. `--dilate-fixed 2` separates "
+                      "them and is running.")
+                    W("")
+                    W("What this does **not** overturn is the measurement in "
+                      "the table above. The resize does make a defect's "
+                      "apparent width a function of its geometry; that was "
+                      "measured on the corpus with no model and survives its "
+                      "own control. What fails is the inference from a "
+                      "property of the input to a fix in the architecture — "
+                      "and the honest reading is that we identified a real "
+                      "confound and have not shown it is *removable*, which is "
+                      "a weaker and less satisfying claim than the one this "
+                      "section carried for a day.")
+                    W("")
         W("The claim, at the strength the data supports: **on a lot-disjoint "
           "split, replacing global average pooling with mean-and-max moves the "
           "hardest class by 0.057 while its capacity control moves it by "

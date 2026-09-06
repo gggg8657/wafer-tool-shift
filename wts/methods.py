@@ -108,7 +108,7 @@ def _embed(model, x, batch, st):
     """
     if st.get("masked"):
         return model.embed(x, batch["mask"])
-    if getattr(model, "scale_aware", False):
+    if getattr(model, "scale_aware", False) or getattr(model, "dilate_fixed", 0):
         return model.embed(x, batch.get("hw"))
     return model.embed(x)
 

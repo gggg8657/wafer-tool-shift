@@ -54,7 +54,7 @@ Three caveats on the last four columns, all of which came out of reading this ta
 
 **A caveat on reading this table.** Adjacent-pair testing asks whether a cell is distinguishable from the next one *down*, which depends on what else is in the table: inserting a representation between two others stops their comparison being made at all. That happened here -- `cnn_bn > feat` separated at margin 0.0093 while they were adjacent, and stopped being an adjacent pair when `spectral` landed between them. Nothing about either cell changed. The statement that does not depend on table composition is that only the die-graph GNN separates from anything.
 
-Each adjacent pair in the ranking above, per protocol, with the verdict from whether the observed seed ranges overlap. This is deliberately non-parametric: three seeds do not support a p-value, but whether one cell's worst seed beat the other's best is a fact about what was seen. The run-to-run floor -- two identical invocations of one cell -- is 1.33e-02, so a margin near that is not a separation.
+Each adjacent pair in the ranking above, per protocol, with the verdict from whether the observed seed ranges overlap. This is deliberately non-parametric: three seeds do not support a p-value, but whether one cell's worst seed beat the other's best is a fact about what was seen. The run-to-run floor -- two identical invocations of one cell -- is 1.62e-02, so a margin near that is not a separation.
 
 | protocol | higher | lower | gap | seeds | verdict |
 |---|---|---|---|---|---|
@@ -128,7 +128,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | die-graph GNN (wafer-only subgraph) | erm | - | 0.7557 | - | 0.4898 | - | 0.1269 | 0.8889 |
 | CNN + RPCA lot-signature channel | erm | - | 0.8813 | - | 0.5000 | - | 0.7466 | 0.9315 |
 
-**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the 223 `lot` cells in `runs/` that carry the column, 122 report the identical 0.4898 and 78 more report exactly 0.5000 -- 90% of them on two values, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them. This applies to every protocol table in this section; it is stated once.
+**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the 226 `lot` cells in `runs/` that carry the column, 122 report the identical 0.4898 and 80 more report exactly 0.5000 -- 89% of them on two values, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them. This applies to every protocol table in this section; it is stated once.
 
 ## Borrowed objectives vs ERM -- protocol `lot_time`
 
@@ -510,7 +510,7 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot | CNN on resized 64x64 (GroupNorm) | erm | gnbn | 8 | 0.8726 | +/-0.0160 | 0.8734, 0.8680, 0.8589, 0.8705, 0.8708, 0.8736, 0.8750, 0.8908 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 8 | 0.8738 | +/-0.0163 | 0.8729, 0.8668, 0.8601, 0.8758, 0.8897, 0.8574, 0.8773, 0.8901 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 8 | 0.8888 | +/-0.0116 | 0.8862, 0.8796, 0.8860, 0.8857, 0.8983, 0.8815, 0.8903, 0.9027 |
-| lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmaxSA | 7 | 0.7852 | +/-0.0296 | 0.7946, 0.7941, 0.7511, 0.8102, 0.7526, 0.7849, 0.8090 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmaxSA | 8 | 0.7847 | +/-0.0296 | 0.7946, 0.7941, 0.7511, 0.8102, 0.7526, 0.7849, 0.8090, 0.7814 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmean | 8 | 0.8793 | +/-0.0171 | 0.8709, 0.8802, 0.8641, 0.8769, 0.8982, 0.8715, 0.8803, 0.8920 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | rpca2_3ch | 3 | 0.8703 | +/-0.0096 | 0.8812, 0.8679, 0.8619 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | scratch_lr1e-3 | 2 | 0.8690 | +/-0.0009 | 0.8699, 0.8681 |
@@ -521,10 +521,10 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot | CNN on resized 64x64 (GroupNorm) | erm | sslinit_lr1e-3 | 2 | 0.7755 | +/-0.0022 | 0.7733, 0.7777 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | sslinit_lr2e-4 | 2 | 0.6529 | +/-0.0087 | 0.6615, 0.6442 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | sslinit_lr5e-4 | 2 | 0.7427 | +/-0.0013 | 0.7414, 0.7440 |
-| lot | CNN on resized 64x64 (GroupNorm) | focal | focal0.0 | 2 | 0.8730 | +/-0.0050 | 0.8781, 0.8680 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal | focal0.0 | 3 | 0.8704 | +/-0.0065 | 0.8781, 0.8680, 0.8651 |
 | lot | CNN on resized 64x64 (GroupNorm) | focal | focal0.5 | 2 | 0.8759 | +/-0.0001 | 0.8760, 0.8758 |
 | lot | CNN on resized 64x64 (GroupNorm) | focal | focal1.0 | 2 | 0.8729 | +/-0.0019 | 0.8748, 0.8710 |
-| lot | CNN on resized 64x64 (GroupNorm) | focal | focal2.0 | 2 | 0.8701 | +/-0.0048 | 0.8654, 0.8749 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal | focal2.0 | 3 | 0.8677 | +/-0.0060 | 0.8654, 0.8749, 0.8628 |
 | lot | CNN on resized 64x64 (GroupNorm) | focal | focal5.0 | 2 | 0.8745 | +/-0.0051 | 0.8694, 0.8795 |
 | lot | size-invariant descriptors + MLP | erm | sess2 | 3 | 0.8338 | +/-0.0067 | 0.8417, 0.8283, 0.8314 |
 | lot | die-graph GNN (wafer-only subgraph) | erm | sess2 | 3 | 0.7524 | +/-0.0036 | 0.7557, 0.7530, 0.7484 |
@@ -563,7 +563,7 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | size | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.8467 | +/-0.0346 | 0.8203, 0.8301, 0.8895 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 8 | 0.8462 | +/-0.0391 | 0.8231, 0.8114, 0.8868, 0.8088, 0.8756, 0.8202, 0.8871, 0.8568 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 8 | 0.8181 | +/-0.0700 | 0.8039, 0.7357, 0.8046, 0.8076, 0.8758, 0.8191, 0.8601, 0.8383 |
-| size | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmaxSA | 7 | 0.7525 | +/-0.0740 | 0.7623, 0.6534, 0.7423, 0.7167, 0.8003, 0.8013, 0.7912 |
+| size | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmaxSA | 8 | 0.7458 | +/-0.0740 | 0.7623, 0.6534, 0.7423, 0.7167, 0.8003, 0.8013, 0.7912, 0.6988 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmean | 3 | 0.8426 | +/-0.0290 | 0.8318, 0.8190, 0.8770 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | sess2 | 3 | 0.8413 | +/-0.0369 | 0.8274, 0.8113, 0.8852 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | + lot-adversarial SSL initialization | 3 | 0.7711 | +/-0.0265 | 0.7602, 0.7500, 0.8030 |
@@ -628,7 +628,7 @@ Geometry and failed-die rate drift with lot number; the defect-class mix does no
 
 ## Run-to-run reproducibility floor
 
-`lot / cnn_gn / erm / seed 0 --tta`, run 6 times under identical arguments: 0.8723, 0.8760, 0.8767, 0.8767, 0.8772, 0.8778. Range **0.0133**, standard deviation 0.0019 -- the pipeline is not bit-reproducible on this GPU. The observed range over identical invocations bounds every same-seed comparison in this repository: two cells whose test macro-F1 differ by less than it have not been shown to differ at all, whatever their arguments. An earlier version of this file estimated the same quantity from a single pair of runs, which understated it.
+`lot / cnn_gn / erm / seed 0 --tta`, run 6 times under identical arguments: 0.8723, 0.8760, 0.8767, 0.8767, 0.8772, 0.8778. Range **0.0162**, standard deviation 0.0019 -- the pipeline is not bit-reproducible on this GPU. The observed range over identical invocations bounds every same-seed comparison in this repository: two cells whose test macro-F1 differ by less than it have not been shown to differ at all, whatever their arguments. An earlier version of this file estimated the same quantity from a single pair of runs, which understated it.
 
 The stored value for that cell is 0.8671, which is **outside** the range of the repeats, 0.0052 from the nearest one, and every repeat lands above it. That is not symmetric noise: something about the environment or the code changed between when that cell was measured and now. `scripts/backfill_metrics.sh` refuses to overwrite measured cells while that is true.
 

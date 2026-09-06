@@ -497,10 +497,34 @@ def main():
                       "round(64/w) instead gives "
                       f"**{_f2['eta_sq_geometry_on_max_pool']:.4f}**. The fix "
                       "is a scale-aware receptive field, not scale-aware "
-                      "pooling. Whether a trained encoder built that way "
-                      "recovers the `Scratch` gain on `size` is **not "
-                      "measured**.")
+                      "pooling.")
                     W("")
+                    _sa = js("scale_aware_size_class_Scratch.json")
+                    _sal = js("scale_aware_lot_class_Scratch.json")
+                    if _sa and _sal:
+                        W("**We then built it, and it failed badly — which is "
+                          "the most useful negative of the weekend.** An "
+                          "encoder whose first block dilates by round(64/w) "
+                          "loses "
+                          f"{abs(_sal['difference']):.4f} of `Scratch` F1 on "
+                          f"`lot` (p = "
+                          f"{_sal['permutation_test']['p_two_sided']:.5f}) and "
+                          f"{abs(_sa['difference']):.4f} on `size` (p = "
+                          f"{_sa['permutation_test']['p_two_sided']:.5f}) "
+                          "against plain `meanmax`, at eight seeds per arm. It "
+                          "is worse than the thing it was meant to rescue. The "
+                          "implementation is not the excuse: it adds no "
+                          "parameters, is bit-exact with the unscaled path at "
+                          "w = 64, and matches a per-sample reference to "
+                          "7.5e-09.")
+                        W("")
+                        W("The measurement stands and the remedy does not. The "
+                          "resize really does make a defect's apparent width a "
+                          "function of geometry; we have not shown that is "
+                          "*removable*. `scripts/dilation_control.sh` (H69) "
+                          "asks whether dilating at all is the problem or "
+                          "adapting it per wafer is.")
+                        W("")
         W("`CnnResized.embed` was a global average over the final feature map. "
           "A `Scratch` is a thin connected line; averaged over the wafer it is "
           "close to a slightly elevated background failure rate, which is "

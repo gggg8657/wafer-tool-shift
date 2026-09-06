@@ -65,7 +65,7 @@ The forward-only test side holds 19 geometries against 338 in training, and 14.1
 
 Every verdict in this section requires two things: the two cells' seed ranges must not overlap, **and** the margin between them must exceed the run-to-run spread between *identical* invocations of one cell — because seeds are run back to back on one pair of GPUs, so a seed range measures the seed and not the pipeline.
 
-That spread is **not one number**. Measured per protocol where it has been measured: `lot` 0.0054, `size` 0.0133. Protocols without their own measurement fall back to 0.0133, the largest measured, since being too strict withdraws a claim and being too lenient publishes one. Observed *seed* ranges differ by protocol far more than that: 0.009–0.019 on `lot` against 0.069–0.072 on `size`.
+That spread is **not one number**. Measured per protocol where it has been measured: `iid` 0.0000, `lot` 0.0054, `lot_time` 0.0162, `size` 0.0133. Protocols without their own measurement fall back to 0.0162, the largest measured, since being too strict withdraws a claim and being too lenient publishes one. Observed *seed* ranges differ by protocol far more than that: 0.009–0.019 on `lot` against 0.069–0.072 on `size`.
 
 **Protocol `lot`** (deltas against the same encoder under ERM):
 
@@ -276,7 +276,18 @@ Native geometry explains 77% of the variance in the max-pooled response and 15% 
 
 Dilating the filter by round(64/w), so its receptive field spans the same number of native dies on every geometry, gives η² = **0.0361** — below the native-resolution control itself. So the pooling gain is not inherently geometry-bound, but the fix is a **scale-aware receptive field**, not scale-aware pooling. Both candidates cost one script to separate and neither cost a training run, which is the argument for testing a mechanism at the level it is stated.
 
-Whether a CNN whose dilation tracks 64/w actually recovers the `Scratch` gain on `size` is **[not measured]**: these are fixed filters on the input plane, not a trained encoder, and a network can learn to compensate in ways this test cannot see.
+**We built it, and it fails — badly, and on both protocols.** `--scale-aware` dilates the first conv block by round(64/w) per wafer. It adds no parameters, reduces bit-exactly to the unscaled path at w = 64, is invariant to batch order, and its grouped convolution matches a per-sample reference to 7.5e-09, all asserted before training. Against plain `meanmax` on `Scratch` F1 at eight seeds per arm:
+
+| protocol | vs `meanmax` | p | vs `mean` | p |
+|---|---|---|---|---|
+| `size` | -0.1094 | **0.01523** | -0.1521 | **0.00031** |
+| `lot` | -0.1758 | **0.00016** | -0.1285 | **0.00016** |
+
+It is worse than the baseline it was meant to rescue, and worse than the plain average pooling that baseline improved on. The prediction was that it would help on `size` and change little on `lot`; it does neither.
+
+**And the dilation is not extreme, which is what makes this interesting rather than merely negative.** It is 2 for 77.9% of wafers, 1 for 15.8%, 3 for 6.2%, and never exceeds 5 — a 3x3 filter at d = 2 spans five pixels. A change that small costing 0.18 of a class F1 is not what the mechanism predicts, and we do not have an explanation we can defend. Two candidates remain live: dilating the first block hurts whatever the dilation is, or *adapting* it per wafer hurts because the encoder can no longer rely on a fixed relationship between pixels and dies. `--dilate-fixed 2` separates them and is running.
+
+What this does **not** overturn is the measurement in the table above. The resize does make a defect's apparent width a function of its geometry; that was measured on the corpus with no model and survives its own control. What fails is the inference from a property of the input to a fix in the architecture — and the honest reading is that we identified a real confound and have not shown it is *removable*, which is a weaker and less satisfying claim than the one this section carried for a day.
 
 The claim, at the strength the data supports: **on a lot-disjoint split, replacing global average pooling with mean-and-max moves the hardest class by 0.057 while its capacity control moves it by −0.001. On the other three protocols it is not established, and on geometry holdout its mean effect is negative.** An architectural change that reads as a general improvement turns out to be protocol-specific — which is the thing this benchmark was built to detect, applied for once to our own result.
 
@@ -336,7 +347,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (GroupNorm) | `erm` | gnbn | 8 | 0.8726 | ±0.0160 |
 | `lot` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8738 | ±0.0163 |
 | `lot` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.8888 | ±0.0116 |
-| `lot` | CNN (GroupNorm) | `erm` | poolmeanmaxSA | 7 | 0.7852 | ±0.0296 |
+| `lot` | CNN (GroupNorm) | `erm` | poolmeanmaxSA | 8 | 0.7847 | ±0.0296 |
 | `lot` | CNN (GroupNorm) | `erm` | poolmeanmean | 8 | 0.8793 | ±0.0171 |
 | `lot` | CNN (GroupNorm) | `erm` | rpca2_3ch | 3 | 0.8703 | ±0.0096 |
 | `lot` | CNN (GroupNorm) | `erm` | scratch_lr1e-3 | 2 | 0.8690 | ±0.0009 |
@@ -389,7 +400,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `size` | CNN (GroupNorm) | `erm` | — | 3 | 0.8467 | ±0.0346 |
 | `size` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8462 | ±0.0391 |
 | `size` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.8181 | ±0.0700 |
-| `size` | CNN (GroupNorm) | `erm` | poolmeanmaxSA | 7 | 0.7525 | ±0.0740 |
+| `size` | CNN (GroupNorm) | `erm` | poolmeanmaxSA | 8 | 0.7458 | ±0.0740 |
 | `size` | CNN (GroupNorm) | `erm` | poolmeanmean | 3 | 0.8426 | ±0.0290 |
 | `size` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.8413 | ±0.0369 |
 | `size` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.7711 | ±0.0265 |

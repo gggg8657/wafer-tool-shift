@@ -90,14 +90,14 @@ for proto in size lot; do
     m=$(printf '%s' "$metric" | tr -cs 'A-Za-z0-9' '_')
     # against plain meanmax: does the receptive field change anything?
     $PY scripts/gn_vs_bn.py --protocol "$proto" --objective erm \
-      --arm-a "poolmeanmaxSA" --arm-b "poolmeanmax" \
+      --arm-a "$ENC:poolmeanmaxSA" --arm-b "$ENC:poolmeanmax" \
       --label-a "meanmax + scale-aware" --label-b "meanmax" \
       --metric "$metric" \
       --out "runs/scale_aware_${proto}_${m}.json" | tee -a "$LOG"
     # against plain mean: the claim the size result is actually about, which is
     # whether the pooling gain exists at all once geometry is held out
     $PY scripts/gn_vs_bn.py --protocol "$proto" --objective erm \
-      --arm-a "poolmeanmaxSA" --arm-b "poolmean" \
+      --arm-a "$ENC:poolmeanmaxSA" --arm-b "$ENC:poolmean" \
       --label-a "meanmax + scale-aware" --label-b "mean" \
       --metric "$metric" \
       --out "runs/scale_aware_vs_mean_${proto}_${m}.json" | tee -a "$LOG"

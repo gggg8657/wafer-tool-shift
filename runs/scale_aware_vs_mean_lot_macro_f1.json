@@ -1,0 +1,42 @@
+{
+  "cell": "lot / erm / one session",
+  "metric": "macro_f1",
+  "arm_a": "meanmax + scale-aware",
+  "arm_b": "mean",
+  "n_per_arm": 8,
+  "cnn_gn": [
+    0.7946159548383497,
+    0.7941477669465724,
+    0.7510885858265198,
+    0.8102125470660739,
+    0.7525725300145546,
+    0.7848696960950671,
+    0.8090055292378691,
+    0.7813967163986907
+  ],
+  "cnn_bn": [
+    0.8728881655856282,
+    0.866765026665558,
+    0.8600671250995675,
+    0.8758476608375892,
+    0.8896873227260554,
+    0.8574348902926974,
+    0.8772753020120868,
+    0.890119601025472
+  ],
+  "mean_gn": 0.7847386658029623,
+  "mean_bn": 0.8737606367805819,
+  "difference": -0.08902197097761966,
+  "range_test": {
+    "ranges_overlap": false,
+    "margin": -0.04722234322662344,
+    "floor": 0.0054153738278555075,
+    "verdict": "clears the floor"
+  },
+  "permutation_test": {
+    "arrangements": 12870,
+    "p_two_sided": 0.0001554001554001554,
+    "smallest_attainable_p": 0.0001554001554001554
+  },
+  "note": "The range test grows stricter with sample size, so it is the right default for reading many three-seed cells and the wrong tool for a sweep meant to settle one comparison. The permutation test is exact and does not punish extra data. Both are reported."
+}

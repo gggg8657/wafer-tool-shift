@@ -53,7 +53,7 @@ class CnnResized(nn.Module):
     """
 
     def __init__(self, n_classes=9, width=32, norm="bn", in_ch=3, pool="mean",
-                 scale_aware=False):
+                 scale_aware=False, dilate_fixed=0):
         super().__init__()
         chs = [in_ch, width, width * 2, width * 4]
         blocks = []
@@ -64,6 +64,13 @@ class CnnResized(nn.Module):
         self.body = nn.Sequential(*blocks)
         self.pool = pool
         self.scale_aware = scale_aware
+        # A constant dilation for every wafer, which is the control the
+        # scale-aware arm needs. `--scale-aware` made the first block's
+        # receptive field track 64/w and lost 0.1758 of Scratch F1 on `lot`.
+        # Dilation is 2 for 77.9% of wafers and never exceeds 5, so the damage
+        # could be from dilating at all rather than from adapting it. Holding
+        # the dilation fixed separates those two.
+        self.dilate_fixed = dilate_fixed
         self.feat_dim = chs[-1] * (2 if pool in ("meanmax", "meanmean") else 1)
         self.head = nn.Linear(self.feat_dim, n_classes)
 
@@ -90,8 +97,12 @@ class CnnResized(nn.Module):
         without this change and the only difference is the receptive field.
         """
         c1, n1, r1, c2, n2, r2, mp = list(self.body)[:7]
-        d = torch.round(64.0 / hw[:, 1].clamp(min=1).float()).long()
-        d = d.clamp(1, 16)
+        if self.dilate_fixed:
+            d = torch.full((x.shape[0],), int(self.dilate_fixed),
+                           dtype=torch.long, device=x.device)
+        else:
+            d = torch.round(64.0 / hw[:, 1].clamp(min=1).float()).long()
+            d = d.clamp(1, 16)
 
         def conv_by_group(t, conv):
             out = None
@@ -112,7 +123,8 @@ class CnnResized(nn.Module):
 
     def embed(self, x, hw=None):
         h = (self._stem_scaled(x, hw)
-             if self.scale_aware and hw is not None else self.body(x))
+             if (self.scale_aware or self.dilate_fixed) and hw is not None
+             else self.body(x))
         m = h.mean(dim=(-2, -1))
         if self.pool == "meanmax":
             return torch.cat([m, h.amax(dim=(-2, -1))], dim=1)
