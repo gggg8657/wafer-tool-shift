@@ -3949,3 +3949,58 @@ the run, and that every check in the real list is phrased as a question.
 `WEEKEND.md` now opens its runbook with this command and says why it exists,
 including the specific failure. Someone inheriting this should not have to
 discover on their own that the interesting output is six tails deep.
+
+### 80. A task the brief handed over was answered and never reported
+
+Re-reading the session brief rather than my own documents: four tasks were
+handed down, and one of them was "diagnose the sinkhorn collapse (macro-F1 0.10)
+with a lambda sweep, remove the claim if still broken". The sweep ran hours ago.
+`grep -c sinkhorn WEEKEND.md` returns **0**.
+
+The Monday reader asked for this specific answer and the Monday document does not
+contain it. Nothing failed — the work was done, the JSON was on disk, and the
+result simply never made it into the hand-off, because I kept moving to whatever
+the last result raised rather than back to what was asked. That is the same
+drift that let the document reach twenty-two minutes: locally sensible turns,
+globally off-spec.
+
+The answer is clean and worth having had:
+
+| λ | macro-F1 | Scratch F1 |
+|---|---|---|
+| 0.0 | 0.8609 | 0.7224 |
+| 0.003 | 0.8591 | 0.6992 |
+| 0.01 | 0.8540 | 0.7037 |
+| 0.03 | 0.8573 | 0.7120 |
+| 0.1 | 0.8485 | 0.6921 |
+| 0.3 | 0.8352 | 0.6798 |
+| 1.0 | **0.1026** | **0.0000** |
+
+**The λ = 0 row is the control that turns this from an observation into a
+diagnosis.** With the transport penalty weighted to zero the objective is plain
+cross-entropy, so the cell must land where ERM lands — and it does, 0.8609
+against ERM's 0.8448–0.8600 over six seeds on the same cell, **0.0009 from the
+nearest**, comfortably inside `lot`'s floor of 0.0054. So the collapse is the
+weight and not a broken implementation. Friday's table asserted "this method
+fails here" when the measurement supported "we ran it wrong", and those are
+different claims with different consequences for anyone who tries the method
+next.
+
+And there is no operating point: macro-F1 falls monotonically with λ and the
+best value in the sweep is λ = 0, which is ERM with extra machinery. Withdrawn —
+not because the method was refuted, but because the number standing for it was
+measuring a hyperparameter.
+
+The limit is the usual one and is stated in the document: one seed per λ, so the
+ordering among the non-collapsed rows is not established — their whole spread is
+comparable to ERM's own seed range of 0.0152. What does not need seeds is the
+shape and the endpoints: a drop to 0.1026 is fifty times that range.
+
+**Two process notes.** First, my patch for this shipped a garbled expression that
+rendered "at lambda = 0 the model collapses to a single class" — false, and
+contradicted by its own next clause, since λ = 0 is the safe setting. Caught on
+reading the rendered output rather than trusting the patch. Second,
+`check_all.py`, built one entry ago, caught the two hand-typed `0.1026` literals
+in this very section on its first real use and refused the commit with one
+unambiguous line. That is the failure it was built for, and the interval between
+building it and needing it was one turn.

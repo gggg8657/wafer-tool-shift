@@ -1,0 +1,77 @@
+{
+  "what": "sinkhorn lambda sweep on lot/cnn_bn, one seed per lambda",
+  "task": "handed to this session: diagnose the 0.10 cell with a lambda sweep, and remove the claim if it is still broken",
+  "n_seeds_per_lambda": 1,
+  "points": [
+    {
+      "ot_lambda": 0.0,
+      "seed": 0,
+      "macro_f1": 0.8608861666263334,
+      "scratch_f1": 0.7224489795918367
+    },
+    {
+      "ot_lambda": 0.003,
+      "seed": 0,
+      "macro_f1": 0.8591110793413951,
+      "scratch_f1": 0.6991869918699187
+    },
+    {
+      "ot_lambda": 0.01,
+      "seed": 0,
+      "macro_f1": 0.8540348180602495,
+      "scratch_f1": 0.7037037037037037
+    },
+    {
+      "ot_lambda": 0.03,
+      "seed": 0,
+      "macro_f1": 0.8573250366465263,
+      "scratch_f1": 0.712
+    },
+    {
+      "ot_lambda": 0.1,
+      "seed": 0,
+      "macro_f1": 0.848528618790841,
+      "scratch_f1": 0.692144373673036
+    },
+    {
+      "ot_lambda": 0.3,
+      "seed": 0,
+      "macro_f1": 0.8352199819583441,
+      "scratch_f1": 0.6798245614035088
+    },
+    {
+      "ot_lambda": 1.0,
+      "seed": 0,
+      "macro_f1": 0.1025653794122285,
+      "scratch_f1": 0.0
+    }
+  ],
+  "erm_same_cell": {
+    "n": 6,
+    "values": [
+      0.8448338522114175,
+      0.85102986097313,
+      0.8520535203586026,
+      0.8529798933295437,
+      0.8587220302094,
+      0.8599539653926209
+    ],
+    "min": 0.8448338522114175,
+    "max": 0.8599539653926209,
+    "seed_range": 0.015120113181203432
+  },
+  "lambda_zero_control": {
+    "why": "at lambda = 0 the transport penalty contributes nothing, so this cell must land where ERM lands. If it did not, the collapse would be a broken code path rather than a badly-chosen weight.",
+    "macro_f1": 0.8608861666263334,
+    "inside_erm_seed_range": false,
+    "distance_to_nearest_erm_seed": 0.0009322012337125152
+  },
+  "n_collapsed": 1,
+  "collapsed_lambdas": [
+    1.0
+  ],
+  "best_lambda": 0.0,
+  "best_beats_lambda_zero": false,
+  "verdict": "the collapse is the penalty's weight, not the method: lambda = 0 lands with ERM and no lambda in the sweep beats it",
+  "limit": "one seed per lambda, so the ordering among the non-collapsed points is not established; the spread across them is comparable to ERM's own seed range"
+}

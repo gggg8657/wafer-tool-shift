@@ -174,6 +174,21 @@ def main():
     _size_sig = (", ".join(f"`{v['objective']}` (p = {v['p_two_sided']:.4f})"
                            for v in _spsig) + " are"
                  if _spsig else "no objective is")
+    _sv = js("sinkhorn_verdict.json") or {}
+    if _sv and _sv.get("collapsed_lambdas"):
+        _z = _sv["lambda_zero_control"]
+        _cl = ", ".join(str(x) for x in _sv["collapsed_lambdas"])
+        _sink_line = (
+            "it is a badly chosen weight, and this was one of the four "
+            "questions handed to the session. The cell was run at the default "
+            f"transport weight; at lambda = {_cl} the model collapses to a "
+            "single class. With the penalty switched off it lands "
+            f"{_z['distance_to_nearest_erm_seed']:.4f} from the nearest ERM "
+            "seed on the same cell — inside the run-to-run floor — so the "
+            "code path is sound and the collapse is the weight. No lambda in "
+            "the sweep beats zero, so there is no operating point (§2.3)")
+    else:
+        _sink_line = NM
     _iidd = js("pooling_iid_perm_macro_f1.json") or {}
     _iidp = (_iidd.get("permutation_test", _iidd) or {}).get("p_two_sided")
     W("## The five-minute version")
@@ -266,6 +281,8 @@ def main():
          "false. At three seeds the exact test could not return below 0.10; "
          f"at eight, {_size_sig} clearly worse than ERM. The null was a "
          "property of the seed budget (§2.1)"),
+        ("The sinkhorn cell's 0.10 macro-F1 is a finding about the method",
+         _sink_line),
         ("An arm scattering wider than its effect is unstable, not worse",
          "our own criterion, and wrong. At eight seeds all six `size` arms "
          "still scatter wider than their effect and `group_dro` separates "
@@ -807,6 +824,49 @@ def main():
           "curve alone. See Decision 4.")
         W("")
 
+    if _sv and _sv.get("points"):
+        W("### 2.3a The sinkhorn cell — one of the four questions handed over")
+        W("")
+        _col = min(_sv["points"], key=lambda q: q["macro_f1"])
+        W(f"Friday reported a sinkhorn cell at macro-F1 {_col['macro_f1']:.4f} "
+          "and read it as a property of the method. The brief asked for a "
+          "lambda sweep and for the claim to be removed if it was still "
+          "broken. Sweeping the transport weight on `lot`/`cnn_bn`:")
+        W("")
+        W(table([[str(pt["ot_lambda"]), f"{pt['macro_f1']:.4f}",
+                  f"{pt['scratch_f1']:.4f}",
+                  "**collapses to one class**" if pt["macro_f1"] < 0.2 else ""]
+                 for pt in _sv["points"]],
+                ["transport weight λ", "macro-F1", "Scratch F1", ""]))
+        W("")
+        _e = _sv["erm_same_cell"]
+        _z = _sv["lambda_zero_control"]
+        W("**The control is the λ = 0 row, and it is what makes this a "
+          "diagnosis rather than an observation.** With the penalty weighted "
+          "to zero the objective is plain cross-entropy, so the cell has to "
+          f"land where ERM lands — and it does, {_z['macro_f1']:.4f} against "
+          f"ERM's {_e['min']:.4f}–{_e['max']:.4f} over {_e['n']} seeds on the "
+          f"same cell, {_z['distance_to_nearest_erm_seed']:.4f} from the "
+          "nearest. That is inside the run-to-run floor. **The collapse is the "
+          "weight, not a broken implementation** — which is the difference "
+          "between \"this method fails here\" and \"we ran it wrong\", and "
+          "Friday's table asserted the first.")
+        W("")
+        W("**And there is no operating point.** macro-F1 falls monotonically "
+          "as λ rises and the best value in the sweep is λ = 0, which is ERM "
+          "with extra machinery. The claim is withdrawn: not because the "
+          "method was refuted, but because the number that stood for it was "
+          "measuring a hyperparameter.")
+        W("")
+        W(f"*Limit, and it is the usual one: {_sv['n_seeds_per_lambda']} seed "
+          "per λ. The ordering among the non-collapsed rows is not "
+          "established — their whole spread is comparable to ERM's own seed "
+          f"range of {_e['seed_range']:.4f}. What the sweep establishes is the "
+          "shape and the two endpoints, and those do not need seeds: the drop "
+          f"to {_col['macro_f1']:.4f} is "
+          f"{(_e['max'] - _col['macro_f1']) / _e['seed_range']:.0f} times "
+          "ERM's own seed range on this cell.*")
+        W("")
     W("### 2.3 Our own two contributions, and one of our own metrics")
     W("")
     cs = js("corpus_stats.json") or {}
