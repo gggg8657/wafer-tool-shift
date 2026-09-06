@@ -232,7 +232,10 @@ class Runner:
             x = onehot_maps(maps)
         if self.a.encoder == "graph":
             return {"x": x, "y": y, "d": d, "mask": maps > 0}
-        return {"x": x, "y": y, "d": d, "mask": None}
+        # native (h, w) per wafer: only a scale-aware encoder reads it, but it
+        # is cheap and keeps the batch dict uniform across the CNN path
+        return {"x": x, "y": y, "d": d, "mask": None,
+                "hw": self.c.hw.to(self.dev)[sel.to(self.dev)]}
 
     def loaders(self, idx, shuffle, batch=None):
         b = batch or self.a.batch
@@ -256,7 +259,8 @@ class Runner:
         else:
             m = CnnResized(n, width=self.a.width,
                            norm="bn" if self.a.encoder == "cnn_bn" else "gn",
-                           pool=self.a.pool)
+                           pool=self.a.pool,
+                           scale_aware=self.a.scale_aware)
         return m.to(self.dev)
 
     def run(self):
@@ -359,7 +363,8 @@ class Runner:
             "tag": a.tag, "sig_channel": a.sig_channel,
             "domain_def": a.domain_def, "n_invariance_domains": self.n_dom,
             "focal_gamma": a.focal_gamma, "class_weight": a.class_weight,
-            "pool": a.pool, "hide_raw_fail": a.hide_raw_fail,
+            "pool": a.pool,
+            "scale_aware": a.scale_aware, "hide_raw_fail": a.hide_raw_fail,
             "ot_lambda": a.ot_lambda,
             "seed": a.seed, "epochs": a.epochs,
             "n_train": len(self.tr), "n_val": len(self.va), "n_test": len(self.te),
@@ -466,7 +471,9 @@ class Runner:
         out, ys = [], []
         for sel in batches:
             b = self.batch_of(sel)
-            logits = (model(b["x"], b["mask"])
+            logits = (model(b["x"], b["hw"])
+                      if getattr(model, "scale_aware", False)
+                      else model(b["x"], b["mask"])
                       if self.a.encoder in ("spectral", "graph")
                       else model(b["x"]))
             out.append(logits.softmax(1).float().cpu())
@@ -530,7 +537,10 @@ class Runner:
         for sel in self.loaders(idx, False, batch=max(self.a.batch, 512)):
             b = self.batch_of(sel)
             e = (model.embed(b["x"], b["mask"])
-                 if self.a.encoder in ("spectral", "graph") else model.embed(b["x"]))
+                 if self.a.encoder in ("spectral", "graph")
+                 else model.embed(b["x"], b["hw"])
+                 if getattr(model, "scale_aware", False)
+                 else model.embed(b["x"]))
             out.append(e.float().cpu())
         return torch.cat(out)
 
@@ -589,6 +599,12 @@ def main():
     p.add_argument("--hsic-lambda", type=float, default=1.0)
     p.add_argument("--ot-lambda", type=float, default=1.0)
     p.add_argument("--anchor-gamma", type=float, default=4.0)
+    p.add_argument("--scale-aware", action="store_true",
+                   help="dilate the first conv block by round(64/w) per "
+                        "wafer, so its receptive field spans the same number "
+                        "of native dies on every geometry. Adds no "
+                        "parameters; at w=64 it is bit-identical to the "
+                        "unscaled path.")
     p.add_argument("--pool", default="mean",
                    choices=["mean", "meanmax", "meanmean"],
                    help="how the CNN reduces its feature map. meanmax is the "

@@ -3289,3 +3289,77 @@ upsampled and a finer grid has nothing to recover. That is still true about
 *information*, and it is now clear the same fact is doing harm through a
 different channel — not by hiding detail but by making the apparent width of a
 defect a function of the wafer it came from.
+
+### 69. The repair I proposed last turn does not work, and one script said so
+
+Entry 68 ended by putting a prediction into two documents: that the pooling
+gain is not inherently geometry-bound, and that "a max taken over a window
+scaled by 64/w ... would be expected to keep the `Scratch` gain and lose the
+`size` penalty". It was written as the sharpest untested prediction in the
+repository. It is wrong.
+
+Extending `pooling_mechanism.py` to test the proposed fix at the same level as
+the diagnosis — no model, same 577 `Scratch` wafers, same eleven geometries,
+same removal of the failure fraction:
+
+| response, fail fraction removed | max-pooled η²(geometry) |
+|---|---|
+| uncorrected, at 64x64 | 0.7689 |
+| **fix 1**: pool back onto the native die grid, then max | **0.7511** |
+| **fix 2**: dilate the filter by round(64/w) | **0.0361** |
+| native resolution (the target) | 0.0629 |
+
+Fix 1 buys 0.0178 of the 0.7060 that needs explaining. **Convolution and
+downsampling do not commute.** The filter has already responded to a band of
+width 64/w with a magnitude set by that width; averaging afterwards preserves
+the magnitude. The correction has to happen before the filter sees the map, not
+after it. Fix 2 does that and lands at 0.0361 — below the native-resolution
+control itself, which is the ceiling I would have expected.
+
+**The cost of being wrong here was one script.** Had I gone straight from entry
+68's sentence to a GPU sweep, the outcome would have been sixteen cells showing
+no effect on `size`, at which point the honest reading is ambiguous between "the
+mechanism is wrong" and "the fix was wrong" — and I would have had no way to
+tell them apart. Testing a proposed repair at the level the mechanism was
+established at separates those two before any training runs. That is the general
+lesson and it is worth more than the specific finding: **a mechanism established
+without a model should have its remedy tested without a model too.**
+
+There is also a smaller and more uncomfortable point. Entry 68 was an entry
+*about* the discipline of testing explanations instead of asserting them, and it
+closed by asserting one. The prediction felt like a corollary of the measurement
+rather than a new claim, which is exactly how untested claims get in. Both
+documents now carry the corrected version, and they say which of the two
+candidates failed rather than quietly presenting the one that worked.
+
+**Implemented.** `--scale-aware` dilates the first conv block by round(64/w) per
+wafer. Three properties are asserted in `tests/`, all before any training:
+
+  * dilation adds no parameters (290,217 either way), so the treatment is
+    compared to `meanmax` at identical capacity — it is its own capacity
+    control, the way `meanmean` is for `meanmax`;
+  * at w = 64 the dilation is 1 and the path is **bit-identical** to the
+    unscaled one, so every measured difference comes from the 97.7% of wafers
+    that are actually upsampled;
+  * output does not depend on batch order, since samples are grouped by dilation
+    value and scattered back — normalisation is applied to the reassembled full
+    batch so BatchNorm sees the statistics it would have seen anyway.
+
+**H66, before the run:** on `size`, `meanmax --scale-aware` beats `meanmax` on
+`Scratch` F1, and the sign of the pooling effect against `mean` turns from
+negative to positive. On `lot` it changes little either way.
+
+Why it may fail, and I weight this more heavily after H63 came in at two of
+four: the mechanism test used fixed line filters on the input plane, while a
+trained encoder has three blocks and can learn to compensate for a scale it sees
+consistently during training. If it already compensates, dilating the first
+block buys nothing and H66 is simply wrong — and that would not falsify the
+mechanism, only its relevance to a learned model. The duller possibility is that
+`size` is too noisy to resolve anything, which is why the sweep runs eight seeds
+from the start.
+
+`scripts/scale_aware_sweep.sh` is 16 cells, not 48, because the pooling sweep
+already ran `poolmeanmax` and `poolmean` at eight seeds on both protocols — with
+`cnn_gn`. Using `cnn_bn` for the treatment would have made it incomparable to
+the control it is meant to beat, which is the kind of quiet protocol change the
+brief forbids.

@@ -521,3 +521,61 @@ def test_duplicate_paragraph_detector_catches_a_section_rendered_twice():
         short = _Path(d, "short.md")
         short.write_text("# t\n\n**Verdict.**\n\n**Verdict.**\n")
         assert m.duplicated_blocks(short) == [], "flagged a repeated label"
+
+
+def test_scale_aware_stem_is_exact_at_dilation_one_and_adds_no_parameters():
+    """The controls for the scale-aware encoder, before it is ever trained.
+
+    Measured with no model (`scripts/pooling_mechanism.py`): nearest-neighbour
+    upsampling makes a one-die scratch arrive as a band ~64/w pixels wide, and
+    native geometry then explains 0.7689 of the variance in a max-pooled line
+    filter response against 0.1485 of the mean-pooled one. Correcting after the
+    convolution does not work (0.7511); dilating the filter by round(64/w) does
+    (0.0361).
+
+    Two properties have to hold for the trained comparison to mean anything:
+
+    1. Dilation adds no parameters, so `scale_aware` is compared against
+       `meanmax` at identical capacity -- it is its own capacity control, the
+       way `meanmean` is for `meanmax`.
+    2. At w = 64 the dilation is 1 and the path must be *bit-identical* to the
+       unscaled one, so any difference measured on real wafers comes from the
+       geometries that are actually upsampled and not from a changed code path.
+
+    The third check is for the grouping itself: samples are batched by dilation
+    value and scattered back, and a bug there would make a wafer's output depend
+    on who else is in its batch.
+    """
+    import torch as _t
+
+    from wts.models import CnnResized
+
+    _t.manual_seed(0)
+    plain = CnnResized(pool="meanmax", scale_aware=False)
+    scaled = CnnResized(pool="meanmax", scale_aware=True)
+    scaled.load_state_dict(plain.state_dict())
+    plain.eval()
+    scaled.eval()
+
+    assert (sum(p.numel() for p in plain.parameters())
+            == sum(p.numel() for p in scaled.parameters())), \
+        "dilation must not change the parameter count"
+
+    x = _t.randn(8, 3, 64, 64)
+    hw_native = _t.tensor([[64, 64], [32, 32], [26, 26], [45, 48],
+                           [64, 64], [32, 32], [26, 26], [45, 48]])
+
+    with _t.no_grad():
+        hw_one = _t.full((8, 2), 64)
+        assert _t.equal(plain(x), scaled(x, hw_one)), \
+            "at dilation 1 the scale-aware path must be bit-identical"
+
+        # on real geometries it must actually differ, or the flag does nothing
+        assert not _t.allclose(plain(x), scaled(x, hw_native), atol=1e-6), \
+            "mixed geometries must change the output"
+
+        # batching by dilation must not make a wafer depend on its batchmates
+        perm = _t.randperm(8)
+        assert _t.equal(scaled(x, hw_native)[perm],
+                        scaled(x[perm], hw_native[perm])), \
+            "output must not depend on batch order"

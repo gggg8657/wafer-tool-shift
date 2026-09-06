@@ -309,9 +309,25 @@ def main():
                   f"{_n['eta_sq_geometry_on_max_pool']:.4f}. **The resize "
                   "creates the geometry dependence; it is not a property of "
                   "the wafers** — and so the one thing that worked is not "
-                  "inherently geometry-bound. A scale-aware max is the obvious "
-                  "next experiment and this weekend did not run it.")
+                  "inherently geometry-bound.")
                 W("")
+                _f1 = pm.get("proposed_fix", {})
+                _f2 = pm.get("proposed_fix_2_dilated_filter", {})
+                if _f1 and _f2:
+                    W("**The repair I wrote down first was wrong, and one "
+                      "script said so before any GPU time was spent.** Pooling "
+                      "the response back onto the native die grid before the "
+                      "max — the obvious way to undo a 64/w replication — "
+                      f"leaves η² at {_f1['eta_sq_geometry_on_max_pool']:.4f}, "
+                      "essentially uncorrected, because convolution and "
+                      "downsampling do not commute. Dilating the *filter* by "
+                      "round(64/w) instead gives "
+                      f"**{_f2['eta_sq_geometry_on_max_pool']:.4f}**. The fix "
+                      "is a scale-aware receptive field, not scale-aware "
+                      "pooling. Whether a trained encoder built that way "
+                      "recovers the `Scratch` gain on `size` is **not "
+                      "measured**.")
+                    W("")
         W("`CnnResized.embed` was a global average over the final feature map. "
           "A `Scratch` is a thin connected line; averaged over the wafer it is "
           "close to a slightly elevated background failure rate, which is "

@@ -266,7 +266,11 @@ What the four protocols do line up with is **how much geometry the test set shar
 
 Native geometry explains 77% of the variance in the max-pooled response and 15% of the mean-pooled one, a factor of 5.2. The control is what makes this an explanation rather than a correlation: geometry also tracks fab, product and era, so scratches on different geometries might simply differ. At native resolution a one-die scratch is one die wide on every geometry, and there the max-pooled dependence collapses to 0.0629 — 0.7060 lower, and below the mean-pooled figure. **The resize creates the geometry dependence; it is not a property of the wafers.**
 
-This is the one mechanism in the paper that was proposed and then tested rather than proposed and left standing, and it carries a concrete consequence: the pooling gain is not inherently geometry-bound. A max taken over a window scaled by 64/w, or a resize that does not vary the apparent width of a defect, would be expected to keep the `Scratch` gain and lose the `size` penalty. That is a prediction this paper does not test and states so.
+**The obvious repair does not work, and finding that out was cheap.** If the resize replicates each die into a 64/w-wide block, average-pooling the response back onto the native die grid before the max should undo exactly that. It does not: η² = 0.7511, against 0.7689 uncorrected. Convolution and downsampling do not commute — the filter has already responded to a band of width 64/w with a magnitude set by that width, and averaging afterwards preserves the magnitude. The correction has to happen before the filter sees the map, not after.
+
+Dilating the filter by round(64/w), so its receptive field spans the same number of native dies on every geometry, gives η² = **0.0361** — below the native-resolution control itself. So the pooling gain is not inherently geometry-bound, but the fix is a **scale-aware receptive field**, not scale-aware pooling. Both candidates cost one script to separate and neither cost a training run, which is the argument for testing a mechanism at the level it is stated.
+
+Whether a CNN whose dilation tracks 64/w actually recovers the `Scratch` gain on `size` is **[not measured]**: these are fixed filters on the input plane, not a trained encoder, and a network can learn to compensate in ways this test cannot see.
 
 The claim, at the strength the data supports: **on a lot-disjoint split, replacing global average pooling with mean-and-max moves the hardest class by 0.057 while its capacity control moves it by −0.001. On the other three protocols it is not established, and on geometry holdout its mean effect is negative.** An architectural change that reads as a general improvement turns out to be protocol-specific — which is the thing this benchmark was built to detect, applied for once to our own result.
 
@@ -368,12 +372,12 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot_time` | CNN + 4th channel | `erm` | zerochan | 3 | 0.7018 | ±0.0030 |
 | `lot_time` | spectral operator | `erm` | sess2 | 3 | 0.6530 | ±0.0242 |
 | `size` | CNN (BatchNorm) | `coral` | sizeseed | 4 | 0.7657 | ±0.0202 |
-| `size` | CNN (BatchNorm) | `dann` | sizeseed | 4 | 0.7570 | ±0.0572 |
+| `size` | CNN (BatchNorm) | `dann` | sizeseed | 5 | 0.7647 | ±0.0572 |
 | `size` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.7843 | ±0.0312 |
-| `size` | CNN (BatchNorm) | `erm` | sizeseed | 4 | 0.7724 | ±0.0598 |
-| `size` | CNN (BatchNorm) | `group_dro` | sizeseed | 3 | 0.6381 | ±0.0922 |
+| `size` | CNN (BatchNorm) | `erm` | sizeseed | 5 | 0.7849 | ±0.0599 |
+| `size` | CNN (BatchNorm) | `group_dro` | sizeseed | 4 | 0.6438 | ±0.0922 |
 | `size` | CNN (BatchNorm) | `irm` | sizeseed | 4 | 0.7569 | ±0.0617 |
-| `size` | CNN (BatchNorm) | `logit_adjust` | sizeseed | 3 | 0.6798 | ±0.0680 |
+| `size` | CNN (BatchNorm) | `logit_adjust` | sizeseed | 4 | 0.6808 | ±0.0680 |
 | `size` | CNN (BatchNorm) | `mixup_domain` | sizeseed | 4 | 0.7616 | ±0.0617 |
 | `size` | CNN (GroupNorm) | `erm` | — | 3 | 0.8467 | ±0.0346 |
 | `size` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8462 | ±0.0391 |

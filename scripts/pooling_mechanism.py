@@ -139,6 +139,36 @@ def main():
     nat_mean = np.array(nat_mean)[m]
     nat_max = np.array(nat_max)[m]
 
+    # ---- the proposed fix, tested at the same level before any GPU is spent.
+    # If the resize creates the dependence by replicating each die into a
+    # 64/w-wide block, then average-pooling the response back onto the native
+    # die grid before taking the max should undo exactly that replication.
+    # A fix that cannot pass the cheap test does not deserve a training run.
+    fix_max = []
+    for j, i in enumerate(sel.tolist()):
+        h_i, w_i = int(hw[j, 0]), int(hw[j, 1])
+        r = resp[j:j + 1]                       # (1, 4, 64, 64)
+        r = F.adaptive_avg_pool2d(r, (max(1, h_i), max(1, w_i)))
+        fix_max.append(float(r.amax()))
+    fix_max = np.array(fix_max)[m]
+
+    # ---- second candidate: scale the *filter*, not the pooling.
+    # Pooling after the fact cannot help, because convolution and downsampling
+    # do not commute: the filter has already responded to a band of width 64/w
+    # with a magnitude set by that width, and averaging preserves the
+    # magnitude. Dilating the filter by round(64/w) makes its receptive field
+    # cover the same number of native dies on every geometry, which is the
+    # thing the native-resolution control actually holds fixed.
+    dil_max = []
+    for j, i in enumerate(sel.tolist()):
+        w_i = max(1, int(hw[j, 1]))
+        d = max(1, int(round(64 / w_i)))
+        t = maps64[j:j + 1].unsqueeze(1)
+        t = (t == 2).float()
+        r = F.conv2d(t, filt, padding=d, dilation=d)
+        dil_max.append(float(r.amax()))
+    dil_max = np.array(dil_max)[m]
+
     res = {
         "what": "does native geometry explain more of the max-pooled filter "
                 "response than of the mean-pooled one, with no model involved",
@@ -165,6 +195,20 @@ def main():
                 residualise(nat_mean, ff), g),
             "eta_sq_geometry_on_max_pool": eta_squared(
                 residualise(nat_max, ff), g),
+        },
+        "proposed_fix_2_dilated_filter": {
+            "what": "dilate the filter by round(64/w) so its receptive field "
+                    "spans the same number of native dies on every geometry, "
+                    "instead of correcting after the convolution",
+            "eta_sq_geometry_on_max_pool": eta_squared(
+                residualise(dil_max, ff), g),
+        },
+        "proposed_fix": {
+            "what": "average-pool the response back onto the native die grid "
+                    "(adaptive_avg_pool2d to h x w) before taking the max, "
+                    "which undoes the nearest-neighbour replication",
+            "eta_sq_geometry_on_max_pool": eta_squared(
+                residualise(fix_max, ff), g),
         },
         "note": "eta-squared is the between-geometry share of total variance. "
                 "The mean-pooled response is close to the failure fraction, "
@@ -196,6 +240,18 @@ def main():
           f"{n['eta_sq_geometry_on_mean_pool']:.4f}")
     print(f"   max-pooled   eta^2(geometry) = "
           f"{n['eta_sq_geometry_on_max_pool']:.4f}")
+    fx = res["proposed_fix"]
+    fx2 = res["proposed_fix_2_dilated_filter"]
+    print("candidate fix 1 -- max after pooling back to the native die grid:")
+    print(f"   max-pooled   eta^2(geometry) = "
+          f"{fx['eta_sq_geometry_on_max_pool']:.4f}")
+    print("candidate fix 2 -- dilate the filter by round(64/w):")
+    print(f"   max-pooled   eta^2(geometry) = "
+          f"{fx2['eta_sq_geometry_on_max_pool']:.4f}")
+    res["fix_recovers_native_behaviour"] = bool(
+        fx["eta_sq_geometry_on_max_pool"]
+        < 0.5 * (a["eta_sq_geometry_on_max_pool"]
+                 + n["eta_sq_geometry_on_max_pool"]))
     r = res["ratio_max_over_mean_residualised"]
     print(f"\nratio at 64x64 (residualised) = {r:.2f}x" if r
           else "\nratio undefined")

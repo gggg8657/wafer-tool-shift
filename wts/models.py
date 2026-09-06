@@ -52,7 +52,8 @@ class CnnResized(nn.Module):
     after.
     """
 
-    def __init__(self, n_classes=9, width=32, norm="bn", in_ch=3, pool="mean"):
+    def __init__(self, n_classes=9, width=32, norm="bn", in_ch=3, pool="mean",
+                 scale_aware=False):
         super().__init__()
         chs = [in_ch, width, width * 2, width * 4]
         blocks = []
@@ -62,11 +63,56 @@ class CnnResized(nn.Module):
                        nn.MaxPool2d(2)]
         self.body = nn.Sequential(*blocks)
         self.pool = pool
+        self.scale_aware = scale_aware
         self.feat_dim = chs[-1] * (2 if pool in ("meanmax", "meanmean") else 1)
         self.head = nn.Linear(self.feat_dim, n_classes)
 
-    def embed(self, x):
-        h = self.body(x)
+    def _stem_scaled(self, x, hw):
+        """First block with per-sample dilation round(64/w).
+
+        Measured on the corpus with no model involved: `resize_nearest`
+        upsamples by indexing, so a one-die-wide scratch reaches the encoder as
+        a band roughly 64/w pixels across, and native geometry then explains
+        0.7689 of the variance in a max-pooled line-filter response against
+        0.1485 of the mean-pooled one. Applying the same filters at native
+        resolution drops that to 0.0629, so the resize creates the dependence.
+
+        Correcting *after* the convolution does not work -- pooling the response
+        back onto the native die grid leaves eta^2 at 0.7511, because
+        convolution and downsampling do not commute. Dilating the filter so its
+        receptive field spans the same number of native dies gives 0.0361.
+
+        Dilation adds no parameters, so a `scale_aware` model has exactly the
+        parameter count of the `meanmax` model it is compared against.
+
+        Normalisation is applied to the reassembled full batch rather than
+        per dilation group, so BatchNorm sees the same statistics it would
+        without this change and the only difference is the receptive field.
+        """
+        c1, n1, r1, c2, n2, r2, mp = list(self.body)[:7]
+        d = torch.round(64.0 / hw[:, 1].clamp(min=1).float()).long()
+        d = d.clamp(1, 16)
+
+        def conv_by_group(t, conv):
+            out = None
+            for dv in torch.unique(d):
+                m = d == dv
+                k = int(dv)
+                o = F.conv2d(t[m], conv.weight, conv.bias,
+                             padding=k, dilation=k)
+                if out is None:
+                    out = t.new_empty((t.shape[0],) + o.shape[1:])
+                out[m] = o
+            return out
+
+        h = r1(n1(conv_by_group(x, c1)))
+        h = r2(n2(conv_by_group(h, c2)))
+        h = mp(h)
+        return self.body[7:](h)
+
+    def embed(self, x, hw=None):
+        h = (self._stem_scaled(x, hw)
+             if self.scale_aware and hw is not None else self.body(x))
         m = h.mean(dim=(-2, -1))
         if self.pool == "meanmax":
             return torch.cat([m, h.amax(dim=(-2, -1))], dim=1)
@@ -74,8 +120,8 @@ class CnnResized(nn.Module):
             return torch.cat([m, m], dim=1)
         return m
 
-    def forward(self, x):
-        return self.head(self.embed(x))
+    def forward(self, x, hw=None):
+        return self.head(self.embed(x, hw))
 
 
 class SpectralConv2d(nn.Module):

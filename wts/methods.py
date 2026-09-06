@@ -99,10 +99,24 @@ def group_dro(model, batch, st):
     return loss, {"worst_group_loss": max(gl.item() for _, gl in losses)}
 
 
+def _embed(model, x, batch, st):
+    """Embed, passing native geometry only to a model that asked for it.
+
+    The second positional argument of `embed` is `mask` for the spectral and
+    graph encoders and `hw` for a scale-aware CNN, and `FeatMlp.embed` takes
+    neither. Gating on the flag keeps every existing call bit-identical.
+    """
+    if st.get("masked"):
+        return model.embed(x, batch["mask"])
+    if getattr(model, "scale_aware", False):
+        return model.embed(x, batch.get("hw"))
+    return model.embed(x)
+
+
 def dann(model, batch, st):
     """Classification loss minus the domain head's ability to read the domain."""
     x, y, d = batch["x"], batch["y"], batch["d"]
-    emb = model.embed(x, batch["mask"]) if st.get("masked") else model.embed(x)
+    emb = _embed(model, x, batch, st)
     logits = model.head(emb)
     cls = F.cross_entropy(logits, y, weight=st.get("cw"))
     dom = st["domain_head"](grad_reverse(emb, st["lamb"]))
@@ -138,7 +152,7 @@ def irm(model, batch, st):
 def coral(model, batch, st):
     """Align the second moments of the embedding across domains in the batch."""
     x, y, d = batch["x"], batch["y"], batch["d"]
-    emb = model.embed(x, batch["mask"]) if st.get("masked") else model.embed(x)
+    emb = _embed(model, x, batch, st)
     cls = F.cross_entropy(model.head(emb), y, weight=st.get("cw"))
     covs = []
     for g in torch.unique(d):
@@ -244,7 +258,7 @@ def sinkhorn_divergence(a, b, eps=0.1, n_iter=25):
 
 def hsic(model, batch, st):
     x, y, d = batch["x"], batch["y"], batch["d"]
-    emb = model.embed(x, batch["mask"]) if st.get("masked") else model.embed(x)
+    emb = _embed(model, x, batch, st)
     cls = F.cross_entropy(model.head(emb), y, weight=st.get("cw"))
     pen = hsic_penalty(emb, d, st["n_dom"])
     return cls + st["hsic_lambda"] * pen, {"hsic": float(pen)}
@@ -252,7 +266,7 @@ def hsic(model, batch, st):
 
 def sinkhorn(model, batch, st):
     x, y, d = batch["x"], batch["y"], batch["d"]
-    emb = model.embed(x, batch["mask"]) if st.get("masked") else model.embed(x)
+    emb = _embed(model, x, batch, st)
     cls = F.cross_entropy(model.head(emb), y, weight=st.get("cw"))
     groups = [emb[d == g] for g in torch.unique(d)]
     groups = [g for g in groups if g.shape[0] >= 4]

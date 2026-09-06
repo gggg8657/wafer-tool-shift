@@ -18,9 +18,18 @@
     "eta_sq_geometry_on_mean_pool": 0.10298858222771369,
     "eta_sq_geometry_on_max_pool": 0.06291557237859102
   },
+  "proposed_fix_2_dilated_filter": {
+    "what": "dilate the filter by round(64/w) so its receptive field spans the same number of native dies on every geometry, instead of correcting after the convolution",
+    "eta_sq_geometry_on_max_pool": 0.03609076821879672
+  },
+  "proposed_fix": {
+    "what": "average-pool the response back onto the native die grid (adaptive_avg_pool2d to h x w) before taking the max, which undoes the nearest-neighbour replication",
+    "eta_sq_geometry_on_max_pool": 0.7511188950160085
+  },
   "note": "eta-squared is the between-geometry share of total variance. The mean-pooled response is close to the failure fraction, which nearest-neighbour upsampling preserves; the max-pooled response is a peak whose width in pixels is set by 64/w.",
   "ratio_max_over_mean_residualised": 5.176441511552809,
   "h65_supported": true,
+  "fix_recovers_native_behaviour": false,
   "max_pool_eta_sq_drop_at_native": 0.7060034970568689,
   "resize_explains_it": true
 }

@@ -920,15 +920,38 @@ def main():
               "the mean-pooled figure. **The resize creates the geometry "
               "dependence; it is not a property of the wafers.**")
             W("")
-            W("This is the one mechanism in the paper that was proposed and "
-              "then tested rather than proposed and left standing, and it "
-              "carries a concrete consequence: the pooling gain is not "
-              "inherently geometry-bound. A max taken over a window scaled by "
-              "64/w, or a resize that does not vary the apparent width of a "
-              "defect, would be expected to keep the `Scratch` gain and lose "
-              "the `size` penalty. That is a prediction this paper does not "
-              "test and states so.")
-            W("")
+            _f1 = pm.get("proposed_fix", {})
+            _f2 = pm.get("proposed_fix_2_dilated_filter", {})
+            if _f1 and _f2:
+                W("**The obvious repair does not work, and finding that out "
+                  "was cheap.** If the resize replicates each die into a "
+                  "64/w-wide block, average-pooling the response back onto the "
+                  "native die grid before the max should undo exactly that. It "
+                  "does not: "
+                  f"η² = {_f1['eta_sq_geometry_on_max_pool']:.4f}, against "
+                  f"{_a['eta_sq_geometry_on_max_pool']:.4f} uncorrected. "
+                  "Convolution and downsampling do not commute — the filter "
+                  "has already responded to a band of width 64/w with a "
+                  "magnitude set by that width, and averaging afterwards "
+                  "preserves the magnitude. The correction has to happen "
+                  "before the filter sees the map, not after.")
+                W("")
+                W("Dilating the filter by round(64/w), so its receptive field "
+                  "spans the same number of native dies on every geometry, "
+                  f"gives η² = **{_f2['eta_sq_geometry_on_max_pool']:.4f}** — "
+                  "below the native-resolution control itself. So the pooling "
+                  "gain is not inherently geometry-bound, but the fix is a "
+                  "**scale-aware receptive field**, not scale-aware pooling. "
+                  "Both candidates cost one script to separate and neither "
+                  "cost a training run, which is the argument for testing a "
+                  "mechanism at the level it is stated.")
+                W("")
+                W("Whether a CNN whose dilation tracks 64/w actually recovers "
+                  "the `Scratch` gain on `size` is **[not measured]**: these "
+                  "are fixed filters on the input plane, not a trained "
+                  "encoder, and a network can learn to compensate in ways this "
+                  "test cannot see.")
+                W("")
         W("The claim, at the strength the data supports: **on a lot-disjoint "
           "split, replacing global average pooling with mean-and-max moves the "
           "hardest class by 0.057 while its capacity control moves it by "
