@@ -1,0 +1,12 @@
+{
+  "what": "floors that were superseded, kept so the documents can say how they changed without typing a number from memory",
+  "why": "the truncated lot_time and iid files were deleted by chain5.sh so they could be re-measured at six repeats. Their values still matter -- the lot_time one was too permissive and was used for a while -- but the artifacts were gone, so the claim about them could not be backed by anything on disk. Recovered from git rather than retyped.",
+  "recovered_from_commit": "e06d01f575d5464db1818fe3dbad5c61b921e2be",
+  "superseded": {
+    "lot_time__cnn_gn": {
+      "n_repeats": 4,
+      "range": 0.016182599392308594,
+      "note": "truncated when two stages shared the GPU lease; the six-repeat value is larger, so this was screening too leniently"
+    }
+  }
+}

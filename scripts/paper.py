@@ -414,6 +414,48 @@ def main():
           "*seed* ranges differ by protocol far more than that: 0.009–0.019 on "
           "`lot` against 0.069–0.072 on `size`.")
         W("")
+    fs = js("floor_sensitivity.json")
+    if fs and fs.get("n_comparisons"):
+        W("**How much of this paper depends on which floor is used?** Every "
+          "protocol now has its own, measured over six identical invocations, "
+          "and they span a factor of "
+          f"{fs['largest'] / fs['smallest']:.1f}: "
+          + ", ".join(f"`{k}` {v:.4f}" for k, v in
+                      sorted(fs["floors_measured"].items(), key=lambda kv: kv[1]))
+          + ". Applying each of those to every comparison in turn, "
+          f"**{fs['n_stable']} of {fs['n_comparisons']}** give the same "
+          "verdict whichever floor is used.")
+        W("")
+        _fl = [r for r in fs["comparisons"]
+               if not r["stable_across_all_measured_floors"]]
+        if _fl:
+            W(f"The {len(_fl)} that do not are "
+              + ", ".join(f"`{r['protocol']}/{r['encoder']}/{r['objective']}`"
+                          for r in _fl)
+              + " — and both are resolved *conservatively* at their own "
+              "protocol's floor, which is the larger of the two thresholds "
+              "that disagree. So no verdict in this paper rests on a borrowed "
+              "threshold. That is a claim we could not have made before the "
+              "floors were measured, and it is worth separating from the "
+              "claim that the floors differ: the first is about whether our "
+              "conclusions are fragile, the second about whether the "
+              "instrument is.")
+            W("")
+        _supj = js("superseded_floors.json") or {}
+        _sup = (_supj.get("superseded", {}).get("lot_time__cnn_gn")
+                or {"range": None, "n_repeats": None})
+        W("**One of those measurements corrected an error in the permissive "
+          "direction.** The `lot_time` floor was first written from four "
+          "invocations rather than six, after two stages shared a GPU lease "
+          "and the repeats were killed, and it read "
+          f"{_sup['range']:.4f}. Measured properly "
+          f"it is {fs['floors_measured'].get('lot_time', 0):.4f} — *larger*, "
+          "so every comparison screened against the old value was screened too "
+          "leniently. The `iid` file from the same incident recorded a single "
+          "invocation and a range of zero, which `floors()` served as that "
+          "protocol's threshold until it was made to refuse floors from fewer "
+          "than three repeats.")
+        W("")
     objs = sorted({k[2] for k in C if k[2] != "erm"})
     for p in ["lot", "size"]:
         rows = []

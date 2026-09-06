@@ -54,7 +54,7 @@ Three caveats on the last four columns, all of which came out of reading this ta
 
 **A caveat on reading this table.** Adjacent-pair testing asks whether a cell is distinguishable from the next one *down*, which depends on what else is in the table: inserting a representation between two others stops their comparison being made at all. That happened here -- `cnn_bn > feat` separated at margin 0.0093 while they were adjacent, and stopped being an adjacent pair when `spectral` landed between them. Nothing about either cell changed. The statement that does not depend on table composition is that only the die-graph GNN separates from anything.
 
-Each adjacent pair in the ranking above, per protocol, with the verdict from whether the observed seed ranges overlap. This is deliberately non-parametric: three seeds do not support a p-value, but whether one cell's worst seed beat the other's best is a fact about what was seen. The run-to-run floor -- two identical invocations of one cell -- is 1.62e-02, so a margin near that is not a separation.
+Each adjacent pair in the ranking above, per protocol, with the verdict from whether the observed seed ranges overlap. This is deliberately non-parametric: three seeds do not support a p-value, but whether one cell's worst seed beat the other's best is a fact about what was seen. The run-to-run floor -- two identical invocations of one cell -- is 1.87e-02, so a margin near that is not a separation.
 
 | protocol | higher | lower | gap | seeds | verdict |
 |---|---|---|---|---|---|
@@ -128,7 +128,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | die-graph GNN (wafer-only subgraph) | erm | - | 0.7557 | - | 0.4898 | - | 0.1269 | 0.8889 |
 | CNN + RPCA lot-signature channel | erm | - | 0.8813 | - | 0.5000 | - | 0.7466 | 0.9315 |
 
-**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the 259 `lot` cells in `runs/` that carry the column, 128 report the identical 0.4898 and 99 more report exactly 0.5000 -- 88% of them on two values, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them. This applies to every protocol table in this section; it is stated once.
+**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the 263 `lot` cells in `runs/` that carry the column, 129 report the identical 0.4898 and 102 more report exactly 0.5000 -- 88% of them on two values, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them. This applies to every protocol table in this section; it is stated once.
 
 ## Borrowed objectives vs ERM -- protocol `lot_time`
 
@@ -525,10 +525,10 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot | CNN on resized 64x64 (GroupNorm) | erm | sslinit_lr2e-4 | 2 | 0.6529 | +/-0.0087 | 0.6615, 0.6442 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | sslinit_lr5e-4 | 2 | 0.7427 | +/-0.0013 | 0.7414, 0.7440 |
 | lot | CNN on resized 64x64 (GroupNorm) | focal | focal0.0 | 8 | 0.8753 | +/-0.0137 | 0.8781, 0.8680, 0.8651, 0.8769, 0.8868, 0.8609, 0.8784, 0.8882 |
-| lot | CNN on resized 64x64 (GroupNorm) | focal | focal0.5 | 2 | 0.8759 | +/-0.0001 | 0.8760, 0.8758 |
-| lot | CNN on resized 64x64 (GroupNorm) | focal | focal1.0 | 2 | 0.8729 | +/-0.0019 | 0.8748, 0.8710 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal | focal0.5 | 4 | 0.8756 | +/-0.0049 | 0.8760, 0.8758, 0.8704, 0.8801 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal | focal1.0 | 3 | 0.8721 | +/-0.0021 | 0.8748, 0.8710, 0.8706 |
 | lot | CNN on resized 64x64 (GroupNorm) | focal | focal2.0 | 8 | 0.8750 | +/-0.0115 | 0.8654, 0.8749, 0.8628, 0.8755, 0.8858, 0.8718, 0.8812, 0.8824 |
-| lot | CNN on resized 64x64 (GroupNorm) | focal | focal5.0 | 2 | 0.8745 | +/-0.0051 | 0.8694, 0.8795 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal | focal5.0 | 3 | 0.8681 | +/-0.0121 | 0.8694, 0.8795, 0.8554 |
 | lot | size-invariant descriptors + MLP | erm | sess2 | 3 | 0.8338 | +/-0.0067 | 0.8417, 0.8283, 0.8314 |
 | lot | die-graph GNN (wafer-only subgraph) | erm | sess2 | 3 | 0.7524 | +/-0.0036 | 0.7557, 0.7530, 0.7484 |
 | lot | CNN + RPCA lot-signature channel | erm | - | 3 | 0.8696 | +/-0.0096 | 0.8813, 0.8654, 0.8621 |
@@ -631,7 +631,7 @@ Geometry and failed-die rate drift with lot number; the defect-class mix does no
 
 ## Run-to-run reproducibility floor
 
-`lot / cnn_gn / erm / seed 0 --tta`, run 6 times under identical arguments: 0.8723, 0.8760, 0.8767, 0.8767, 0.8772, 0.8778. Range **0.0162**, standard deviation 0.0019 -- the pipeline is not bit-reproducible on this GPU. The observed range over identical invocations bounds every same-seed comparison in this repository: two cells whose test macro-F1 differ by less than it have not been shown to differ at all, whatever their arguments. An earlier version of this file estimated the same quantity from a single pair of runs, which understated it.
+`lot / cnn_gn / erm / seed 0 --tta`, run 6 times under identical arguments: 0.8723, 0.8760, 0.8767, 0.8767, 0.8772, 0.8778. Range **0.0187**, standard deviation 0.0019 -- the pipeline is not bit-reproducible on this GPU. The observed range over identical invocations bounds every same-seed comparison in this repository: two cells whose test macro-F1 differ by less than it have not been shown to differ at all, whatever their arguments. An earlier version of this file estimated the same quantity from a single pair of runs, which understated it.
 
 The stored value for that cell is 0.8671, which is **outside** the range of the repeats, 0.0052 from the nearest one, and every repeat lands above it. That is not symmetric noise: something about the environment or the code changed between when that cell was measured and now. `scripts/backfill_metrics.sh` refuses to overwrite measured cells while that is true.
 

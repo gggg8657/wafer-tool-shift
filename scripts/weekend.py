@@ -131,6 +131,17 @@ def main():
           "largest, because being too strict withdraws a claim and being too "
           "lenient publishes one.")
         W("")
+        _fsq = js("floor_sensitivity.json")
+        if _fsq and _fsq.get("n_comparisons"):
+            W("**And it does not much matter which of them a comparison is "
+              "judged against.** Applying every measured floor in turn to "
+              f"every comparison, **{_fsq['n_stable']} of "
+              f"{_fsq['n_comparisons']}** give the same verdict whichever is "
+              "used, and the two that do not are resolved conservatively at "
+              "their own protocol's floor. No verdict here rests on a borrowed "
+              "threshold — which is a different question from whether the "
+              "floors differ, and a more reassuring answer.")
+            W("")
         W("**Two standards are used below and it matters which you are "
           "reading.** Most tables here hold dozens of cells at three seeds, "
           "where a p-value is unavailable at any effect size — an exact "

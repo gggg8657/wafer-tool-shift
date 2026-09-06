@@ -4154,3 +4154,57 @@ worked: `grep -c "Two candidates remain live" paper_draft.md` returned 0 after
 the second attempt and would have returned 1 after the first. Three failures of
 the same shape, and the fix that finally held was written down as a habit one
 entry earlier and then actually followed.
+
+### 84. All four floors measured, and a check of how much anything depended on them
+
+`chain5.sh` re-measured both truncated floors at six repeats. All four protocols
+now have their own:
+
+| protocol | floor (6 repeats) |
+|---|---|
+| `lot` | 0.0054 |
+| `iid` | 0.0082 |
+| `size` | 0.0133 |
+| `lot_time` | 0.0187 |
+
+A factor of 3.5 across protocols. The central methodological claim of this
+project — that the run-to-run floor is a property of the protocol and not one
+number — rested on two measurements until now and rests on four.
+
+**Measuring `iid`'s own floor was a change of criterion, and the brief is
+explicit that those make before and after incomparable.** `iid` had been
+screened against the fallback, the largest floor measured anywhere; its own is
+0.0082, which is *smaller*, so the test got weaker. Rather than print two tables
+I measured the sensitivity: apply every measured floor in turn to every
+comparison and see which verdicts move.
+
+**22 of 24 comparisons give the same verdict whichever floor is used.** The two
+that move are `size/feat/group_dro` and `size/feat/logit_adjust`, and both are
+resolved *conservatively* at their own protocol's floor — the larger of the two
+thresholds that disagree. So no verdict in these documents rests on a borrowed
+threshold. That is worth separating from the claim that the floors differ: one
+is about whether the conclusions are fragile, the other about whether the
+instrument is. The instrument varies by 3.5x; the conclusions do not move.
+
+As it happens no `iid` comparison exists in the objective tables at all — the
+borrowed DG objectives were only run on `lot` and `size` — so the weaker `iid`
+floor could not have changed anything. Better to have measured that than to have
+assumed it.
+
+**The re-measurement corrected an error in the permissive direction.** The
+truncated `lot_time` floor read 0.0162 from four invocations; the honest
+six-repeat value is **0.0187**, larger, so everything screened against the old
+one was screened too leniently. Combined with the `iid` file's range of zero
+from a single invocation, both halves of that incident erred toward publishing
+rather than withdrawing, which is the direction that costs something.
+
+**A smaller point about provenance that took a real decision.** Saying "it read
+0.0162" required a number whose artifact `chain5.sh` had deleted in order to
+re-measure. The run happened and its log exists, but the file was gone, so
+nothing on disk backed the claim. Retyping it from the terminal would have been
+exactly the habit the ratchet exists to break — the number *feels* like a
+measurement because I watched it being measured. I recovered it from git into
+`runs/superseded_floors.json`, with the commit it came from, and the documents
+now generate from that. A superseded measurement is still a measurement and
+still needs somewhere to live; deleting the artifact does not license typing the
+value.

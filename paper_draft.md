@@ -65,7 +65,13 @@ The forward-only test side holds 19 geometries against 338 in training, and 14.1
 
 Every verdict in this section requires two things: the two cells' seed ranges must not overlap, **and** the margin between them must exceed the run-to-run spread between *identical* invocations of one cell — because seeds are run back to back on one pair of GPUs, so a seed range measures the seed and not the pipeline.
 
-That spread is **not one number**. Measured per protocol where it has been measured: `iid` 0.0082, `lot` 0.0054, `size` 0.0133. Protocols without their own measurement fall back to 0.0133, the largest measured, since being too strict withdraws a claim and being too lenient publishes one. Observed *seed* ranges differ by protocol far more than that: 0.009–0.019 on `lot` against 0.069–0.072 on `size`.
+That spread is **not one number**. Measured per protocol where it has been measured: `iid` 0.0082, `lot` 0.0054, `lot_time` 0.0187, `size` 0.0133. Protocols without their own measurement fall back to 0.0187, the largest measured, since being too strict withdraws a claim and being too lenient publishes one. Observed *seed* ranges differ by protocol far more than that: 0.009–0.019 on `lot` against 0.069–0.072 on `size`.
+
+**How much of this paper depends on which floor is used?** Every protocol now has its own, measured over six identical invocations, and they span a factor of 3.5: `lot` 0.0054, `iid` 0.0082, `size` 0.0133, `lot_time` 0.0187. Applying each of those to every comparison in turn, **22 of 24** give the same verdict whichever floor is used.
+
+The 2 that do not are `size/feat/group_dro`, `size/feat/logit_adjust` — and both are resolved *conservatively* at their own protocol's floor, which is the larger of the two thresholds that disagree. So no verdict in this paper rests on a borrowed threshold. That is a claim we could not have made before the floors were measured, and it is worth separating from the claim that the floors differ: the first is about whether our conclusions are fragile, the second about whether the instrument is.
+
+**One of those measurements corrected an error in the permissive direction.** The `lot_time` floor was first written from four invocations rather than six, after two stages shared a GPU lease and the repeats were killed, and it read 0.0162. Measured properly it is 0.0187 — *larger*, so every comparison screened against the old value was screened too leniently. The `iid` file from the same incident recorded a single invocation and a range of zero, which `floors()` served as that protocol's threshold until it was made to refuse floors from fewer than three repeats.
 
 **Protocol `lot`** (deltas against the same encoder under ERM):
 
@@ -381,8 +387,8 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (GroupNorm) | `erm` | sslinit_lr2e-4 | 2 | 0.6529 | ±0.0087 |
 | `lot` | CNN (GroupNorm) | `erm` | sslinit_lr5e-4 | 2 | 0.7427 | ±0.0013 |
 | `lot` | CNN (GroupNorm) | `focal` | focal0.0 | 8 | 0.8753 | ±0.0137 |
-| `lot` | CNN (GroupNorm) | `focal` | focal0.5 | 2 | 0.8759 | ±0.0001 |
-| `lot` | CNN (GroupNorm) | `focal` | focal1.0 | 2 | 0.8729 | ±0.0019 |
+| `lot` | CNN (GroupNorm) | `focal` | focal0.5 | 3 | 0.8740 | ±0.0028 |
+| `lot` | CNN (GroupNorm) | `focal` | focal1.0 | 3 | 0.8721 | ±0.0021 |
 | `lot` | CNN (GroupNorm) | `focal` | focal2.0 | 8 | 0.8750 | ±0.0115 |
 | `lot` | CNN (GroupNorm) | `focal` | focal5.0 | 2 | 0.8745 | ±0.0051 |
 | `lot` | descriptors + MLP | `erm` | sess2 | 3 | 0.8338 | ±0.0067 |
