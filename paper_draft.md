@@ -221,6 +221,10 @@ The obvious alternative explanation is that the fine-tuning recipe is tuned for 
 
 Three explanations for the long tail were measured and discarded first. Class imbalance: focal loss over five values of gamma against its own bit-exact `gamma = 0` control, class-balanced weighting, and positive weighting on the multi-label task — nothing, nothing, and worse. Input resolution: refuted outright, since 97.7% of wafers are *upsampled* to reach 64x64 and a finer grid has nothing to recover.
 
+That refutation covers the wafers that are upsampled and not the 2.0% that are **downsampled** — 3,481 of them. `resize_nearest` samples 64 row and 64 column indices and takes their outer product, so on a wafer larger than 64 it does not blur, it *drops* the rows and columns it did not pick. Those wafers keep 0.6559 of their failing dies on average and 832 of them keep under half. None keeps zero, so no label is voided, but a third of the failure evidence on 2% of the corpus is deleted before any model sees it and nothing downstream would notice.
+
+**Which dies get deleted is shape-blind; how *predictably* they do is not.** Mean retention is explained by wafer size alone to within 0.6% for every one of the nine classes — and it has to be, since a row survives with probability |yi|/h whatever is drawn on it, so the mean carries no information about structure and a table of mean ratios would have been a vacuous null. The statistic that separates a thin line from a scattered blob is the dispersion, and there the classes do separate: `Scratch` has the widest spread at 0.0794 and `Donut` the narrowest at 0.0054. A scratch confined to a few rows keeps nearly all or nearly none of itself depending on whether those rows survive; scattered failures average out. So the class this paper's one positive result is about is also the class whose preprocessing loss is least predictable.
+
 What was left is that `CnnResized.embed` is a global average over the final feature map. A `Scratch` is a thin connected line; averaged over the wafer it is close to a slightly elevated background failure rate, and the mean is exactly the statistic that discards the fact that the failures form a line. `meanmax` concatenates the max; `meanmean` concatenates the mean with itself and has **identical parameter count and no extra information**.
 
 | protocol | pooling | macro-F1 vs `mean` | verdict | Scratch F1 vs `mean` | verdict |
@@ -374,11 +378,11 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `size` | CNN (BatchNorm) | `coral` | sizeseed | 6 | 0.7754 | ±0.0422 |
 | `size` | CNN (BatchNorm) | `dann` | sizeseed | 6 | 0.7610 | ±0.0572 |
 | `size` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.7843 | ±0.0312 |
-| `size` | CNN (BatchNorm) | `erm` | sizeseed | 6 | 0.7828 | ±0.0599 |
-| `size` | CNN (BatchNorm) | `group_dro` | sizeseed | 5 | 0.6545 | ±0.0922 |
-| `size` | CNN (BatchNorm) | `irm` | sizeseed | 5 | 0.7645 | ±0.0617 |
-| `size` | CNN (BatchNorm) | `logit_adjust` | sizeseed | 5 | 0.6967 | ±0.0684 |
-| `size` | CNN (BatchNorm) | `mixup_domain` | sizeseed | 5 | 0.7755 | ±0.0628 |
+| `size` | CNN (BatchNorm) | `erm` | sizeseed | 7 | 0.7904 | ±0.0606 |
+| `size` | CNN (BatchNorm) | `group_dro` | sizeseed | 6 | 0.6645 | ±0.0922 |
+| `size` | CNN (BatchNorm) | `irm` | sizeseed | 6 | 0.7649 | ±0.0617 |
+| `size` | CNN (BatchNorm) | `logit_adjust` | sizeseed | 6 | 0.6898 | ±0.0684 |
+| `size` | CNN (BatchNorm) | `mixup_domain` | sizeseed | 6 | 0.7741 | ±0.0628 |
 | `size` | CNN (GroupNorm) | `erm` | — | 3 | 0.8467 | ±0.0346 |
 | `size` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8462 | ±0.0391 |
 | `size` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.8181 | ±0.0700 |

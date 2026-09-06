@@ -1,0 +1,114 @@
+{
+  "what": "fraction of failing dies surviving resize_nearest, on the wafers it downsamples",
+  "how": "resize_nearest samples 64 row and 64 column indices and takes their outer product, so a die at (r, c) survives iff r is a sampled row and c a sampled column. Computed exactly, not estimated.",
+  "n_wafers_upsampled_or_exact": 169467,
+  "n_wafers_downsampled": 3481,
+  "frac_downsampled": 0.02012743714873835,
+  "overall": {
+    "mean_fail_die_retention": 0.6558899151474618,
+    "median_fail_die_retention": 0.7123287671232876,
+    "n_losing_over_half": 832,
+    "n_losing_everything": 0
+  },
+  "per_class": {
+    "Center": {
+      "n_downsampled_wafers": 138,
+      "mean_fail_die_retention": 0.6656719719844473,
+      "median_fail_die_retention": 0.6762380017452008,
+      "min_fail_die_retention": 0.191027496382055,
+      "n_losing_over_half": 42,
+      "n_losing_everything": 0,
+      "mean_expected_from_size_alone": 0.6665130358481803,
+      "mean_ratio_actual_over_expected": 0.9980645590426672,
+      "stdev_ratio_actual_over_expected": 0.04523949761204758
+    },
+    "Donut": {
+      "n_downsampled_wafers": 34,
+      "mean_fail_die_retention": 0.8917043782327058,
+      "median_fail_die_retention": 0.9029706497680483,
+      "min_fail_die_retention": 0.6432532347504621,
+      "n_losing_over_half": 0,
+      "n_losing_everything": 0,
+      "mean_expected_from_size_alone": 0.8926219066878412,
+      "mean_ratio_actual_over_expected": 0.9989439031756514,
+      "stdev_ratio_actual_over_expected": 0.005445091642878892
+    },
+    "Edge-Loc": {
+      "n_downsampled_wafers": 198,
+      "mean_fail_die_retention": 0.7600796136764573,
+      "median_fail_die_retention": 0.8108451443569553,
+      "min_fail_die_retention": 0.23780487804878048,
+      "n_losing_over_half": 24,
+      "n_losing_everything": 0,
+      "mean_expected_from_size_alone": 0.7553362358944951,
+      "mean_ratio_actual_over_expected": 1.0055358041997693,
+      "stdev_ratio_actual_over_expected": 0.04016182295985973
+    },
+    "Edge-Ring": {
+      "n_downsampled_wafers": 1412,
+      "mean_fail_die_retention": 0.5763220830477654,
+      "median_fail_die_retention": 0.7072066426445245,
+      "min_fail_die_retention": 0.13714285714285715,
+      "n_losing_over_half": 578,
+      "n_losing_everything": 0,
+      "mean_expected_from_size_alone": 0.5697763551181219,
+      "mean_ratio_actual_over_expected": 1.0046575243041949,
+      "stdev_ratio_actual_over_expected": 0.037597949358592654
+    },
+    "Loc": {
+      "n_downsampled_wafers": 247,
+      "mean_fail_die_retention": 0.6402678139566209,
+      "median_fail_die_retention": 0.6693548387096774,
+      "min_fail_die_retention": 0.10497237569060773,
+      "n_losing_over_half": 60,
+      "n_losing_everything": 0,
+      "mean_expected_from_size_alone": 0.6399516313602324,
+      "mean_ratio_actual_over_expected": 0.9961540192271736,
+      "stdev_ratio_actual_over_expected": 0.06286958780057039
+    },
+    "Near-full": {
+      "n_downsampled_wafers": 1,
+      "mean_fail_die_retention": 0.8542119987566056,
+      "median_fail_die_retention": 0.8542119987566056,
+      "min_fail_die_retention": 0.8542119987566056,
+      "n_losing_over_half": 0,
+      "n_losing_everything": 0,
+      "mean_expected_from_size_alone": 0.8533333333333334,
+      "mean_ratio_actual_over_expected": 1.001029686042897,
+      "stdev_ratio_actual_over_expected": null
+    },
+    "Random": {
+      "n_downsampled_wafers": 20,
+      "mean_fail_die_retention": 0.5926733856201276,
+      "median_fail_die_retention": 0.6066754426406016,
+      "min_fail_die_retention": 0.2509948834565094,
+      "n_losing_over_half": 7,
+      "n_losing_everything": 0,
+      "mean_expected_from_size_alone": 0.5956355806896982,
+      "mean_ratio_actual_over_expected": 0.9954373639884451,
+      "stdev_ratio_actual_over_expected": 0.017325555463937884
+    },
+    "Scratch": {
+      "n_downsampled_wafers": 185,
+      "mean_fail_die_retention": 0.5966859954153795,
+      "median_fail_die_retention": 0.6235294117647059,
+      "min_fail_die_retention": 0.17269076305220885,
+      "n_losing_over_half": 56,
+      "n_losing_everything": 0,
+      "mean_expected_from_size_alone": 0.597815810961168,
+      "mean_ratio_actual_over_expected": 0.9985358956609433,
+      "stdev_ratio_actual_over_expected": 0.0794120728999955
+    },
+    "none": {
+      "n_downsampled_wafers": 1246,
+      "mean_fail_die_retention": 0.7347261877631427,
+      "median_fail_die_retention": 0.7176303806168916,
+      "min_fail_die_retention": 0.10040160642570281,
+      "n_losing_over_half": 65,
+      "n_losing_everything": 0,
+      "mean_expected_from_size_alone": 0.7364691824665647,
+      "mean_ratio_actual_over_expected": 0.9962026071226298,
+      "stdev_ratio_actual_over_expected": 0.06201146927791603
+    }
+  }
+}

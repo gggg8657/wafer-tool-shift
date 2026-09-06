@@ -3420,3 +3420,80 @@ claim to four protocols or complicate it.
 `scripts/chain_after_size.sh` queues both behind the running sweep, after the
 scale-aware sweep, and waits on the tmux session rather than oversubscribing a
 lease that is already busy.
+
+### 71. H67 was wrong in its interesting half, and my first control could not have detected it
+
+Two results here lean on the same fact about preprocessing in opposite
+directions. Input resolution was refuted as a lever because 97.7% of wafers are
+*upsampled* and a finer grid has nothing to recover. H65 then showed that same
+upsampling does harm, by making a defect's apparent width a function of its
+geometry. Neither statement covers the wafers that are **downsampled**.
+
+`resize_nearest` picks 64 row indices and 64 column indices and takes their
+outer product, so on a wafer larger than 64 it does not blur — it *drops* the
+rows and columns it did not pick. A failing die survives only if both its row
+and its column were sampled, which makes retention computable exactly rather
+than estimated.
+
+**H67, before the run:** among downsampled wafers a material fraction of failing
+dies is dropped, and the loss is worse for `Scratch` than for classes whose
+signature covers area, because a thin line intersects fewer sampled rows and
+columns than a blob.
+
+The first half holds. 3,481 wafers (2.0%) are downsampled; they keep 0.6559 of
+their failing dies on average and 832 keep under half. **None keeps zero**, so
+no label is voided — but a third of the failure evidence on 2% of the corpus is
+deleted before any model sees it, and nothing downstream would notice.
+
+The second half is wrong, and wrong in a way I had already half-committed to by
+calling `Edge-Ring` an area class. It is a thin annulus, and it loses the most.
+
+**Then the control, and the mistake inside it.** Bigger wafers drop more rows
+whatever is drawn on them, so a per-class difference in retention could be
+nothing but a per-class difference in wafer size. I computed, per wafer, what a
+uniform scatter of the same size would retain — |yi|/h times |xi|/w — and took
+the mean ratio per class. Every class came in between 0.995 and 1.006.
+
+That looks like a decisive null and it is worth almost nothing. **The mean ratio
+is ~1 for any defect shape, by construction.** A row survives with probability
+|yi|/h regardless of what is drawn on it, so the expectation carries no
+information about structure at all. Had the shape effect been enormous, that
+table would have looked exactly the same. I had built a check whose pass
+condition was near-vacuous — the second time this session, after
+`number_provenance.py` turned out to accept 86% of random four-digit decimals.
+The pattern is the same both times: a guard that compares an observation to a
+quantity that does not depend on the thing being tested.
+
+What separates a thin line from a scattered blob is the **dispersion**, not the
+mean. A scratch confined to a few rows retains nearly all or nearly none of
+itself depending on whether those rows survive; scattered failures average out.
+Per-class standard deviation of the ratio:
+
+| class | sd(actual / expected) |
+|---|---|
+| `Scratch` | **0.0794** |
+| `Loc` | 0.0629 |
+| `none` | 0.0620 |
+| `Center` | 0.0452 |
+| `Edge-Loc` | 0.0402 |
+| `Edge-Ring` | 0.0376 |
+| `Random` | 0.0173 |
+| `Donut` | 0.0054 |
+
+`Scratch` is the widest of the nine and `Donut` — a thick ring, the most
+spatially redundant signature in the corpus — the narrowest, by a factor of
+fifteen. `Random`, whose failures are scattered by definition, sits near the
+bottom exactly as the averaging argument requires. So H67's *reasoning* survives
+while H67's *statement* does not: thin structures are more exposed to which rows
+happen to survive, and that shows up in how unpredictable the loss is rather
+than in how large it is on average.
+
+The consequence worth carrying: the class this project's one positive result is
+about is also the class whose preprocessing loss is least predictable. Both
+findings about the resize now sit together — it **distorts** selectively, by
+scaling apparent width with geometry (H65), and it **deletes** uniformly in the
+mean but most erratically for thin structures (H67).
+
+Two entries ago I wrote that a mechanism established without a model should have
+its remedy tested without a model. The addition here is narrower and sharper:
+before believing a control, check that it *could* have come out differently.

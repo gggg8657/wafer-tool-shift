@@ -803,6 +803,45 @@ def main():
           "of wafers are *upsampled* to reach 64x64 and a finer grid has "
           "nothing to recover.")
         W("")
+        rf = js("resize_fidelity.json")
+        if rf:
+            _o = rf["overall"]
+            _pc = rf["per_class"]
+            _sd = {k: v["stdev_ratio_actual_over_expected"] for k, v in
+                   _pc.items() if v["stdev_ratio_actual_over_expected"]}
+            _worst = max(_sd, key=_sd.get) if _sd else None
+            _best = min(_sd, key=_sd.get) if _sd else None
+            W("That refutation covers the wafers that are upsampled and not "
+              f"the {100 * rf['frac_downsampled']:.1f}% that are "
+              f"**downsampled** — {rf['n_wafers_downsampled']:,} of them. "
+              "`resize_nearest` samples 64 row and 64 column indices and takes "
+              "their outer product, so on a wafer larger than 64 it does not "
+              "blur, it *drops* the rows and columns it did not pick. Those "
+              "wafers keep "
+              f"{_o['mean_fail_die_retention']:.4f} of their failing dies on "
+              f"average and {_o['n_losing_over_half']} of them keep under "
+              f"half. None keeps zero, so no label is voided, but a third of "
+              "the failure evidence on 2% of the corpus is deleted before any "
+              "model sees it and nothing downstream would notice.")
+            W("")
+            if _worst and _best:
+                W("**Which dies get deleted is shape-blind; how *predictably* "
+                  "they do is not.** Mean retention is explained by wafer size "
+                  "alone to within 0.6% for every one of the nine classes — "
+                  "and it has to be, since a row survives with probability "
+                  "|yi|/h whatever is drawn on it, so the mean carries no "
+                  "information about structure and a table of mean ratios "
+                  "would have been a vacuous null. The statistic that "
+                  "separates a thin line from a scattered blob is the "
+                  "dispersion, and there the classes do separate: "
+                  f"`{_worst}` has the widest spread at {_sd[_worst]:.4f} and "
+                  f"`{_best}` the narrowest at {_sd[_best]:.4f}. A scratch "
+                  "confined to a few rows keeps nearly all or nearly none of "
+                  "itself depending on whether those rows survive; scattered "
+                  "failures average out. So the class this paper's one "
+                  "positive result is about is also the class whose "
+                  "preprocessing loss is least predictable.")
+                W("")
         W("What was left is that `CnnResized.embed` is a global average over "
           "the final feature map. A `Scratch` is a thin connected line; "
           "averaged over the wafer it is close to a slightly elevated "
