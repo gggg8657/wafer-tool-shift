@@ -97,6 +97,11 @@ def main():
     ap.add_argument("--runs", default="runs")
     ap.add_argument("--out", default="paper_draft.md")
     a = ap.parse_args()
+
+    def js(name):
+        q = Path(a.runs) / name
+        return json.loads(q.read_text()) if q.exists() else None
+
     C = load(a.runs)
     L = []
     W = L.append
@@ -128,22 +133,36 @@ def main():
       "with no time involved. Meeting geometries never trained on, which we "
       "had assumed was the expensive part, costs approximately nothing.")
     W("")
+    _fam = js("dg_family_test.json") or {}
+    _ft = _fam.get("family_test") or {}
+    _fm = _fam.get("multiplicity") or {}
+    _famp = (f"p = {_ft['p_two_sided']:.5f}" if _ft else NM)
+    _po = _fm.get("per_objective") or {}
+    _sur = sorted((o for o, v in _po.items() if v.get("survives_holm_05")),
+                  key=lambda z: _po[z]["p_holm"])
+    _famh = (", ".join(f"`{o}` at {_po[o]['p_holm']:.4f}" for o in _sur)
+             if _sur else NM)
+    _nfam = len(_fam.get("objectives") or []) or None
     n_obj = len({k[2] for k in C if k[2] not in ("erm", "focal")})
-    words = {7: "Seven", 8: "Eight", 9: "Nine", 10: "Ten"}
+    words = {5: "Five", 6: "Six", 7: "Seven", 8: "Eight", 9: "Nine",
+             10: "Ten"}
     dt_done = sorted({k[2] for k in C if k[3] == "dtime" and k[2] != "erm"})
     W("The rest of the paper is a sequence of our own claims failing their own "
       "controls, and we think that is the contribution. "
-      f"{words.get(n_obj, n_obj)} borrowed invariance objectives fail to beat "
+      f"{words.get(_nfam, _nfam)} borrowed invariance objectives fail to beat "
       "ERM — a finding the first version of the experiment could not have "
       "produced otherwise, since it handed every objective a domain vocabulary "
       "of 32 buckets whose class distributions differ by a total variation of "
       f"0.02. Re-run against production-order deciles carrying nine times "
-      "that shift, none of the six beats ERM — and taken to eight seeds per "
-      "arm, **two are established as significantly worse than it**: GroupDRO "
-      "and domain-mixup, at p = 0.0017 and p = 0.0051. Our own three-seed "
-      "screen had called both unestablished; it was under-powered, and a null "
-      "asserted from an under-powered test is the failure mode this paper "
-      "spends most of its length on. Two methods we built "
+      "that shift and taken to eight seeds per arm, **all six sit below ERM "
+      "and the family is significantly worse than it in aggregate** — an "
+      "exact sign-flip test on the per-seed paired differences gives "
+      f"{_famp}, with every seed negative. Two objectives are individually "
+      f"worse after Holm correction over the six tests ({_famh}). Our own "
+      "three-seed screen had called them all unestablished; it was "
+      "under-powered, and a null asserted from an under-powered test is the "
+      "failure mode this paper spends most of its length on. Two methods we "
+      "built "
       "for this corpus do not survive either. An RPCA lot-signature channel is "
       "matched by a fourth channel of zeros — and could not have been "
       "otherwise, because the encoder is handed an untouched copy of what the "
@@ -453,10 +472,6 @@ def main():
     dt = [(o, a_, b) for o, a_, b in dt if a_]
     W("### The domain definition was doing the work")
     W("")
-    def js(name):
-        q = Path(a.runs) / name
-        return json.loads(q.read_text()) if q.exists() else None
-
     # these four total variations used to be typed into the sentence. They are
     # measurements of the corpus and belong in `runs/`, like every other number.
     _cs = js("corpus_stats.json") or {}

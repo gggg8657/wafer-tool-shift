@@ -128,7 +128,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | die-graph GNN (wafer-only subgraph) | erm | - | 0.7557 | - | 0.4898 | - | 0.1269 | 0.8889 |
 | CNN + RPCA lot-signature channel | erm | - | 0.8813 | - | 0.5000 | - | 0.7466 | 0.9315 |
 
-**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the 208 `lot` cells in `runs/` that carry the column, 111 report the identical 0.4898 and 75 more report exactly 0.5000 -- 89% of them on two values, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them. This applies to every protocol table in this section; it is stated once.
+**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the 216 `lot` cells in `runs/` that carry the column, 119 report the identical 0.4898 and 75 more report exactly 0.5000 -- 90% of them on two values, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them. This applies to every protocol table in this section; it is stated once.
 
 ## Borrowed objectives vs ERM -- protocol `lot_time`
 
@@ -486,9 +486,9 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | iid | size-invariant descriptors + MLP | erm | sess2 | 3 | 0.8443 | +/-0.0076 | 0.8532, 0.8417, 0.8380 |
 | iid | spectral operator, native resolution | erm | sess2 | 3 | 0.8576 | +/-0.0142 | 0.8578, 0.8433, 0.8718 |
 | lot | CNN on resized 64x64 (BatchNorm) | coral | - | 3 | 0.8468 | +/-0.0090 | 0.8553, 0.8479, 0.8373 |
-| lot | CNN on resized 64x64 (BatchNorm) | coral | dtime | 6 | 0.8470 | +/-0.0131 | 0.8569, 0.8373, 0.8388, 0.8592, 0.8566, 0.8329 |
+| lot | CNN on resized 64x64 (BatchNorm) | coral | dtime | 8 | 0.8493 | +/-0.0131 | 0.8569, 0.8373, 0.8388, 0.8592, 0.8566, 0.8329, 0.8542, 0.8584 |
 | lot | CNN on resized 64x64 (BatchNorm) | dann | - | 3 | 0.8517 | +/-0.0080 | 0.8596, 0.8436, 0.8518 |
-| lot | CNN on resized 64x64 (BatchNorm) | dann | dtime | 6 | 0.8466 | +/-0.0154 | 0.8583, 0.8319, 0.8460, 0.8471, 0.8628, 0.8337 |
+| lot | CNN on resized 64x64 (BatchNorm) | dann | dtime | 8 | 0.8487 | +/-0.0154 | 0.8583, 0.8319, 0.8460, 0.8471, 0.8628, 0.8337, 0.8523, 0.8574 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm | - | 3 | 0.8522 | +/-0.0069 | 0.8587, 0.8448, 0.8530 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm | dtime | 8 | 0.8585 | +/-0.0127 | 0.8583, 0.8438, 0.8521, 0.8629, 0.8664, 0.8505, 0.8644, 0.8692 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm | gnbn | 8 | 0.8596 | +/-0.0143 | 0.8569, 0.8532, 0.8563, 0.8599, 0.8689, 0.8455, 0.8621, 0.8740 |
@@ -496,9 +496,9 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot | CNN on resized 64x64 (BatchNorm) | group_dro | - | 3 | 0.8535 | +/-0.0063 | 0.8615, 0.8501, 0.8488 |
 | lot | CNN on resized 64x64 (BatchNorm) | group_dro | dtime | 8 | 0.8384 | +/-0.0200 | 0.8402, 0.8125, 0.8244, 0.8461, 0.8524, 0.8417, 0.8471, 0.8427 |
 | lot | CNN on resized 64x64 (BatchNorm) | hsic | - | 3 | 0.8527 | +/-0.0080 | 0.8628, 0.8484, 0.8469 |
-| lot | CNN on resized 64x64 (BatchNorm) | hsic | dtime | 6 | 0.8528 | +/-0.0140 | 0.8568, 0.8417, 0.8479, 0.8663, 0.8654, 0.8384 |
+| lot | CNN on resized 64x64 (BatchNorm) | hsic | dtime | 8 | 0.8556 | +/-0.0160 | 0.8568, 0.8417, 0.8479, 0.8663, 0.8654, 0.8384, 0.8575, 0.8704 |
 | lot | CNN on resized 64x64 (BatchNorm) | irm | - | 3 | 0.8418 | +/-0.0094 | 0.8536, 0.8371, 0.8348 |
-| lot | CNN on resized 64x64 (BatchNorm) | irm | dtime | 6 | 0.8503 | +/-0.0098 | 0.8529, 0.8424, 0.8443, 0.8620, 0.8569, 0.8431 |
+| lot | CNN on resized 64x64 (BatchNorm) | irm | dtime | 8 | 0.8539 | +/-0.0120 | 0.8529, 0.8424, 0.8443, 0.8620, 0.8569, 0.8431, 0.8634, 0.8664 |
 | lot | CNN on resized 64x64 (BatchNorm) | mixup_domain | - | 3 | 0.8398 | +/-0.0108 | 0.8541, 0.8330, 0.8324 |
 | lot | CNN on resized 64x64 (BatchNorm) | mixup_domain | dtime | 8 | 0.8405 | +/-0.0168 | 0.8522, 0.8246, 0.8347, 0.8492, 0.8582, 0.8317, 0.8362, 0.8373 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.8647 | +/-0.0044 | 0.8671, 0.8680, 0.8591 |
@@ -550,7 +550,7 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | size | CNN on resized 64x64 (BatchNorm) | coral | sizeseed | 3 | 0.7714 | +/-0.0137 | 0.7614, 0.7642, 0.7888 |
 | size | CNN on resized 64x64 (BatchNorm) | dann | sizeseed | 3 | 0.7744 | +/-0.0382 | 0.7426, 0.7618, 0.8189 |
 | size | CNN on resized 64x64 (BatchNorm) | erm | sess2 | 3 | 0.7843 | +/-0.0312 | 0.7724, 0.7590, 0.8214 |
-| size | CNN on resized 64x64 (BatchNorm) | erm | sizeseed | 3 | 0.7915 | +/-0.0368 | 0.7612, 0.7786, 0.8347 |
+| size | CNN on resized 64x64 (BatchNorm) | erm | sizeseed | 4 | 0.7724 | +/-0.0598 | 0.7612, 0.7786, 0.8347, 0.7150 |
 | size | CNN on resized 64x64 (BatchNorm) | group_dro | sizeseed | 3 | 0.6381 | +/-0.0922 | 0.5760, 0.5778, 0.7604 |
 | size | CNN on resized 64x64 (BatchNorm) | irm | sizeseed | 3 | 0.7657 | +/-0.0617 | 0.7482, 0.7127, 0.8362 |
 | size | CNN on resized 64x64 (BatchNorm) | logit_adjust | sizeseed | 3 | 0.6798 | +/-0.0680 | 0.6567, 0.6233, 0.7594 |
@@ -778,12 +778,12 @@ Every group-aware objective was originally handed `lot % 32` as its domain: 10,7
 
 | objective | representation | `lot % 32` (TV 0.021) | vs ERM | production decile (TV 0.182) | vs ERM | vs ERM under real domains |
 |---|---|---|---|---|---|---|
-| `coral` | CNN on resized 64x64 (BatchNorm) | 0.8468 ±0.0090 | -0.0053 | 0.8470 ±0.0131 | -0.0115 | ranges overlap |
-| `dann` | CNN on resized 64x64 (BatchNorm) | 0.8517 ±0.0080 | -0.0005 | 0.8466 ±0.0154 | -0.0118 | ranges overlap |
+| `coral` | CNN on resized 64x64 (BatchNorm) | 0.8468 ±0.0090 | -0.0053 | 0.8493 ±0.0131 | -0.0092 | ranges overlap |
+| `dann` | CNN on resized 64x64 (BatchNorm) | 0.8517 ±0.0080 | -0.0005 | 0.8487 ±0.0154 | -0.0098 | ranges overlap |
 | `erm` | CNN on resized 64x64 (BatchNorm) | 0.8522 ±0.0069 | +0.0000 | 0.8585 ±0.0127 | +0.0000 | ranges overlap |
 | `group_dro` | CNN on resized 64x64 (BatchNorm) | 0.8535 ±0.0063 | +0.0013 | 0.8384 ±0.0200 | -0.0201 | ranges overlap |
-| `hsic` | CNN on resized 64x64 (BatchNorm) | 0.8527 ±0.0080 | +0.0005 | 0.8528 ±0.0140 | -0.0057 | ranges overlap |
-| `irm` | CNN on resized 64x64 (BatchNorm) | 0.8418 ±0.0094 | -0.0103 | 0.8503 ±0.0098 | -0.0082 | ranges overlap |
+| `hsic` | CNN on resized 64x64 (BatchNorm) | 0.8527 ±0.0080 | +0.0005 | 0.8556 ±0.0160 | -0.0029 | ranges overlap |
+| `irm` | CNN on resized 64x64 (BatchNorm) | 0.8418 ±0.0094 | -0.0103 | 0.8539 ±0.0120 | -0.0045 | ranges overlap |
 | `mixup_domain` | CNN on resized 64x64 (BatchNorm) | 0.8398 ±0.0108 | -0.0124 | 0.8405 ±0.0168 | -0.0180 | ranges overlap |
 
 The last column asks whether the objective's seed range and ERM's seed range overlap under the *real* domain definition. This is the question H4 was posed to answer: were these methods tying with ERM because they had been switched off by a degenerate domain vocabulary? The answer is no — none of them beats ERM under a vocabulary carrying nine times the label shift.
@@ -821,6 +821,10 @@ The table above reads every objective as unestablished against ERM. That reading
 |---|---|---|---|---|---|---|
 | `group_dro` | 8 | 0.8384 | 0.8585 | -0.0201 | ranges overlap | **0.00171** |
 | `mixup_domain` | 8 | 0.8405 | 0.8585 | -0.0180 | ranges overlap | **0.00513** |
+| `coral` | 8 | 0.8493 | 0.8585 | -0.0092 | ranges overlap | **0.08718** |
+| `dann` | 8 | 0.8487 | 0.8585 | -0.0098 | ranges overlap | **0.07770** |
+| `irm` | 8 | 0.8539 | 0.8585 | -0.0045 | ranges overlap | **0.33800** |
+| `hsic` | 8 | 0.8556 | 0.8585 | -0.0029 | ranges overlap | **0.58073** |
 
 **Both are significantly worse than ERM.** The claim that no borrowed objective is distinguishable from ERM was a consequence of insufficient seeds, not of the methods being indistinguishable. The corrected statement is that none of them *beats* ERM, two are established as actively harmful under a domain definition that carries real shift, and the remaining four are genuinely unestablished at the seed budget run here.
 

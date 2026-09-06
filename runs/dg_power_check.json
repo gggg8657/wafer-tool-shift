@@ -20,5 +20,49 @@
     "p_two_sided": 0.005128205128205128,
     "arrangements": 12870,
     "ranges_overlap": true
+  },
+  "coral__macro_f1": {
+    "n_per_arm": 8,
+    "objective": "coral",
+    "metric": "macro_f1",
+    "mean_objective": 0.8492872518107766,
+    "mean_erm": 0.8584621202650695,
+    "difference": -0.00917486845429294,
+    "p_two_sided": 0.08717948717948718,
+    "arrangements": 12870,
+    "ranges_overlap": true
+  },
+  "dann__macro_f1": {
+    "n_per_arm": 8,
+    "objective": "dann",
+    "metric": "macro_f1",
+    "mean_objective": 0.848703469281896,
+    "mean_erm": 0.8584621202650695,
+    "difference": -0.009758650983173522,
+    "p_two_sided": 0.0777000777000777,
+    "arrangements": 12870,
+    "ranges_overlap": true
+  },
+  "irm__macro_f1": {
+    "n_per_arm": 8,
+    "objective": "irm",
+    "metric": "macro_f1",
+    "mean_objective": 0.8539326838260926,
+    "mean_erm": 0.8584621202650695,
+    "difference": -0.004529436438976964,
+    "p_two_sided": 0.337995337995338,
+    "arrangements": 12870,
+    "ranges_overlap": true
+  },
+  "hsic__macro_f1": {
+    "n_per_arm": 8,
+    "objective": "hsic",
+    "metric": "macro_f1",
+    "mean_objective": 0.8555588507458786,
+    "mean_erm": 0.8584621202650695,
+    "difference": -0.002903269519190954,
+    "p_two_sided": 0.5807303807303807,
+    "arrangements": 12870,
+    "ranges_overlap": true
   }
 }

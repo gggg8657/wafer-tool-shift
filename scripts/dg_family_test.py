@@ -1,0 +1,144 @@
+"""Two questions the six per-objective tests do not answer.
+
+At eight seeds under a domain vocabulary that carries real shift, all six
+borrowed objectives sit below ERM and the p-values order monotonically with
+effect size: group_dro -0.0201 (0.00171), mixup_domain -0.0180 (0.00513),
+dann -0.0098 (0.0777), coral -0.0092 (0.0872), irm -0.0045 (0.338),
+hsic -0.0029 (0.581).
+
+**1. Six tests at 0.05.** Reporting two significant results out of six without
+saying six were run is the oldest way to manufacture a finding. Holm-Bonferroni
+is applied here, and the two survive it -- but that has to be shown, not
+asserted.
+
+**2. All six point the same way.** No single test asks whether the *family*
+underperforms ERM, and the obvious way to ask is wrong: the six comparisons
+share one ERM baseline and one corpus, so they are not independent and a sign
+test across them would badly overstate its evidence.
+
+The test that is valid pairs by seed. Every arm was run at seeds 0-7 against an
+ERM arm at the same seeds, and a seed fixes the split, the initialisation and
+the batch order. So for each seed take the mean of the six objectives minus ERM
+at that same seed, giving eight paired differences, and test those by exact
+sign-flipping: under the null that the family matches ERM the differences are
+symmetric about zero, so all 2^8 = 256 sign assignments are equally likely.
+That is exact, respects the pairing, and never treats the shared baseline as
+six independent observations. Its smallest attainable two-sided p is 2/256 =
+0.0078.
+
+    python scripts/dg_family_test.py     # writes runs/dg_family_test.json
+"""
+from __future__ import annotations
+
+import glob
+import itertools
+import json
+from pathlib import Path
+
+OBJS = ("coral", "dann", "irm", "group_dro", "mixup_domain", "hsic")
+
+
+def arm(obj, tag="dtime"):
+    out = {}
+    for f in glob.glob(f"runs/lot__cnn_bn__{obj}__{tag}__s*.json"):
+        r = json.load(open(f))
+        out[r["seed"]] = r["test"]["macro_f1"]
+    return out
+
+
+def holm(pvals):
+    """Holm-Bonferroni step-down. Returns adjusted p in the input order."""
+    order = sorted(range(len(pvals)), key=lambda i: pvals[i])
+    adj = [0.0] * len(pvals)
+    running = 0.0
+    for rank, i in enumerate(order):
+        v = (len(pvals) - rank) * pvals[i]
+        running = max(running, v)          # enforce monotonicity
+        adj[i] = min(1.0, running)
+    return adj
+
+
+def sign_flip_p(diffs):
+    """Exact two-sided sign-flip test on paired differences."""
+    n = len(diffs)
+    obs = abs(sum(diffs))
+    hits = 0
+    for signs in itertools.product((1, -1), repeat=n):
+        if abs(sum(s * d for s, d in zip(signs, diffs))) >= obs - 1e-15:
+            hits += 1
+    return hits / 2 ** n, 2 ** n
+
+
+def main():
+    base = arm("erm")
+    per = {o: arm(o) for o in OBJS}
+
+    # ---- 1. multiplicity over the six per-objective tests
+    prev = json.loads(Path("runs/dg_power_check.json").read_text())
+    names, ps = [], []
+    for o in OBJS:
+        k = f"{o}__macro_f1"
+        if k in prev:
+            names.append(o)
+            ps.append(prev[k]["p_two_sided"])
+    adj = holm(ps)
+    multiplicity = {
+        o: {"p_raw": p, "p_holm": a, "survives_holm_05": a < 0.05,
+            "significant_raw_05": p < 0.05}
+        for o, p, a in zip(names, ps, adj)
+    }
+
+    # ---- 2. family-level paired test on the seeds every arm shares
+    shared = sorted(set(base).intersection(*(set(per[o]) for o in OBJS)))
+    diffs = [sum(per[o][s] for o in OBJS) / len(OBJS) - base[s] for s in shared]
+    p_fam, n_arr = sign_flip_p(diffs)
+
+    res = {
+        "what": "multiplicity correction and a family-level paired test for "
+                "the six borrowed DG objectives under domain-def time_decile",
+        "protocol": "lot", "encoder": "cnn_bn", "tag": "dtime",
+        "objectives": list(OBJS),
+        "multiplicity": {
+            "method": "Holm-Bonferroni over the six per-objective permutation "
+                      "tests", "n_tests": len(ps),
+            "per_objective": multiplicity,
+            "n_significant_raw": sum(v["significant_raw_05"]
+                                     for v in multiplicity.values()),
+            "n_survives_holm": sum(v["survives_holm_05"]
+                                   for v in multiplicity.values()),
+        },
+        "family_test": {
+            "method": "exact two-sided sign-flip test on per-seed paired "
+                      "differences (mean of six objectives minus ERM at the "
+                      "same seed)",
+            "why_paired": "the six comparisons share one ERM baseline and one "
+                          "corpus, so they are not independent; pairing by "
+                          "seed holds the split, the initialisation and the "
+                          "batch order fixed and never counts the shared "
+                          "baseline six times",
+            "seeds": shared, "n_pairs": len(shared),
+            "per_seed_difference": dict(zip(map(str, shared), diffs)),
+            "mean_difference": sum(diffs) / len(diffs),
+            "n_negative": sum(1 for d in diffs if d < 0),
+            "p_two_sided": p_fam,
+            "arrangements": n_arr,
+            "min_attainable_p": 2.0 / n_arr,
+        },
+    }
+    Path("runs/dg_family_test.json").write_text(json.dumps(res, indent=2))
+
+    print("Holm-Bonferroni over six tests:")
+    for o in names:
+        v = multiplicity[o]
+        print(f"  {o:14s} p={v['p_raw']:.5f}  holm={v['p_holm']:.5f}"
+              f"  {'survives' if v['survives_holm_05'] else ''}")
+    print(f"\nFamily paired sign-flip test on {len(shared)} seeds:")
+    print(f"  mean difference {res['family_test']['mean_difference']:+.4f}, "
+          f"{res['family_test']['n_negative']}/{len(diffs)} seeds negative")
+    print(f"  p = {p_fam:.5f} over {n_arr} sign assignments "
+          f"(floor {2.0 / n_arr:.5f})")
+    print("\nwrote runs/dg_family_test.json")
+
+
+if __name__ == "__main__":
+    main()

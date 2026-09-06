@@ -364,27 +364,72 @@ def main():
             W("")
             dg = js("dg_power_check.json")
             if dg:
+                fam = js("dg_family_test.json") or {}
+                mult = (fam.get("multiplicity") or {}).get("per_objective", {})
                 W("**But \"nothing is distinguishable from ERM\" was wrong, "
-                  "and it was wrong because three seeds cannot see it.** The "
-                  "two largest effects, taken to eight seeds per arm and read "
-                  "with an exact permutation test:")
+                  "and it was wrong because three seeds cannot see it.** All "
+                  "six objectives are now at eight seeds per arm, read with an "
+                  "exact permutation test against ERM at the same seeds:")
                 W("")
-                W(table([[f"`{v['objective']}`", v["n_per_arm"],
-                          f"{v['difference']:+.4f}",
-                          "ranges overlap" if v["ranges_overlap"]
-                          else "ranges disjoint",
-                          f"**{v['p_two_sided']:.5f}**"] for v in dg.values()],
-                        ["objective", "seeds/arm", "vs ERM", "range screen",
-                         "exact permutation p"]))
+                rows_dg = []
+                for v in sorted(dg.values(), key=lambda z: z["difference"]):
+                    h = mult.get(v["objective"], {})
+                    rows_dg.append([
+                        f"`{v['objective']}`", v["n_per_arm"],
+                        f"{v['difference']:+.4f}",
+                        f"**{v['p_two_sided']:.5f}**"
+                        if v["p_two_sided"] < 0.05 else f"{v['p_two_sided']:.5f}",
+                        (f"**{h['p_holm']:.4f}**" if h.get("survives_holm_05")
+                         else f"{h['p_holm']:.4f}") if h else NM])
+                W(table(rows_dg, ["objective", "seeds/arm", "vs ERM",
+                                  "exact permutation p", "Holm-adjusted p"]))
                 W("")
-                W("Both are **significantly worse than ERM**. The corrected "
-                  "claim is that none of the borrowed objectives helps, two are "
-                  "established as actively harmful under a domain definition "
-                  "that carries real shift, and four are genuinely "
-                  "unestablished at this seed budget. That is a better result "
+                nsr = (fam.get("multiplicity") or {}).get("n_significant_raw")
+                nsh = (fam.get("multiplicity") or {}).get("n_survives_holm")
+                if nsr is not None:
+                    W(f"**Every one of the six is negative.** {nsr} reach "
+                      f"p < 0.05 individually and {nsh} survive "
+                      "Holm-Bonferroni over the six tests — which has to be "
+                      "shown rather than asserted, because reporting two "
+                      "significant results out of six without saying six were "
+                      "run is the oldest way to manufacture a finding.")
+                    W("")
+                ft = fam.get("family_test") or {}
+                if ft:
+                    W("**The six all pointing the same way is itself a "
+                      "result, and the obvious way to test it is wrong.** The "
+                      "comparisons share one ERM baseline and one corpus, so "
+                      "they are not independent and a sign test across "
+                      "objectives would badly overstate its evidence. Pairing "
+                      "by seed avoids that: a seed fixes the split, the "
+                      "initialisation and the batch order, so the mean of the "
+                      "six objectives minus ERM *at the same seed* gives "
+                      f"{ft['n_pairs']} paired differences that can be "
+                      "sign-flipped exactly.")
+                    W("")
+                    W(f"All {ft['n_negative']} of {ft['n_pairs']} are "
+                      f"negative, mean {ft['mean_difference']:+.4f}, "
+                      f"**p = {ft['p_two_sided']:.5f}** over "
+                      f"{ft['arrangements']} sign assignments. **The borrowed "
+                      "objective family as a whole is worse than ERM on this "
+                      "corpus.**")
+                    W("")
+                    if abs(ft["p_two_sided"] - ft["min_attainable_p"]) < 1e-12:
+                        W(f"That p is the floor of this test — with "
+                          f"{ft['n_pairs']} seeds, {ft['arrangements']} sign "
+                          "assignments, nothing below "
+                          f"{ft['min_attainable_p']:.5f} is reachable. The "
+                          "result is as strong as eight seeds can make it and "
+                          "no stronger; a smaller p would need more seeds, not "
+                          "a better argument.")
+                        W("")
+                W("The corrected claim is that none of the borrowed "
+                  "objectives helps, the family is established as harmful in "
+                  "aggregate, and two objectives are individually harmful "
+                  "after correction for multiplicity. That is a better result "
                   "than the null it replaces: a uniformly null table cannot "
-                  "show that the benchmark would detect a harmful method if one "
-                  "existed, and this does. **Rules out:** this family of "
+                  "show that the benchmark would detect a harmful method if "
+                  "one existed, and this does. **Rules out:** this family of "
                   "invariance objectives on this corpus, now with evidence "
                   "rather than with silence.")
                 W("")

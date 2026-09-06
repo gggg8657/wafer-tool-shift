@@ -1,0 +1,88 @@
+{
+  "what": "multiplicity correction and a family-level paired test for the six borrowed DG objectives under domain-def time_decile",
+  "protocol": "lot",
+  "encoder": "cnn_bn",
+  "tag": "dtime",
+  "objectives": [
+    "coral",
+    "dann",
+    "irm",
+    "group_dro",
+    "mixup_domain",
+    "hsic"
+  ],
+  "multiplicity": {
+    "method": "Holm-Bonferroni over the six per-objective permutation tests",
+    "n_tests": 6,
+    "per_objective": {
+      "coral": {
+        "p_raw": 0.08717948717948718,
+        "p_holm": 0.3108003108003108,
+        "survives_holm_05": false,
+        "significant_raw_05": false
+      },
+      "dann": {
+        "p_raw": 0.0777000777000777,
+        "p_holm": 0.3108003108003108,
+        "survives_holm_05": false,
+        "significant_raw_05": false
+      },
+      "irm": {
+        "p_raw": 0.337995337995338,
+        "p_holm": 0.675990675990676,
+        "survives_holm_05": false,
+        "significant_raw_05": false
+      },
+      "group_dro": {
+        "p_raw": 0.0017094017094017094,
+        "p_holm": 0.010256410256410256,
+        "survives_holm_05": true,
+        "significant_raw_05": true
+      },
+      "mixup_domain": {
+        "p_raw": 0.005128205128205128,
+        "p_holm": 0.02564102564102564,
+        "survives_holm_05": true,
+        "significant_raw_05": true
+      },
+      "hsic": {
+        "p_raw": 0.5807303807303807,
+        "p_holm": 0.675990675990676,
+        "survives_holm_05": false,
+        "significant_raw_05": false
+      }
+    },
+    "n_significant_raw": 2,
+    "n_survives_holm": 2
+  },
+  "family_test": {
+    "method": "exact two-sided sign-flip test on per-seed paired differences (mean of six objectives minus ERM at the same seed)",
+    "why_paired": "the six comparisons share one ERM baseline and one corpus, so they are not independent; pairing by seed holds the split, the initialisation and the batch order fixed and never counts the shared baseline six times",
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "n_pairs": 8,
+    "per_seed_difference": {
+      "0": -0.005443216198707801,
+      "1": -0.012049545701967035,
+      "2": -0.012780448242881715,
+      "3": -0.00789918993635852,
+      "4": -0.007671103454449879,
+      "5": -0.013591441775801294,
+      "6": -0.012585077935779676,
+      "7": -0.0138226746844623
+    },
+    "mean_difference": -0.010730337241301027,
+    "n_negative": 8,
+    "p_two_sided": 0.0078125,
+    "arrangements": 256,
+    "min_attainable_p": 0.0078125
+  }
+}

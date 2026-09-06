@@ -3165,3 +3165,62 @@ is the actual question, and I do not know the answer.
 Until it lands, `size` is **unresolved rather than negative**, and the claim
 that this family is ruled out "on either protocol, with no exception left" has
 been withdrawn to rest on `lot` alone.
+
+### 67. H63 scored: two of four, both misses in the same direction
+
+**H63, stated in `scripts/dg_complete.sh` before the run:** "coral and dann
+separate from ERM at p < 0.05 and are worse; irm and hsic do not." The reasoning
+was that the first two had roughly twice the three-seed effect of the last two,
+and every DG effect measured on this corpus has been negative, so the ones with
+more signal should resolve first. I wrote that I expected to get at least one of
+the four wrong.
+
+| objective | vs ERM | p at n=8 | H63 | outcome |
+|---|---|---|---|---|
+| `dann` | -0.0098 | 0.07770 | separates | **wrong** |
+| `coral` | -0.0092 | 0.08718 | separates | **wrong** |
+| `irm` | -0.0045 | 0.33800 | does not | right |
+| `hsic` | -0.0029 | 0.58073 | does not | right |
+
+Two of four, and **both misses in the same direction**: I over-predicted
+significance. The direction of the effects was right in all four cases — every
+one is negative — and the size was not. That is the same error the three-seed
+screen makes, made by me instead of by the instrument, and it is worth noticing
+that having spent this whole weekend on exactly this failure did not stop me
+committing it. `coral` and `dann` at 0.087 and 0.078 are the region where a
+prior feels confirmed and is not.
+
+**What the completed table then showed is better than what H63 was asking
+about.** All six objectives are negative and the p-values order monotonically
+with effect size. Two things follow that no per-objective test states, and one
+of them I nearly got wrong.
+
+*Multiplicity.* Six tests were run at 0.05 and two came back significant.
+Reporting that without saying six were run is the oldest way to manufacture a
+finding. Under Holm-Bonferroni `group_dro` goes to 0.0103 and `mixup_domain` to
+0.0256; both survive. That had to be computed, not assumed — with six tests the
+threshold for the smallest is 0.0083, and `group_dro` at 0.00171 clears it with
+less room than the raw p suggests.
+
+*The family.* Six out of six pointing the same way is itself evidence, and the
+obvious test of it is invalid: the comparisons share one ERM baseline and one
+corpus, so a sign test across objectives would treat one baseline as six
+independent observations. Pairing by seed fixes this. A seed fixes the split,
+the initialisation and the batch order, so the mean of the six objectives minus
+ERM *at the same seed* gives eight paired differences, and under the null those
+are symmetric about zero, so all 2^8 sign assignments are equally likely. Exact,
+correctly paired, no independence assumption across objectives.
+
+**All 8 of 8 differences are negative, mean -0.0107, p = 0.00781.** The borrowed
+objective family as a whole is worse than ERM on this corpus.
+
+The honest qualification, which the script records rather than my writing it
+down once: 0.00781 is 2/256, **the floor of the test**. Eight seeds cannot
+produce a smaller p however large the effect. The result is as strong as this
+seed budget can make it and no stronger, and it would be easy to read
+"p = 0.008" as though more data could not have said more. It could.
+
+This is now the strongest positive claim about a negative result in the project,
+and it arrived from asking a question about the *shape* of a table — all six the
+same sign — rather than about any cell in it. The same instinct that found the
+duplicated section in entry 65.
