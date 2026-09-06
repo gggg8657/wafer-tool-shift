@@ -725,14 +725,46 @@ def main():
                   "it, so `[:40]` of a sorted list is a slice and not a sample, "
                   "and it happened to be the most favourable slice available.")
                 W("")
-    W("On `lot` the three fourth-channel variants are separated from each other "
-      "by less than the seed spread of any one of them. **A channel of zeros "
-      "buys what the decomposition buys.** Whatever the fourth channel is worth "
-      "there, it is worth as extra first-layer capacity, not as information "
-      "about the tool. On `lot_time` the residual is ahead of both controls at "
-      "every seed, which is the one place a genuine tool signature should help; "
-      "the separation is below the controls' half-range at n=3, so we record it "
-      "as a hypothesis and not a result.")
+    _npa = js("null_power_audit.json") or {}
+    _rp = next((e for e in _npa.get("families", [])
+                if e["label"].startswith("RPCA")), None)
+    _fl = floor_for(F, "lot")
+    if _rp and _rp.get("could_reach_05"):
+        _cmp = {c["treatment"]: c for c in _rp["comparisons"]}
+        W("**This null is now powered, which it was not for most of the "
+          "weekend.** The ablation originally ran at three seeds per arm, "
+          "where an exact permutation test cannot return below 0.10 — so it "
+          "could not have detected a difference at any effect size, and the "
+          "sentence below was resting on it. At eight seeds per arm, against "
+          "the zeros channel:")
+        W("")
+        W(table([[f"`{t.replace('rpca2_', '')}`", str(c["n_per_arm"]),
+                  f"{c['difference']:+.5f}", f"{c['p_two_sided']:.4f}",
+                  f"{c['min_attainable_p']:.5f}"]
+                 for t, c in _cmp.items()],
+                ["fourth channel", "seeds/arm", "vs zeros", "exact "
+                 "permutation p", "smallest attainable p"]))
+        W("")
+        _fm = _cmp.get("rpca2_failmask")
+        if _fm and abs(_fm["difference"]) > 0:
+            W("The test can now resolve a difference "
+              f"{_fl / _rp['min_attainable_p']:.0f} times smaller than `lot`'s "
+              f"run-to-run floor of {_fl:.4f}, and it finds none. The raw "
+              "failed-die mask and a channel of **zeros** differ by "
+              f"{abs(_fm['difference']):.6f} — "
+              f"{_fl / abs(_fm['difference']):.0f} times below that floor. "
+              "This is no longer \"we could not tell them apart\"; it is "
+              "\"they are the same, measured with an instrument that would "
+              "have said otherwise\".")
+            W("")
+    W("So on `lot` the three fourth-channel variants are separated from each "
+      "other by less than the seed spread of any one of them. **A channel of "
+      "zeros buys what the decomposition buys.** Whatever the fourth channel "
+      "is worth there, it is worth as extra first-layer capacity, not as "
+      "information about the tool. On `lot_time` the residual is ahead of both "
+      "controls at every seed, which is the one place a genuine tool signature "
+      "should help; the separation is below the controls' half-range at n=3, "
+      "so we record it as a hypothesis and not a result.")
     W("")
     W("### 4.2 Lot-adversarial self-supervised pretraining is worse than "
       "random initialization")

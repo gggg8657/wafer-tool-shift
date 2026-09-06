@@ -174,6 +174,25 @@ def main():
     _size_sig = (", ".join(f"`{v['objective']}` (p = {v['p_two_sided']:.4f})"
                            for v in _spsig) + " are"
                  if _spsig else "no objective is")
+    _npa2 = js("null_power_audit.json") or {}
+    _rpf = next((e for e in _npa2.get("families", [])
+                 if e["label"].startswith("RPCA")), None)
+    _flot = floor_for(F, "lot")
+    _rpca_line = (
+        "a fourth channel of *zeros* buys the same, and could not have failed "
+        "to, because `stack_channels` hands the encoder an intact copy of what "
+        "the decomposition removed. Now measured with a test that could have "
+        "said otherwise: at eight seeds per arm the raw failed-die mask and a "
+        "channel of zeros differ by "
+        f"{min(abs(c['difference']) for c in _rpf['comparisons']):.6f}, "
+        f"{_flot / min(abs(c['difference']) for c in _rpf['comparisons']):.0f} "
+        "times below the run-to-run floor. Closes off lot-signature channels "
+        "for this architecture (§2.3)"
+        if _rpf and _rpf.get("could_reach_05") else
+        "a fourth channel of *zeros* buys the same, and could not have failed "
+        "to, because `stack_channels` hands the encoder an intact copy of what "
+        "the decomposition removed. Closes off lot-signature channels for this "
+        "architecture (§2.3)")
     _sv = js("sinkhorn_verdict.json") or {}
     if _sv and _sv.get("collapsed_lambdas"):
         _z = _sv["lambda_zero_control"]
@@ -257,11 +276,7 @@ def main():
       "one.")
     W("")
     for _c, _r in (
-        ("The RPCA fourth channel helps",
-         "a fourth channel of *zeros* buys the same, and could not have failed "
-         "to, because `stack_channels` hands the encoder an intact copy of "
-         "what the decomposition removed. Closes off lot-signature channels "
-         "for this architecture (§2.3)"),
+        ("The RPCA fourth channel helps", _rpca_line),
         ("Lot-adversarial SSL pretraining helps",
          "worse than random initialisation at every learning rate. Closes off "
          "this pretraining objective (§2.3)"),

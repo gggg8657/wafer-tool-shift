@@ -205,7 +205,16 @@ The transition is abrupt and there is no useful regime between the two failure m
 
 This was documented at the time and the documentation was measured on the wrong population. The original sweep took the first 40 lots of a lot-id-sorted list and reported a mean rank of 0.475 and 0.302 of the failure energy in the low-rank part at the standard weight — from which it concluded the decomposition was working. The same weight on a random sample gives 0.040 and 0.022. Lot id is not arbitrary on this corpus: geometry and failed-die rate both drift with it, so `[:40]` of a sorted list is a slice and not a sample, and it happened to be the most favourable slice available.
 
-On `lot` the three fourth-channel variants are separated from each other by less than the seed spread of any one of them. **A channel of zeros buys what the decomposition buys.** Whatever the fourth channel is worth there, it is worth as extra first-layer capacity, not as information about the tool. On `lot_time` the residual is ahead of both controls at every seed, which is the one place a genuine tool signature should help; the separation is below the controls' half-range at n=3, so we record it as a hypothesis and not a result.
+**This null is now powered, which it was not for most of the weekend.** The ablation originally ran at three seeds per arm, where an exact permutation test cannot return below 0.10 — so it could not have detected a difference at any effect size, and the sentence below was resting on it. At eight seeds per arm, against the zeros channel:
+
+| fourth channel | seeds/arm | vs zeros | exact permutation p | smallest attainable p |
+|---|---|---|---|---|
+| `residual` | 8 | -0.00198 | 0.6651 | 0.00016 |
+| `failmask` | 8 | -0.00005 | 0.9925 | 0.00016 |
+
+The test can now resolve a difference 35 times smaller than `lot`'s run-to-run floor of 0.0054, and it finds none. The raw failed-die mask and a channel of **zeros** differ by 0.000046 — 118 times below that floor. This is no longer "we could not tell them apart"; it is "they are the same, measured with an instrument that would have said otherwise".
+
+So on `lot` the three fourth-channel variants are separated from each other by less than the seed spread of any one of them. **A channel of zeros buys what the decomposition buys.** Whatever the fourth channel is worth there, it is worth as extra first-layer capacity, not as information about the tool. On `lot_time` the residual is ahead of both controls at every seed, which is the one place a genuine tool signature should help; the separation is below the controls' half-range at n=3, so we record it as a hypothesis and not a result.
 
 ### 4.2 Lot-adversarial self-supervised pretraining is worse than random initialization
 
@@ -358,10 +367,10 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (GroupNorm) | `erm` | sslinit_lr1e-3 | 2 | 0.7755 | ±0.0022 |
 | `lot` | CNN (GroupNorm) | `erm` | sslinit_lr2e-4 | 2 | 0.6529 | ±0.0087 |
 | `lot` | CNN (GroupNorm) | `erm` | sslinit_lr5e-4 | 2 | 0.7427 | ±0.0013 |
-| `lot` | CNN (GroupNorm) | `focal` | focal0.0 | 7 | 0.8734 | ±0.0129 |
+| `lot` | CNN (GroupNorm) | `focal` | focal0.0 | 8 | 0.8753 | ±0.0137 |
 | `lot` | CNN (GroupNorm) | `focal` | focal0.5 | 2 | 0.8759 | ±0.0001 |
 | `lot` | CNN (GroupNorm) | `focal` | focal1.0 | 2 | 0.8729 | ±0.0019 |
-| `lot` | CNN (GroupNorm) | `focal` | focal2.0 | 7 | 0.8739 | ±0.0115 |
+| `lot` | CNN (GroupNorm) | `focal` | focal2.0 | 8 | 0.8750 | ±0.0115 |
 | `lot` | CNN (GroupNorm) | `focal` | focal5.0 | 2 | 0.8745 | ±0.0051 |
 | `lot` | descriptors + MLP | `erm` | sess2 | 3 | 0.8338 | ±0.0067 |
 | `lot` | die-graph GNN | `erm` | sess2 | 3 | 0.7524 | ±0.0036 |
@@ -371,7 +380,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN + 4th channel | `erm` | hideraw2_residual | 3 | 0.8434 | ±0.0089 |
 | `lot` | CNN + 4th channel | `erm` | rpca2_failmask | 8 | 0.8764 | ±0.0163 |
 | `lot` | CNN + 4th channel | `erm` | rpca2_residual | 8 | 0.8745 | ±0.0114 |
-| `lot` | CNN + 4th channel | `erm` | rpca2_zeros | 7 | 0.8748 | ±0.0147 |
+| `lot` | CNN + 4th channel | `erm` | rpca2_zeros | 8 | 0.8765 | ±0.0147 |
 | `lot` | CNN + 4th channel | `erm` | sess2 | 3 | 0.8717 | ±0.0079 |
 | `lot` | CNN + 4th channel | `erm` | zerochan | 3 | 0.8689 | ±0.0075 |
 | `lot` | spectral operator | `erm` | sess2 | 3 | 0.8405 | ±0.0216 |
@@ -517,11 +526,11 @@ Twice this project reported a null that turned out to be a property of the seed 
 
 | null | seeds/arm | smallest attainable p | could reach 0.05? |
 |---|---|---|---|
-| RPCA fourth channel vs a channel of zeros | 3 | 0.1000 | **no** |
+| RPCA fourth channel vs a channel of zeros | 8 | 0.0002 | yes |
 | focal loss vs its bit-exact gamma = 0 control | 2 | 0.3333 | **no** |
 | meanmean capacity control vs mean | 8 | 0.0002 | yes |
 
-**2 of 3 rest on a test that could not have returned p < 0.05 at any effect size.** They are absence of evidence, and this paper has been writing them as evidence of absence. `scripts/null_power_fix.sh` takes both to eight seeds.
+**1 of 3 rest on a test that could not have returned p < 0.05 at any effect size.** They are absence of evidence, and this paper has been writing them as evidence of absence. `scripts/null_power_fix.sh` takes both to eight seeds.
 
 **Neither is expected to reverse, and the reason matters more than the expectation.** The RPCA withdrawal does not rest on its ablation at all: the low-rank part is rank 0 for 94.83% of decomposed wafers, the residual is bit-identical to the raw failed-die mask for 95.27% of all of them, and `stack_channels` concatenates the fourth channel to an *intact* one-hot, so the encoder reads an untouched copy of whatever the decomposition removed. The control could not have failed to tie. The ablation corroborates a mechanism; it was never the evidence, and the sentence that presented it as such was overstating a weak test while a strong argument sat beside it.
 

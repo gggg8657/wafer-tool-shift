@@ -4004,3 +4004,44 @@ reading the rendered output rather than trusting the patch. Second,
 in this very section on its first real use and refused the commit with one
 unambiguous line. That is the failure it was built for, and the interval between
 building it and needing it was one turn.
+
+### 81. H68's RPCA half: the null is now evidence of absence
+
+The brief called the RPCA fourth-channel ablation "the most important task you
+have". For most of the weekend it was decided by three seeds per arm, where the
+exact test cannot return below 0.10 — so the withdrawal rested on a
+measurement that could not have contradicted it whatever the truth was. Entry 76
+found that; `null_power_fix.sh` fixed it. All three arms are now at eight seeds.
+
+| fourth channel | seeds/arm | vs zeros | exact permutation p | smallest attainable p |
+|---|---|---|---|---|
+| `residual` | 8 | -0.00198 | 0.6651 | 0.00016 |
+| `failmask` | 8 | **-0.00005** | 0.9925 | 0.00016 |
+
+**H68 predicted neither null would reverse. The RPCA half holds, and it holds
+much more strongly than before.** The instrument can now resolve a difference
+thirty-five times smaller than `lot`'s run-to-run floor of 0.0054. It finds
+nothing. The raw failed-die mask and a channel of **zeros** differ by
+0.000046 — a hundred and eighteen times below that floor.
+
+The distinction that matters is not the p-value but what changed about the
+claim. Before: *we could not tell them apart.* Now: *they are the same, measured
+with an instrument that would have said otherwise.* Those read alike in a table
+and are not the same statement, and only the second is worth putting in front of
+someone deciding whether to build on the idea.
+
+It is also the tidiest confirmation of the mechanism this project has. The
+prediction was structural rather than empirical: `stack_channels` concatenates
+the fourth channel to an *intact* one-hot, so the encoder always holds an
+untouched copy of whatever the decomposition removed, and the control therefore
+**could not** have failed to tie. A structural argument predicts not just a null
+but a *tight* one, and 0.000046 against a floor of 0.0054 is what tight looks
+like. Had the arms come back separated by, say, half the floor, the mechanism
+would have been wrong even though the withdrawal survived — which is the kind
+of thing an underpowered test hides in both directions.
+
+Two things left open, stated rather than glossed. Only `γ = 2.0` was taken to
+eight seeds on the focal side; `γ = 0.5`, `1.0` and `5.0` remain at two seeds
+with a floor of 0.3333, so "focal contributes nothing" is settled at one gamma
+and unsettled at three. And `lot_time`'s residual-ahead-at-every-seed
+observation is still n=3 and still recorded as a hypothesis.
