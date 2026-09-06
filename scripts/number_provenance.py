@@ -44,6 +44,7 @@ import sys
 from pathlib import Path
 
 SOURCES = ("scripts/report.py", "scripts/paper.py", "scripts/weekend.py")
+RATCHET = Path("runs/typed_decimal_ratchet.json")
 # >=3 fraction digits: 0.85 is a rounded restatement, 0.8523 is a measurement
 LITERAL = re.compile(r"(?<![\d.])(\d{1,2}\.\d{3,})(?![\d])")
 # things that are not measurements
@@ -138,13 +139,42 @@ def main():
     print("So traceability is close to vacuous below five digits. The count "
           "that matters is the first one: every typed decimal is frozen "
           "against a runs/ that moves, whether or not it matches today.")
+
+    # ---- the part of this script that can actually fail.
+    # `guard_audit.py` reports the traceability check as VACUOUS, correctly: it
+    # accepts ~86% of random four-digit decimals, so a green result from it
+    # means nothing. What *is* checkable is the inventory. Every typed decimal
+    # is a number frozen against a `runs/` that keeps moving, so the count is
+    # a debt and it should only ever go down. This ratchet can genuinely fail:
+    # add one hand-typed measurement to a generator and it does.
+    total_typed = n_ok + n_bad
+    prev = None
+    if RATCHET.exists():
+        prev = json.loads(RATCHET.read_text()).get("count")
+    breach = prev is not None and total_typed > prev
+    print(f"\nRatchet: {total_typed} decimals typed into generator prose"
+          + (f" (was {prev})" if prev is not None else " (baseline set)"))
+    if breach:
+        print(f"  RAISED by {total_typed - prev}. A number typed into a "
+              "sentence decays exactly as fast as one typed into a table and "
+              "is harder to see. Compute it from `runs/` instead.")
+    elif prev is not None and total_typed < prev:
+        print(f"  lowered by {prev - total_typed}")
+    if prev is None or total_typed < prev:
+        RATCHET.write_text(json.dumps(
+            {"count": total_typed, "sources": list(SOURCES),
+             "what": "decimals with >=3 fraction digits typed into generator "
+                     "prose; a debt that should only decrease",
+             "why": "the traceability check above accepts ~86% of random "
+                    "four-digit decimals and is not evidence; this is the "
+                    "part of the script that can fail"}, indent=2))
     if n_bad:
         print("Unmatched is not automatically wrong: a ratio, a percentage or "
               "a difference between two measured values is derived rather than "
               "stored. But a derived number should be computed in the "
               "generator, not typed, for the same reason a measured one "
               "should -- the inputs move.")
-    return 1 if (a.strict and n_bad) else 0
+    return 1 if (a.strict and (n_bad or breach)) else 0
 
 
 if __name__ == "__main__":

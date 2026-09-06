@@ -3497,3 +3497,55 @@ mean but most erratically for thin structures (H67).
 Two entries ago I wrote that a mechanism established without a model should have
 its remedy tested without a model. The addition here is narrower and sharper:
 before believing a control, check that it *could* have come out differently.
+
+### 72. Auditing the guards, and finding the audit itself was the untested test
+
+Twice in one session I built a check whose pass condition was close to vacuous:
+`number_provenance.py`, which accepts 86% of random four-digit decimals because
+`runs/` is a large enough haystack that almost any number matches; and
+`resize_fidelity.py`'s first control, whose expected value is 1 for *any* defect
+shape by construction. Both had the same shape — an observation compared against
+a quantity that does not depend on the thing being tested — and neither was
+caught by running the guard. Both were caught by asking afterwards what the
+guard would have said had the defect been present.
+
+`scripts/guard_audit.py` makes that question routine. Each guard is fed a
+specific defect this repository actually shipped, and must object:
+
+| guard | defect it is fed | verdict |
+|---|---|---|
+| `verify_stage.py` | 3 cells where 8 were launched | catches |
+| `prose_status_lint` duplicated_blocks | a section body inside its own input loop | catches |
+| `section_census.py` | an input referenced through a tuple | catches |
+| `report.py separation` | ranges disjoint by less than the floor | catches |
+| `gn_vs_bn.py perm_p` | identical arms; maximally separated arms | catches |
+| `coverage_check.py` | a JSON no document reads | catches |
+| `number_provenance` traceability | a random 4-digit decimal | **VACUOUS**, 89% accepted |
+| `number_provenance` ratchet | one more decimal typed into prose | catches |
+
+**The first run reported the floor screen as VACUOUS, and it was my audit that
+was broken.** `separation` returns `(verdict, margin)`; I applied `bool()` to
+the tuple, which is always truthy, so the "must not separate" case passed
+trivially. An untested test — inside the script whose entire purpose is to catch
+untested tests. It took four minutes to find and it would have taken one wrong
+sentence in `WEEKEND.md` to tell a Monday reader that the primary verdict column
+in every table here is worthless. The lesson is not that I made an error; it is
+that a tool for checking whether checks can fail is itself a check, and gets no
+exemption. Each audit now asserts both directions — the defect is rejected *and*
+the honest case is accepted — because an always-failing guard is as useless as
+an always-passing one and only the two-sided test distinguishes them.
+
+**The genuinely vacuous one is fixed by changing what it measures, not how.**
+No amount of better matching rescues traceability: `runs/` holds tens of
+thousands of values and a four-digit decimal has nowhere to hide. What is
+checkable is the *inventory*. Every decimal typed into generator prose is a
+number frozen against a `runs/` that keeps moving — which is exactly how "25
+cells report 0.4898" came to be wrong by a factor of four while remaining
+perfectly traceable. So the count is a debt, currently **44**, and it may only
+go down. That ratchet can genuinely fail: adding one hand-typed measurement
+raises it, and the audit demonstrates that it does.
+
+`WEEKEND.md` now opens its runbook with `guard_audit.py` and says plainly which
+checks are evidence and which are not. A reader inheriting this on Monday should
+not have to take the green ticks on trust, and the one check that cannot support
+them says so in the document rather than only in its own output.

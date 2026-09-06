@@ -907,6 +907,7 @@ def main():
     W("ls -t runs/*.json | head             # newest cells")
     W("python scripts/report.py && python scripts/paper.py && python scripts/weekend.py")
     W("python tests/run_tests.py            # no pytest in the shared pdeno env, by design")
+    W("python scripts/guard_audit.py        # do the checks themselves catch anything?")
     W("```")
     W("")
     stages = [
@@ -963,6 +964,24 @@ def main():
               ("done" if "done ===" in p_.read_text() else "running"))
         rows.append([name, st, f"`{log}`", what])
     W(table(rows, ["stage", "status", "log", "what it decides"]))
+    W("")
+    W("### Which of these checks are evidence, and which are not")
+    W("")
+    W("Every guard in `scripts/` is fed a defect it claims to catch, by "
+      "`python scripts/guard_audit.py`. The defects are the ones this "
+      "repository actually shipped — a stage producing three cells where "
+      "eight were launched, a section body left inside its own input loop, an "
+      "input referenced through a tuple, two arms disjoint by less than the "
+      "run-to-run floor. A guard that passes its own broken input is reported "
+      "as **VACUOUS**, which is worse than a failing one: it means every green "
+      "result it has produced was uninformative.")
+    W("")
+    W("Run it before trusting anything below. One check is currently vacuous "
+      "by construction and says so: `number_provenance.py`'s traceability "
+      "half accepts most random four-digit decimals, because `runs/` holds "
+      "tens of thousands of values and almost any number matches one. Its "
+      "ratchet half — the count of decimals typed into generator prose, which "
+      "may only go down — does fail when it should.")
     W("")
     W("### A property of this codebase worth knowing before you run anything")
     W("")

@@ -1,0 +1,10 @@
+{
+  "count": 44,
+  "sources": [
+    "scripts/report.py",
+    "scripts/paper.py",
+    "scripts/weekend.py"
+  ],
+  "what": "decimals with >=3 fraction digits typed into generator prose; a debt that should only decrease",
+  "why": "the traceability check above accepts ~86% of random four-digit decimals and is not evidence; this is the part of the script that can fail"
+}

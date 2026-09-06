@@ -375,12 +375,12 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot_time` | CNN + 4th channel | `erm` | sess2 | 3 | 0.7149 | ±0.0030 |
 | `lot_time` | CNN + 4th channel | `erm` | zerochan | 3 | 0.7018 | ±0.0030 |
 | `lot_time` | spectral operator | `erm` | sess2 | 3 | 0.6530 | ±0.0242 |
-| `size` | CNN (BatchNorm) | `coral` | sizeseed | 6 | 0.7754 | ±0.0422 |
-| `size` | CNN (BatchNorm) | `dann` | sizeseed | 6 | 0.7610 | ±0.0572 |
+| `size` | CNN (BatchNorm) | `coral` | sizeseed | 7 | 0.7819 | ±0.0422 |
+| `size` | CNN (BatchNorm) | `dann` | sizeseed | 7 | 0.7709 | ±0.0628 |
 | `size` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.7843 | ±0.0312 |
 | `size` | CNN (BatchNorm) | `erm` | sizeseed | 7 | 0.7904 | ±0.0606 |
-| `size` | CNN (BatchNorm) | `group_dro` | sizeseed | 6 | 0.6645 | ±0.0922 |
-| `size` | CNN (BatchNorm) | `irm` | sizeseed | 6 | 0.7649 | ±0.0617 |
+| `size` | CNN (BatchNorm) | `group_dro` | sizeseed | 7 | 0.6801 | ±0.0988 |
+| `size` | CNN (BatchNorm) | `irm` | sizeseed | 7 | 0.7725 | ±0.0617 |
 | `size` | CNN (BatchNorm) | `logit_adjust` | sizeseed | 6 | 0.6898 | ±0.0684 |
 | `size` | CNN (BatchNorm) | `mixup_domain` | sizeseed | 6 | 0.7741 | ±0.0628 |
 | `size` | CNN (GroupNorm) | `erm` | — | 3 | 0.8467 | ±0.0346 |
