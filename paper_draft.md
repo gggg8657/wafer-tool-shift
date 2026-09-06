@@ -65,7 +65,7 @@ The forward-only test side holds 19 geometries against 338 in training, and 14.1
 
 Every verdict in this section requires two things: the two cells' seed ranges must not overlap, **and** the margin between them must exceed the run-to-run spread between *identical* invocations of one cell — because seeds are run back to back on one pair of GPUs, so a seed range measures the seed and not the pipeline.
 
-That spread is **not one number**. Measured per protocol where it has been measured: `lot` 0.0054, `lot_time` 0.0162, `size` 0.0133. Protocols without their own measurement fall back to 0.0162, the largest measured, since being too strict withdraws a claim and being too lenient publishes one. Observed *seed* ranges differ by protocol far more than that: 0.009–0.019 on `lot` against 0.069–0.072 on `size`.
+That spread is **not one number**. Measured per protocol where it has been measured: `iid` 0.0082, `lot` 0.0054, `size` 0.0133. Protocols without their own measurement fall back to 0.0133, the largest measured, since being too strict withdraws a claim and being too lenient publishes one. Observed *seed* ranges differ by protocol far more than that: 0.009–0.019 on `lot` against 0.069–0.072 on `size`.
 
 **Protocol `lot`** (deltas against the same encoder under ERM):
 
@@ -294,7 +294,19 @@ Dilating the filter by round(64/w), so its receptive field spans the same number
 
 It is worse than the baseline it was meant to rescue, and worse than the plain average pooling that baseline improved on. The prediction was that it would help on `size` and change little on `lot`; it does neither.
 
-**And the dilation is not extreme, which is what makes this interesting rather than merely negative.** It is 2 for 77.9% of wafers, 1 for 15.8%, 3 for 6.2%, and never exceeds 5 — a 3x3 filter at d = 2 spans five pixels. A change that small costing 0.18 of a class F1 is not what the mechanism predicts, and we do not have an explanation we can defend. Two candidates remain live: dilating the first block hurts whatever the dilation is, or *adapting* it per wafer hurts because the encoder can no longer rely on a fixed relationship between pixels and dies. `--dilate-fixed 2` separates them and is running.
+**H69 asked whether the damage is dilation itself or adapting it, and the answer is both halves of the question are informative.** A control that dilates the first block by a *constant* 2 — the value 77.9% of wafers receive — on `Scratch` F1 at eight seeds per arm:
+
+| comparison | difference | exact permutation p |
+|---|---|---|
+| fixed d = 2 vs plain `meanmax` | -0.2844 | **0.00016** |
+| fixed d = 2 vs geometry-adaptive | -0.1087 | **0.00808** |
+| the same, on macro-F1 | -0.0112 | 0.44227 |
+
+**The lever is dead and the mechanism is not.** Dilating the first conv block is catastrophic whatever the dilation, which was the prediction — so H66's failure says nothing about whether the geometry confound is real. But the adaptive version is significantly *better* than the fixed one, and only on `Scratch`: 0.1087 at p = 0.00808, against 0.0112 at p = 0.44227 on macro-F1.
+
+That is the pattern the mechanism predicts and not an obvious consequence of anything else: the geometry-width coupling is a *thin-structure* effect, so making the receptive field track 64/w should help on the thin class and nowhere in particular otherwise. We report it as consistent with the mechanism rather than as confirmation — it is a two-arm comparison read after the fact, inside a regime where both arms are far worse than doing nothing, and a difference measured between two broken configurations is weak evidence about a good one.
+
+**And the dilation is not extreme, which is what makes this interesting rather than merely negative.** It is 2 for 77.9% of wafers, 1 for 15.8%, 3 for 6.2%, and never exceeds 5 — a 3x3 filter at d = 2 spans five pixels. A change that small costing 0.18 of a class F1 is not what the mechanism predicts, and we do not have an explanation we can defend for the *size* of it. What H69 settles is which of two candidates it is: dilating the first block hurts whatever the dilation, rather than per-wafer adaptation hurting. Why a five-pixel receptive field in the first block should cost a quarter of a class F1 is open, and we would rather leave it open than name a plausible cause we have not measured.
 
 What this does **not** overturn is the measurement in the table above. The resize does make a defect's apparent width a function of its geometry; that was measured on the corpus with no model and survives its own control. What fails is the inference from a property of the input to a fix in the architecture — and the honest reading is that we identified a real confound and have not shown it is *removable*, which is a weaker and less satisfying claim than the one this section carried for a day.
 

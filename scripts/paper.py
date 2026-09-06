@@ -1067,18 +1067,70 @@ def main():
                       "improved on. The prediction was that it would help on "
                       "`size` and change little on `lot`; it does neither.")
                     W("")
+                    _dc = js("dilation_control_lot_class_Scratch.json")
+                    _dsa = js("dilation_control_vs_sa_lot_class_Scratch.json")
+                    _dsam = js("dilation_control_vs_sa_lot_macro_f1.json")
+                    if _dc and _dsa and _dsam:
+                        W("**H69 asked whether the damage is dilation itself or "
+                          "adapting it, and the answer is both halves of the "
+                          "question are informative.** A control that dilates "
+                          "the first block by a *constant* 2 — the value 77.9% "
+                          "of wafers receive — on `Scratch` F1 at eight seeds "
+                          "per arm:")
+                        W("")
+                        W(table([
+                            ["fixed d = 2 vs plain `meanmax`",
+                             f"{_dc['difference']:+.4f}",
+                             f"**{_dc['permutation_test']['p_two_sided']:.5f}**"],
+                            ["fixed d = 2 vs geometry-adaptive",
+                             f"{_dsa['difference']:+.4f}",
+                             f"**{_dsa['permutation_test']['p_two_sided']:.5f}**"],
+                            ["the same, on macro-F1",
+                             f"{_dsam['difference']:+.4f}",
+                             f"{_dsam['permutation_test']['p_two_sided']:.5f}"]],
+                            ["comparison", "difference", "exact permutation p"]))
+                        W("")
+                        W("**The lever is dead and the mechanism is not.** "
+                          "Dilating the first conv block is catastrophic "
+                          "whatever the dilation, which was the prediction — "
+                          "so H66's failure says nothing about whether the "
+                          "geometry confound is real. But the adaptive version "
+                          "is significantly *better* than the fixed one, and "
+                          "only on `Scratch`: "
+                          f"{abs(_dsa['difference']):.4f} at "
+                          f"p = {_dsa['permutation_test']['p_two_sided']:.5f}, "
+                          "against "
+                          f"{abs(_dsam['difference']):.4f} at "
+                          f"p = {_dsam['permutation_test']['p_two_sided']:.5f} "
+                          "on macro-F1.")
+                        W("")
+                        W("That is the pattern the mechanism predicts and not "
+                          "an obvious consequence of anything else: the "
+                          "geometry-width coupling is a *thin-structure* "
+                          "effect, so making the receptive field track 64/w "
+                          "should help on the thin class and nowhere in "
+                          "particular otherwise. We report it as consistent "
+                          "with the mechanism rather than as confirmation — it "
+                          "is a two-arm comparison read after the fact, inside "
+                          "a regime where both arms are far worse than doing "
+                          "nothing, and a difference measured between two "
+                          "broken configurations is weak evidence about a good "
+                          "one.")
+                        W("")
                     W("**And the dilation is not extreme, which is what makes "
                       "this interesting rather than merely negative.** It is 2 "
                       "for 77.9% of wafers, 1 for 15.8%, 3 for 6.2%, and never "
                       "exceeds 5 — a 3x3 filter at d = 2 spans five pixels. "
                       "A change that small costing 0.18 of a class F1 is not "
                       "what the mechanism predicts, and we do not have an "
-                      "explanation we can defend. Two candidates remain live: "
-                      "dilating the first block hurts whatever the dilation "
-                      "is, or *adapting* it per wafer hurts because the "
-                      "encoder can no longer rely on a fixed relationship "
-                      "between pixels and dies. `--dilate-fixed 2` separates "
-                      "them and is running.")
+                      "explanation we can defend for the *size* of it. "
+                      "What H69 settles is which of two candidates it "
+                      "is: dilating the first block hurts whatever the "
+                      "dilation, rather than per-wafer adaptation "
+                      "hurting. Why a five-pixel receptive field in the "
+                      "first block should cost a quarter of a class F1 "
+                      "is open, and we would rather leave it open than "
+                      "name a plausible cause we have not measured.")
                     W("")
                     W("What this does **not** overturn is the measurement in "
                       "the table above. The resize does make a defect's "

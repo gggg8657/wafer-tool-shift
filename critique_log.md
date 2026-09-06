@@ -4100,3 +4100,57 @@ line. Same shape as the ratchet miss in entry 78: the output that mattered was
 not the last one. The habit that catches it is checking the rendered document
 for the new sentence rather than the generator for a zero exit, which is what
 `check_all.py` does for numbers and nothing does for prose.
+
+### 83. H69: the lever is dead and the mechanism survives, which are separable results
+
+`dilation_control.sh` finished. H69 said fixed dilation would be worse than
+plain `meanmax` by a margin similar to the adaptive version, exonerating
+adaptivity. On `Scratch` F1 at eight seeds per arm:
+
+| comparison | difference | exact permutation p |
+|---|---|---|
+| fixed d = 2 vs plain `meanmax` | -0.2844 | 0.00016 |
+| fixed d = 2 vs geometry-adaptive | -0.1087 | 0.00808 |
+| the same, on macro-F1 | -0.0112 | 0.44227 |
+
+**Right on the first count, and it produced something I did not predict.**
+Dilating the first conv block is catastrophic whatever the dilation — fixed
+d = 2 is *worse* than the adaptive version, not comparable to it. So H66's
+failure is a fact about dilating a first block and says nothing about whether
+the geometry confound is real.
+
+The unpredicted part: the adaptive version beats the fixed one by 0.1087 on
+`Scratch` at p = 0.00808, and by 0.0112 on macro-F1 at p = 0.44227. **The
+difference is concentrated in the thin class and absent in the average** — which
+is exactly what the H65 mechanism predicts, since the geometry-width coupling is
+a thin-structure effect and adapting the receptive field to 64/w should help on
+`Scratch` and nowhere in particular otherwise.
+
+I have written that as *consistent with* the mechanism and not as confirmation,
+and the distinction is not modesty. It is a two-arm comparison read after the
+fact, and both arms sit far below doing nothing — `meanmax` reaches 0.7764 on
+`Scratch`, adaptive 0.6007, fixed 0.4920. A difference measured between two
+broken configurations is weak evidence about a good one, and the class-specific
+pattern is the sort of thing that is easy to find once you know to look for it.
+What would make it evidence is a prediction of the same shape made before a run
+that could have contradicted it.
+
+So the position on the pooling result is now stable and unsatisfying in a
+defensible way. The resize makes a defect's apparent width a function of its
+geometry: measured on the corpus, no model, survives a native-resolution control
+that could have killed it. That confound is **real and not shown to be
+removable**, because the only architectural lever tried destroys the encoder for
+reasons unrelated to geometry. Why a five-pixel receptive field in the first
+block costs a quarter of a class F1 remains open, and naming a plausible cause
+would be the same error as the mechanism stories this weekend has spent itself
+withdrawing.
+
+**Third occurrence of the same process failure.** My patch to `paper.py` failed
+its assertion and died before writing, while the surrounding commands printed
+their successes — as in entry 82, and as with the ratchet in entry 78. I caught
+it this time only because entry 82's postscript told me to grep the *rendered
+document* for the new sentence rather than trust the generator's exit. That
+worked: `grep -c "Two candidates remain live" paper_draft.md` returned 0 after
+the second attempt and would have returned 1 after the first. Three failures of
+the same shape, and the fix that finally held was written down as a habit one
+entry earlier and then actually followed.

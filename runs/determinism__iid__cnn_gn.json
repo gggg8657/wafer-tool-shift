@@ -1,0 +1,24 @@
+{
+  "what": "6 identical invocations of one cell under the current code",
+  "cell": "iid / cnn_gn / erm / seed 0 --tta",
+  "epochs": 12,
+  "n_repeats": 6,
+  "macro_f1_values": [
+    0.8791138945497337,
+    0.8828468738363388,
+    0.8856881843101613,
+    0.8859212519208418,
+    0.8863065456180778,
+    0.8873289956848145
+  ],
+  "min": 0.8791138945497337,
+  "max": 0.8873289956848145,
+  "mean": 0.8845342909866614,
+  "range": 0.008215101135080838,
+  "stdev": 0.0030474404156956994,
+  "bit_reproducible": false,
+  "stored_macro_f1": 0.8855200183460098,
+  "stored_inside_repeat_range": true,
+  "stored_distance_to_nearest_repeat": 0.00016816596415147878,
+  "note": "The observed range over identical invocations bounds every same-seed comparison in this repository: two cells whose test macro-F1 differ by less than it have not been shown to differ at all, whatever their arguments. An earlier version of this file estimated the same quantity from a single pair of runs, which understated it."
+}

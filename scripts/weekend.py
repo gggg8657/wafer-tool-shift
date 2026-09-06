@@ -550,13 +550,36 @@ def main():
                           "w = 64, and matches a per-sample reference to "
                           "7.5e-09.")
                         W("")
+                        _dc = js("dilation_control_lot_class_Scratch.json")
+                        _dsa = js("dilation_control_vs_sa_lot_class_Scratch.json")
+                        _dsm = js("dilation_control_vs_sa_lot_macro_f1.json")
                         W("The measurement stands and the remedy does not. The "
                           "resize really does make a defect's apparent width a "
                           "function of geometry; we have not shown that is "
-                          "*removable*. `scripts/dilation_control.sh` (H69) "
-                          "asks whether dilating at all is the problem or "
-                          "adapting it per wafer is.")
+                          "*removable*.")
                         W("")
+                        if _dc and _dsa and _dsm:
+                            W("**H69 asked which half was at fault, and the "
+                              "answer keeps the mechanism alive while leaving "
+                              "the lever dead.** Dilating the first block by a "
+                              "*constant* 2 — the value 77.9% of wafers "
+                              "receive — is worse than plain `meanmax` by "
+                              f"{abs(_dc['difference']):.4f} on `Scratch` "
+                              f"(p = {_dc['permutation_test']['p_two_sided']:.5f}), "
+                              "so dilation itself is the problem and H66's "
+                              "failure says nothing about whether the geometry "
+                              "confound is real. But the geometry-adaptive "
+                              "version beats the fixed one by "
+                              f"{abs(_dsa['difference']):.4f} on `Scratch` "
+                              f"(p = {_dsa['permutation_test']['p_two_sided']:.5f}) "
+                              "and not on macro-F1 "
+                              f"(p = {_dsm['permutation_test']['p_two_sided']:.5f}) "
+                              "— the thin-structure-only pattern the mechanism "
+                              "predicts. Consistent with it, not confirmation: "
+                              "both arms are far worse than doing nothing, and "
+                              "a difference between two broken configurations "
+                              "is weak evidence about a good one.")
+                            W("")
         W("`CnnResized.embed` was a global average over the final feature map. "
           "A `Scratch` is a thin connected line; averaged over the wafer it is "
           "close to a slightly elevated background failure rate, which is "
