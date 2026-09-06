@@ -652,6 +652,56 @@ def main():
     W("")
 
     # ---------------------------------------------------------------- result 3
+    _famx = js("dg_family_test.json") or {}
+    _szr = _famx.get("size_replication")
+    if _szr and _szr.get("all"):
+        _a, _r = _szr["all"], _szr["individually_unestablished_only"]
+        _lt = _famx.get("family_test") or {}
+        _ltr = ((_famx.get("robustness") or {})
+                .get("individually_unestablished_only") or {})
+        W("### 3.1 The family result replicates on the second protocol")
+        W("")
+        W("The aggregate test above uses production deciles as the domain "
+          "vocabulary on `lot`. `size` holds geometry out and its hash was "
+          "never degenerate, so repeating the same paired sign-flip test there "
+          "asks whether this is a fact about one protocol or about these "
+          "objectives on this corpus:")
+        W("")
+        W(table([
+            ["`lot`, production deciles — all six",
+             f"{_lt['mean_difference']:+.4f}",
+             f"{_lt['n_negative']}/{_lt['n_pairs']}",
+             f"**{_lt['p_two_sided']:.5f}**"],
+            ["`lot` — dropping the two individually significant",
+             f"{_ltr['mean_difference']:+.4f}",
+             f"{_ltr['n_negative']}/{_ltr['n_pairs']}",
+             f"**{_ltr['p_two_sided']:.5f}**"],
+            ["`size`, geometry holdout — all five",
+             f"{_a['mean_difference']:+.4f}",
+             f"{_a['n_negative']}/{_a['n_pairs']}",
+             f"**{_a['p_two_sided']:.5f}**"],
+            ["`size` — dropping the one individually significant",
+             f"{_r['mean_difference']:+.4f}",
+             f"{_r['n_negative']}/{_r['n_pairs']}",
+             f"**{_r['p_two_sided']:.5f}**"]],
+            ["family", "mean vs ERM", "seeds negative", "exact p"]))
+        W("")
+        W("**Two protocols, two domain vocabularies, and in both the family is "
+          "worse than ERM after removing the members that are individually "
+          "significant.** On `size` the effect is "
+          f"{_a['mean_difference'] / _lt['mean_difference']:.1f} times larger "
+          "than on `lot`, which is what holding geometry out should do to "
+          "methods that assume the domains they are handed carry the shift.")
+        W("")
+        W("We predicted this replication would fail on the second row — the "
+          "four remaining effects on `size` are much smaller than "
+          "`group_dro`'s, so it looked like one objective carrying the result. "
+          f"It does not fail: {_r['n_negative']} of {_r['n_pairs']} seeds are "
+          f"still negative at p = {_r['p_two_sided']:.5f}. The prediction was "
+          "wrong in the direction of expecting a single large effect to be "
+          "doing the work, which is the same instinct that makes a per-method "
+          "table the default way to read a benchmark.")
+        W("")
     W("## 4. Result: our own two contributions fail their own controls")
     W("")
     W("### 4.1 The RPCA lot-signature channel is matched by a channel of zeros")

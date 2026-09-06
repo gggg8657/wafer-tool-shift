@@ -38,12 +38,36 @@ from pathlib import Path
 OBJS = ("coral", "dann", "irm", "group_dro", "mixup_domain", "hsic")
 
 
-def arm(obj, tag="dtime"):
+def arm(obj, tag="dtime", proto="lot"):
     out = {}
-    for f in glob.glob(f"runs/lot__cnn_bn__{obj}__{tag}__s*.json"):
+    for f in glob.glob(f"runs/{proto}__cnn_bn__{obj}__{tag}__s*.json"):
         r = json.load(open(f))
         out[r["seed"]] = r["test"]["macro_f1"]
     return out
+
+
+# `size` holds its own DG arms at eight seeds under a domain vocabulary that
+# was never degenerate (geometry hash, TV 0.2592). Running the same paired test
+# there asks whether the family result is a fact about `lot` and production
+# deciles, or about these objectives on this corpus. hsic was not run on `size`.
+SIZE_OBJS = ("coral", "dann", "irm", "group_dro", "mixup_domain")
+
+
+def family_on(objs, tag, proto):
+    base = arm("erm", tag, proto)
+    per = {o: arm(o, tag, proto) for o in objs}
+    shared = sorted(set(base).intersection(*(set(per[o]) for o in objs)))
+    if len(shared) < 2:
+        return None
+    d = [sum(per[o][s] for o in objs) / len(objs) - base[s] for s in shared]
+    pv, na = sign_flip_p(d)
+    return {"protocol": proto, "tag": tag, "objectives": list(objs),
+            "seeds": shared, "n_pairs": len(d),
+            "per_seed_difference": dict(zip(map(str, shared), d)),
+            "mean_difference": sum(d) / len(d),
+            "n_negative": sum(1 for v in d if v < 0),
+            "p_two_sided": pv, "arrangements": na,
+            "min_attainable_p": 2.0 / na}
 
 
 def holm(pvals):
@@ -147,6 +171,22 @@ def main():
         },
         "robustness": robustness,
     }
+
+    # ---- the same test on `size`, which has a different domain vocabulary
+    sz_all = family_on(SIZE_OBJS, "sizeseed", "size")
+    if sz_all:
+        _szsig = {"group_dro"}          # the only DG objective significant on
+        _szrest = [o for o in SIZE_OBJS if o not in _szsig]
+        res["size_replication"] = {
+            "why": "the `lot` result uses production deciles as the domain "
+                   "vocabulary. `size` holds geometry out and its hash was "
+                   "never degenerate, so repeating the test there asks whether "
+                   "this is a fact about one protocol or about these "
+                   "objectives on this corpus.",
+            "all": sz_all,
+            "individually_unestablished_only": family_on(_szrest, "sizeseed",
+                                                         "size"),
+        }
     Path("runs/dg_family_test.json").write_text(json.dumps(res, indent=2))
 
     print("Holm-Bonferroni over six tests:")
@@ -172,6 +212,16 @@ def main():
     print(f"\nLeave-one-out: worst p over the six subsets is "
           f"{worst['p_two_sided']:.5f} "
           f"(dropping `{[k for k, v in lo.items() if v is worst][0]}`)")
+    sz = res.get("size_replication")
+    if sz:
+        print("\nSame test on `size` (geometry holdout, its own vocabulary):")
+        for lab, k in (("all five", "all"),
+                       ("dropping group_dro", "individually_unestablished_only")):
+            v = sz[k]
+            if v:
+                print(f"  {lab:22s} mean {v['mean_difference']:+.4f}, "
+                      f"{v['n_negative']}/{v['n_pairs']} negative, "
+                      f"p = {v['p_two_sided']:.5f}")
     print("\nwrote runs/dg_family_test.json")
 
 

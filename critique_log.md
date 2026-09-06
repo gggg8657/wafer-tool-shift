@@ -4208,3 +4208,50 @@ measurement because I watched it being measured. I recovered it from git into
 now generate from that. A superseded measurement is still a measurement and
 still needs somewhere to live; deleting the artifact does not license typing the
 value.
+
+### 85. H71: the family result replicates on the second protocol, and my prediction was wrong where it mattered
+
+The paired sign-flip test had only ever been run on `lot` under production
+deciles. `size` holds geometry out, has its own domain vocabulary that was never
+degenerate, and its arms are now at eight seeds — so the same test asks whether
+the aggregate result is a fact about one protocol or about these objectives on
+this corpus.
+
+**H71, before computing:** the family is worse than ERM on `size` too, with at
+least 7 of 8 paired differences negative; but dropping `group_dro` — the only
+individually significant DG objective there — *will* break it, because the
+remaining four effects are an order of magnitude smaller than its -0.1291.
+
+| family | mean vs ERM | seeds negative | exact p |
+|---|---|---|---|
+| `lot`, production deciles — all six | -0.0107 | 8/8 | 0.00781 |
+| `lot` — dropping the two individually significant | -0.0066 | 8/8 | 0.00781 |
+| `size`, geometry holdout — all five | -0.0375 | 8/8 | 0.00781 |
+| `size` — dropping the one individually significant | -0.0146 | 7/8 | **0.02344** |
+
+Right on the first half, **wrong on the second**. Dropping `group_dro` does not
+break it: seven of eight seeds are still negative at p = 0.02344.
+
+So the central negative claim now holds on **two protocols, under two domain
+vocabularies, and in both cases after removing the members that are
+individually significant.** On `size` the aggregate effect is 3.5 times larger
+than on `lot`, which is what holding geometry out should do to methods that
+assume the domains they are handed carry the shift.
+
+**The direction of the miss is the part worth keeping.** I expected one large
+effect to be carrying the result, and I expected it twice — the same reasoning
+produced the `lot` robustness check, which also came back holding. Both times
+the instinct was that an aggregate is a large member plus noise. Both times the
+aggregate was a consistent small signal across members that no per-method row
+can show, because each member's own comparison is dominated by seed variance
+that pairing removes.
+
+That instinct is not idiosyncratic; it is what makes a per-method table the
+default way to read a benchmark, and it is exactly the failure mode this project
+began by documenting in its own three-seed screen. Getting it wrong twice, in a
+weekend spent writing about it, is a reasonable estimate of how strong the pull
+is.
+
+Four hypotheses right, one half right, one wrong, one wrong-in-half: H64 6/6,
+H68 both halves, H69 right and informative, H71 half. H63 two of four. H66 badly
+wrong. Recorded together so the ratio stays visible rather than the wins.

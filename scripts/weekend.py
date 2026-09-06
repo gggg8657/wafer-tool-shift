@@ -264,6 +264,17 @@ def main():
                   f"at p = {_rb['p_two_sided']:.5f}: four methods no single "
                   "test can separate from ERM are jointly worse than it."
                   if _rb else "")
+        _szr = _fm.get("size_replication") or {}
+        _sza = _szr.get("all") or {}
+        _szq = _szr.get("individually_unestablished_only") or {}
+        if _sza and _szq:
+            _extra += (
+                f" It replicates on `size`, a different protocol with a "
+                f"different domain vocabulary: {_sza['n_negative']}/"
+                f"{_sza['n_pairs']} negative at p = {_sza['p_two_sided']:.5f}, "
+                f"and {_szq['n_negative']}/{_szq['n_pairs']} at "
+                f"p = {_szq['p_two_sided']:.5f} after dropping its one "
+                "individually significant member.")
         surv_lines.append(
             f"**The borrowed domain-generalization family is worse than ERM**, "
             f"not merely no better — {_ftt['n_negative']} of "

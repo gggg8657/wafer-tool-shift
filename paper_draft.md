@@ -156,6 +156,21 @@ So the two halves end differently. On `lot` the original experiment could not ha
 
 `erm` never reads the domain label, so its two columns are the null control on the plumbing — but read them seed by seed, not as means. The `dtime` arm has since been taken to eight seeds for the objectives that needed resolving while the `lot % 32` arm remains at three, so the two column means average over different seed sets and differ for that reason alone. On the seeds they share the two agree to within the run-to-run floor, which is what the control asserts.
 
+### 3.1 The family result replicates on the second protocol
+
+The aggregate test above uses production deciles as the domain vocabulary on `lot`. `size` holds geometry out and its hash was never degenerate, so repeating the same paired sign-flip test there asks whether this is a fact about one protocol or about these objectives on this corpus:
+
+| family | mean vs ERM | seeds negative | exact p |
+|---|---|---|---|
+| `lot`, production deciles — all six | -0.0107 | 8/8 | **0.00781** |
+| `lot` — dropping the two individually significant | -0.0066 | 8/8 | **0.00781** |
+| `size`, geometry holdout — all five | -0.0375 | 8/8 | **0.00781** |
+| `size` — dropping the one individually significant | -0.0146 | 7/8 | **0.02344** |
+
+**Two protocols, two domain vocabularies, and in both the family is worse than ERM after removing the members that are individually significant.** On `size` the effect is 3.5 times larger than on `lot`, which is what holding geometry out should do to methods that assume the domains they are handed carry the shift.
+
+We predicted this replication would fail on the second row — the four remaining effects on `size` are much smaller than `group_dro`'s, so it looked like one objective carrying the result. It does not fail: 7 of 8 seeds are still negative at p = 0.02344. The prediction was wrong in the direction of expecting a single large effect to be doing the work, which is the same instinct that makes a per-method table the default way to read a benchmark.
+
 ## 4. Result: our own two contributions fail their own controls
 
 ### 4.1 The RPCA lot-signature channel is matched by a channel of zeros
@@ -387,10 +402,10 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (GroupNorm) | `erm` | sslinit_lr2e-4 | 2 | 0.6529 | ±0.0087 |
 | `lot` | CNN (GroupNorm) | `erm` | sslinit_lr5e-4 | 2 | 0.7427 | ±0.0013 |
 | `lot` | CNN (GroupNorm) | `focal` | focal0.0 | 8 | 0.8753 | ±0.0137 |
-| `lot` | CNN (GroupNorm) | `focal` | focal0.5 | 3 | 0.8740 | ±0.0028 |
-| `lot` | CNN (GroupNorm) | `focal` | focal1.0 | 3 | 0.8721 | ±0.0021 |
+| `lot` | CNN (GroupNorm) | `focal` | focal0.5 | 5 | 0.8788 | ±0.0106 |
+| `lot` | CNN (GroupNorm) | `focal` | focal1.0 | 5 | 0.8758 | ±0.0079 |
 | `lot` | CNN (GroupNorm) | `focal` | focal2.0 | 8 | 0.8750 | ±0.0115 |
-| `lot` | CNN (GroupNorm) | `focal` | focal5.0 | 2 | 0.8745 | ±0.0051 |
+| `lot` | CNN (GroupNorm) | `focal` | focal5.0 | 4 | 0.8694 | ±0.0121 |
 | `lot` | descriptors + MLP | `erm` | sess2 | 3 | 0.8338 | ±0.0067 |
 | `lot` | die-graph GNN | `erm` | sess2 | 3 | 0.7524 | ±0.0036 |
 | `lot` | CNN + 4th channel | `erm` | — | 3 | 0.8696 | ±0.0096 |

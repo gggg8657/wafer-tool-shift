@@ -192,5 +192,81 @@
         "min_attainable_p": 0.0078125
       }
     }
+  },
+  "size_replication": {
+    "why": "the `lot` result uses production deciles as the domain vocabulary. `size` holds geometry out and its hash was never degenerate, so repeating the test there asks whether this is a fact about one protocol or about these objectives on this corpus.",
+    "all": {
+      "protocol": "size",
+      "tag": "sizeseed",
+      "objectives": [
+        "coral",
+        "dann",
+        "irm",
+        "group_dro",
+        "mixup_domain"
+      ],
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "n_pairs": 8,
+      "per_seed_difference": {
+        "0": -0.04270697394371914,
+        "1": -0.06569810505458407,
+        "2": -0.028110349228515408,
+        "3": -0.005113263389964651,
+        "4": -0.044502093090424966,
+        "5": -0.022802942166926687,
+        "6": -0.020441988810210754,
+        "7": -0.07085705830199185
+      },
+      "mean_difference": -0.03752909674829219,
+      "n_negative": 8,
+      "p_two_sided": 0.0078125,
+      "arrangements": 256,
+      "min_attainable_p": 0.0078125
+    },
+    "individually_unestablished_only": {
+      "protocol": "size",
+      "tag": "sizeseed",
+      "objectives": [
+        "coral",
+        "dann",
+        "irm",
+        "mixup_domain"
+      ],
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "n_pairs": 8,
+      "per_seed_difference": {
+        "0": -0.007086168360239897,
+        "1": -0.031940304090700256,
+        "2": -0.016553222843004423,
+        "3": 0.007105140196422277,
+        "4": -0.021285897990659275,
+        "5": -0.013972126632254223,
+        "6": -0.009910001447071437,
+        "7": -0.02341811140091432
+      },
+      "mean_difference": -0.014632586571052694,
+      "n_negative": 7,
+      "p_two_sided": 0.0234375,
+      "arrangements": 256,
+      "min_attainable_p": 0.0078125
+    }
   }
 }
