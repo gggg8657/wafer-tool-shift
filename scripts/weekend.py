@@ -315,6 +315,11 @@ def main():
         ("`scale_aware_sweep.sh` (H66)", _done_sa),
         ("the two missing run-to-run floors (`lot_time`, `iid`)", _done_floors))
         if not done()]
+    _run += ([] if (Path(a.runs) / "null_power_audit.json").exists()
+             and all(len(list(Path(a.runs).glob(
+                 f"lot__rpca_cnn__erm__{t}__s*.json"))) >= 8
+                 for t in ("rpca2_residual", "rpca2_failmask", "rpca2_zeros"))
+             else ["`null_power_fix.sh` (H68)"])
     W("**Still running.** " + (", ".join(_run) + " — section 5 says how to "
                                "check them and what each decides."
                                if _run else "Nothing; all stages complete."))

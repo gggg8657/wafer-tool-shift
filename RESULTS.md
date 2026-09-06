@@ -128,7 +128,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | die-graph GNN (wafer-only subgraph) | erm | - | 0.7557 | - | 0.4898 | - | 0.1269 | 0.8889 |
 | CNN + RPCA lot-signature channel | erm | - | 0.8813 | - | 0.5000 | - | 0.7466 | 0.9315 |
 
-**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the 219 `lot` cells in `runs/` that carry the column, 120 report the identical 0.4898 and 76 more report exactly 0.5000 -- 89% of them on two values, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them. This applies to every protocol table in this section; it is stated once.
+**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the 223 `lot` cells in `runs/` that carry the column, 122 report the identical 0.4898 and 78 more report exactly 0.5000 -- 90% of them on two values, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them. This applies to every protocol table in this section; it is stated once.
 
 ## Borrowed objectives vs ERM -- protocol `lot_time`
 
@@ -510,7 +510,7 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot | CNN on resized 64x64 (GroupNorm) | erm | gnbn | 8 | 0.8726 | +/-0.0160 | 0.8734, 0.8680, 0.8589, 0.8705, 0.8708, 0.8736, 0.8750, 0.8908 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 8 | 0.8738 | +/-0.0163 | 0.8729, 0.8668, 0.8601, 0.8758, 0.8897, 0.8574, 0.8773, 0.8901 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 8 | 0.8888 | +/-0.0116 | 0.8862, 0.8796, 0.8860, 0.8857, 0.8983, 0.8815, 0.8903, 0.9027 |
-| lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmaxSA | 3 | 0.7800 | +/-0.0218 | 0.7946, 0.7941, 0.7511 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmaxSA | 7 | 0.7852 | +/-0.0296 | 0.7946, 0.7941, 0.7511, 0.8102, 0.7526, 0.7849, 0.8090 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmean | 8 | 0.8793 | +/-0.0171 | 0.8709, 0.8802, 0.8641, 0.8769, 0.8982, 0.8715, 0.8803, 0.8920 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | rpca2_3ch | 3 | 0.8703 | +/-0.0096 | 0.8812, 0.8679, 0.8619 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | scratch_lr1e-3 | 2 | 0.8690 | +/-0.0009 | 0.8699, 0.8681 |
@@ -563,7 +563,7 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | size | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.8467 | +/-0.0346 | 0.8203, 0.8301, 0.8895 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 8 | 0.8462 | +/-0.0391 | 0.8231, 0.8114, 0.8868, 0.8088, 0.8756, 0.8202, 0.8871, 0.8568 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 8 | 0.8181 | +/-0.0700 | 0.8039, 0.7357, 0.8046, 0.8076, 0.8758, 0.8191, 0.8601, 0.8383 |
-| size | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmaxSA | 3 | 0.7193 | +/-0.0545 | 0.7623, 0.6534, 0.7423 |
+| size | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmaxSA | 7 | 0.7525 | +/-0.0740 | 0.7623, 0.6534, 0.7423, 0.7167, 0.8003, 0.8013, 0.7912 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmean | 3 | 0.8426 | +/-0.0290 | 0.8318, 0.8190, 0.8770 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | sess2 | 3 | 0.8413 | +/-0.0369 | 0.8274, 0.8113, 0.8852 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | + lot-adversarial SSL initialization | 3 | 0.7711 | +/-0.0265 | 0.7602, 0.7500, 0.8030 |

@@ -1202,7 +1202,9 @@ def main():
           "split of a **synthetic dataset that is an upper bound on the real "
           "task**. The honest number is the lot-disjoint one.")
         W("")
-        W("Third, **focal loss contributes nothing**, which is worth stating "
+        W("Third, **focal loss contributes nothing at the seed budget we gave "
+          "it** — see section 7.9, which is honest about how little that "
+          "budget could have shown — which is worth stating "
           "because it was named in the target as though it were the mechanism:")
         W("")
         cmp_rows = []
@@ -1281,6 +1283,62 @@ def main():
     W("")
 
     # ---------------------------------------------------------------- threats
+    npa = js("null_power_audit.json")
+    if npa and npa.get("n_underpowered"):
+        W("## 7.9 How much each of our nulls could have shown")
+        W("")
+        _spz = js("size_power_check.json") or {}
+        _szsig = sorted((v for k, v in _spz.items()
+                         if k != "_meta" and v["p_two_sided"] < 0.05),
+                        key=lambda z: z["difference"])
+        _szs = (" and ".join(f"p = {v['p_two_sided']:.4f}" for v in _szsig)
+                if _szsig else NM)
+        W("Twice this project reported a null that turned out to be a property "
+          "of the seed budget. \"Nothing separates from ERM on `size`\" came "
+          "from three seeds per arm, where an exact permutation test cannot "
+          f"return below 0.10; at eight, {len(_szsig)} objectives separate at "
+          f"{_szs}. A null stated with a difference and no statement of "
+          "what the instrument could resolve is not a finding, so every null "
+          "this paper rests on is listed here with its power.")
+        W("")
+        W(table([[e["label"], str(e["n_per_arm"]),
+                  (f"{e['min_attainable_p']:.4f}"
+                   if e["min_attainable_p"] else NM),
+                  "yes" if e["could_reach_05"] else "**no**"]
+                 for e in npa["families"]],
+                ["null", "seeds/arm", "smallest attainable p",
+                 "could reach 0.05?"]))
+        W("")
+        W(f"**{npa['n_underpowered']} of {npa['n_families']} rest on a test "
+          "that could not have returned p < 0.05 at any effect size.** They "
+          "are absence of evidence, and this paper has been writing them as "
+          "evidence of absence. `scripts/null_power_fix.sh` takes both to "
+          "eight seeds.")
+        W("")
+        _mm = next((e for e in npa["families"]
+                    if e["label"].startswith("meanmean")), None)
+        _mmfloor = (f"{_mm['min_attainable_p']:.4f}" if _mm else NM)
+        W("**Neither is expected to reverse, and the reason matters more than "
+          "the expectation.** The RPCA withdrawal does not rest on its "
+          "ablation at all: the low-rank part is rank 0 for 94.83% of "
+          "decomposed wafers, the residual is bit-identical to the raw "
+          "failed-die mask for 95.27% of all of them, and `stack_channels` "
+          "concatenates the fourth channel to an *intact* one-hot, so the "
+          "encoder reads an untouched copy of whatever the decomposition "
+          "removed. The control could not have failed to tie. The ablation "
+          "corroborates a mechanism; it was never the evidence, and the "
+          "sentence that presented it as such was overstating a weak test "
+          "while a strong argument sat beside it.")
+        W("")
+        W("The capacity control is the counter-example that shows the "
+          "distinction is not rhetorical: `meanmean` versus `mean` is also a "
+          f"null, and it is at eight seeds with a floor of {_mmfloor}, so it "
+          "can "
+          "carry the weight the pooling result puts on it. **H68, on record: "
+          "at eight seeds neither the RPCA nor the focal null reverses.** If "
+          "either does, the corresponding withdrawal here is wrong and comes "
+          "back out.")
+        W("")
     W("## 8. Threats to validity")
     W("")
     W("1. **Time is a proxy, and the forward-only split is not purely "

@@ -1,0 +1,101 @@
+{
+  "what": "seeds per arm and smallest attainable two-sided p for each null the documents rest on",
+  "why": "a null whose floor is above 0.05 is absence of evidence, not evidence of absence",
+  "families": [
+    {
+      "label": "RPCA fourth channel vs a channel of zeros",
+      "control": "rpca2_zeros",
+      "metric": "macro_f1",
+      "comparisons": [
+        {
+          "treatment": "rpca2_residual",
+          "n_per_arm": 3,
+          "difference": 0.0032611314398951485,
+          "p_two_sided": 0.8,
+          "arrangements": 20,
+          "min_attainable_p": 0.1,
+          "could_reach_05": false
+        },
+        {
+          "treatment": "rpca2_failmask",
+          "n_per_arm": 3,
+          "difference": 0.004376766266258714,
+          "p_two_sided": 0.5,
+          "arrangements": 20,
+          "min_attainable_p": 0.1,
+          "could_reach_05": false
+        }
+      ],
+      "n_per_arm": 3,
+      "min_attainable_p": 0.1,
+      "could_reach_05": false
+    },
+    {
+      "label": "focal loss vs its bit-exact gamma = 0 control",
+      "control": "focal0.0",
+      "metric": "macro_f1",
+      "comparisons": [
+        {
+          "treatment": "focal0.5",
+          "n_per_arm": 2,
+          "difference": 0.0028435144549159297,
+          "p_two_sided": 1.0,
+          "arrangements": 6,
+          "min_attainable_p": 0.3333333333333333,
+          "could_reach_05": false
+        },
+        {
+          "treatment": "focal1.0",
+          "n_per_arm": 2,
+          "difference": -9.402888292364686e-05,
+          "p_two_sided": 1.0,
+          "arrangements": 6,
+          "min_attainable_p": 0.3333333333333333,
+          "could_reach_05": false
+        },
+        {
+          "treatment": "focal2.0",
+          "n_per_arm": 2,
+          "difference": -0.0028796581322488857,
+          "p_two_sided": 0.6666666666666666,
+          "arrangements": 6,
+          "min_attainable_p": 0.3333333333333333,
+          "could_reach_05": false
+        },
+        {
+          "treatment": "focal5.0",
+          "n_per_arm": 2,
+          "difference": 0.001432672742008867,
+          "p_two_sided": 0.6666666666666666,
+          "arrangements": 6,
+          "min_attainable_p": 0.3333333333333333,
+          "could_reach_05": false
+        }
+      ],
+      "n_per_arm": 2,
+      "min_attainable_p": 0.3333333333333333,
+      "could_reach_05": false
+    },
+    {
+      "label": "meanmean capacity control vs mean",
+      "control": "poolmean",
+      "metric": "macro_f1",
+      "comparisons": [
+        {
+          "treatment": "poolmeanmean",
+          "n_per_arm": 8,
+          "difference": 0.005496781951302987,
+          "p_two_sided": 0.36037296037296035,
+          "arrangements": 12870,
+          "min_attainable_p": 0.0001554001554001554,
+          "could_reach_05": true
+        }
+      ],
+      "n_per_arm": 8,
+      "min_attainable_p": 0.0001554001554001554,
+      "could_reach_05": true
+    }
+  ],
+  "n_families": 3,
+  "n_underpowered": 2
+}

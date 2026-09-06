@@ -336,7 +336,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (GroupNorm) | `erm` | gnbn | 8 | 0.8726 | ±0.0160 |
 | `lot` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8738 | ±0.0163 |
 | `lot` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.8888 | ±0.0116 |
-| `lot` | CNN (GroupNorm) | `erm` | poolmeanmaxSA | 3 | 0.7800 | ±0.0218 |
+| `lot` | CNN (GroupNorm) | `erm` | poolmeanmaxSA | 7 | 0.7852 | ±0.0296 |
 | `lot` | CNN (GroupNorm) | `erm` | poolmeanmean | 8 | 0.8793 | ±0.0171 |
 | `lot` | CNN (GroupNorm) | `erm` | rpca2_3ch | 3 | 0.8703 | ±0.0096 |
 | `lot` | CNN (GroupNorm) | `erm` | scratch_lr1e-3 | 2 | 0.8690 | ±0.0009 |
@@ -389,7 +389,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `size` | CNN (GroupNorm) | `erm` | — | 3 | 0.8467 | ±0.0346 |
 | `size` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8462 | ±0.0391 |
 | `size` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.8181 | ±0.0700 |
-| `size` | CNN (GroupNorm) | `erm` | poolmeanmaxSA | 3 | 0.7193 | ±0.0545 |
+| `size` | CNN (GroupNorm) | `erm` | poolmeanmaxSA | 7 | 0.7525 | ±0.0740 |
 | `size` | CNN (GroupNorm) | `erm` | poolmeanmean | 3 | 0.8426 | ±0.0290 |
 | `size` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.8413 | ±0.0369 |
 | `size` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.7711 | ±0.0265 |
@@ -454,7 +454,7 @@ Second, **the most favourable honest reading still misses.** Taking the optimist
 
 Every reading falls short, and the closest one is on the optimistic split of a **synthetic dataset that is an upper bound on the real task**. The honest number is the lot-disjoint one.
 
-Third, **focal loss contributes nothing**, which is worth stating because it was named in the target as though it were the mechanism:
+Third, **focal loss contributes nothing at the seed budget we gave it** — see section 7.9, which is honest about how little that budget could have shown — which is worth stating because it was named in the target as though it were the mechanism:
 
 | protocol | comparison | loss | `bce` | verdict |
 |---|---|---|---|---|
@@ -499,6 +499,22 @@ The obvious account is resolution: the CNN path resamples every wafer to a fixed
 **97.7% of wafers are *upsampled* to reach 64x64**; only 2.0% are downsampled. The median wafer's larger dimension is 34 dies. The resize is adding pixels, not removing detail, so raising the input resolution cannot recover information that was never discarded. `Scratch` is the most-downsampled class at 15.5%, which is still a small minority of it.
 
 A scratch is thin in units of *dies*, not pixels, and no resampling changes that. Whatever makes it hard, it is not the input grid — which rules out the cheapest remaining lever and leaves the backbone, the pooling, and real mixed-type data.
+
+## 7.9 How much each of our nulls could have shown
+
+Twice this project reported a null that turned out to be a property of the seed budget. "Nothing separates from ERM on `size`" came from three seeds per arm, where an exact permutation test cannot return below 0.10; at eight, 2 objectives separate at p = 0.0019 and p = 0.0050. A null stated with a difference and no statement of what the instrument could resolve is not a finding, so every null this paper rests on is listed here with its power.
+
+| null | seeds/arm | smallest attainable p | could reach 0.05? |
+|---|---|---|---|
+| RPCA fourth channel vs a channel of zeros | 3 | 0.1000 | **no** |
+| focal loss vs its bit-exact gamma = 0 control | 2 | 0.3333 | **no** |
+| meanmean capacity control vs mean | 8 | 0.0002 | yes |
+
+**2 of 3 rest on a test that could not have returned p < 0.05 at any effect size.** They are absence of evidence, and this paper has been writing them as evidence of absence. `scripts/null_power_fix.sh` takes both to eight seeds.
+
+**Neither is expected to reverse, and the reason matters more than the expectation.** The RPCA withdrawal does not rest on its ablation at all: the low-rank part is rank 0 for 94.83% of decomposed wafers, the residual is bit-identical to the raw failed-die mask for 95.27% of all of them, and `stack_channels` concatenates the fourth channel to an *intact* one-hot, so the encoder reads an untouched copy of whatever the decomposition removed. The control could not have failed to tie. The ablation corroborates a mechanism; it was never the evidence, and the sentence that presented it as such was overstating a weak test while a strong argument sat beside it.
+
+The capacity control is the counter-example that shows the distinction is not rhetorical: `meanmean` versus `mean` is also a null, and it is at eight seeds with a floor of 0.0002, so it can carry the weight the pooling result puts on it. **H68, on record: at eight seeds neither the RPCA nor the focal null reverses.** If either does, the corresponding withdrawal here is wrong and comes back out.
 
 ## 8. Threats to validity
 

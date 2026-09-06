@@ -3720,3 +3720,69 @@ caught its author, which says less about the guard than about how strong the
 pull is to type a number you have just read off a terminal — it feels like
 quoting a measurement, and it is not; it is copying one out of the only place
 that stays current.
+
+### 76. Auditing every null for what its test could have shown, and editing a running script again
+
+Entry 75 ended with a class of error rather than an instance: substituting a
+statement about dispersion for a test that answers the question. I have made it
+twice. The obvious next move is not to wait for a third, but to check where else
+a null here is asserted without a statement of what the instrument could
+resolve.
+
+Scanning the rendered documents for null assertions with no test or qualifier
+nearby returned mostly false positives — titles, and paragraphs whose
+qualifier sits in the adjacent table. Three were real, and two of the three are
+load-bearing.
+
+| null | seeds/arm | smallest attainable p | could reach 0.05? |
+|---|---|---|---|
+| RPCA fourth channel vs a channel of zeros | 3 | 0.1000 | **no** |
+| focal loss vs its bit-exact γ = 0 control | 2 | 0.3333 | **no** |
+| `meanmean` capacity control vs `mean` | 8 | 0.0002 | yes |
+
+**Two of the three rest on a test that could not have returned p < 0.05 at any
+effect size.** Focal's floor is 0.3333 — two seeds per arm admits three
+distinct arrangements — and every observed p is 0.667 or 1.0. "Focal loss
+contributes nothing" has been sitting in the paper as a result.
+
+The capacity control is the useful contrast, and it is why this is not a
+rhetorical complaint. `meanmean` versus `mean` is also a null. It is at eight
+seeds with a floor of 0.0002 and p = 0.5908 on `Scratch`, so it can carry the
+weight the pooling result puts on it. The difference between a null that means
+something and a null that does not is entirely in the power, and nothing in the
+documents was distinguishing them.
+
+**What I am not doing is reversing either claim.** The RPCA withdrawal never
+rested on its ablation: rank 0 for 94.83% of decomposed wafers, residual
+bit-identical to the raw mask for 95.27% of all of them, and `stack_channels`
+concatenating to an *intact* one-hot so the encoder reads an untouched copy of
+whatever was removed. The control could not have failed to tie. The ablation
+corroborates a mechanism. The error was presenting a weak test as the evidence
+while a strong argument sat beside it — which is a different failure from
+believing a weak test, and easier to miss, because the conclusion is right.
+
+**H68, on record before the run:** at eight seeds neither null reverses.
+`scripts/null_power_fix.sh` runs it — 30 cells.
+
+**And I made a mistake I had already written down.** I appended that stage to
+`chain_after_size.sh` while it was executing. Bash reads a script by byte offset
+as it runs, so editing one mid-flight makes it resume at the wrong place in the
+new text; `chain_rest.sh` was killed for exactly this earlier in the weekend and
+the rule I recorded then was "never edit a running script". I reverted within a
+minute and put the stage in `chain3.sh`, which waits on the tmux session. The
+scale-aware sweep was mid-cell and unaffected.
+
+Worth being precise about why the rule failed to fire. It was recorded as an
+incident, not as a constraint on the action — nothing in the loop asks "is this
+file currently being executed?" before an edit. Every other lesson this weekend
+became a script; this one stayed a sentence in a log I do not re-read, and a
+lesson that lives only in prose is one you get to learn twice.
+
+**Postscript to 76.** Third consecutive commit in which the ratchet caught its
+author: 47 against a baseline of 44, and all three were in the new section
+*about* nulls being asserted rather than computed — `p = 0.0019`, `p = 0.0050`,
+and the capacity control's floor. They now come from `size_power_check.json` and
+`null_power_audit.json`. Three commits in a row is no longer an anecdote about
+carelessness; it is the measured rate at which I type a number I have just read
+off a terminal. The guard has caught 100% of them, which is the only reason the
+rate is knowable at all.
