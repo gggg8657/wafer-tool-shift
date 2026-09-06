@@ -1,0 +1,108 @@
+{
+  "what": "for every arm measured at both three and eight seeds, whether the three-seed estimate of the difference from ERM has the same sign as the eight-seed one",
+  "small_n": 3,
+  "large_n": 8,
+  "n_arms": 12,
+  "n_sign_flips": 0,
+  "magnitude_ratio_min": 0.6151042956315619,
+  "magnitude_ratio_max": 2.1534909100997055,
+  "note": "the three-seed set is a subset of the eight-seed set, so this is not two independent measurements; it is what an experimenter who stopped early would have concluded.",
+  "arms": [
+    {
+      "family": "size",
+      "objective": "coral",
+      "difference_at_3_seeds": -0.02004689599515519,
+      "difference_at_8_seeds": -0.009309022806243017,
+      "sign_preserved": true,
+      "magnitude_ratio": 2.1534909100997055
+    },
+    {
+      "family": "size",
+      "objective": "dann",
+      "difference_at_3_seeds": -0.017065163951277773,
+      "difference_at_8_seeds": -0.02249430313283507,
+      "sign_preserved": true,
+      "magnitude_ratio": 0.7586438153030689
+    },
+    {
+      "family": "size",
+      "objective": "irm",
+      "difference_at_3_seeds": -0.025787305918919312,
+      "difference_at_8_seeds": -0.01805787988302887,
+      "sign_preserved": true,
+      "magnitude_ratio": 1.428036186194521
+    },
+    {
+      "family": "size",
+      "objective": "group_dro",
+      "difference_at_3_seeds": -0.1534194533194384,
+      "difference_at_8_seeds": -0.12911513745725023,
+      "sign_preserved": true,
+      "magnitude_ratio": 1.1882375400811178
+    },
+    {
+      "family": "size",
+      "objective": "mixup_domain",
+      "difference_at_3_seeds": -0.01120689452657353,
+      "difference_at_8_seeds": -0.008669140462103764,
+      "sign_preserved": true,
+      "magnitude_ratio": 1.2927342192185363
+    },
+    {
+      "family": "size",
+      "objective": "logit_adjust",
+      "difference_at_3_seeds": -0.11171130178135213,
+      "difference_at_8_seeds": -0.08871208247452178,
+      "sign_preserved": true,
+      "magnitude_ratio": 1.2592568978801253
+    },
+    {
+      "family": "lot (production deciles)",
+      "objective": "coral",
+      "difference_at_3_seeds": -0.007079387833933026,
+      "difference_at_8_seeds": -0.00917486845429294,
+      "sign_preserved": true,
+      "magnitude_ratio": 0.7716064670791619
+    },
+    {
+      "family": "lot (production deciles)",
+      "objective": "dann",
+      "difference_at_3_seeds": -0.006002588139319198,
+      "difference_at_8_seeds": -0.009758650983173522,
+      "sign_preserved": true,
+      "magnitude_ratio": 0.6151042956315619
+    },
+    {
+      "family": "lot (production deciles)",
+      "objective": "irm",
+      "difference_at_3_seeds": -0.004894909254522628,
+      "difference_at_8_seeds": -0.004529436438976964,
+      "sign_preserved": true,
+      "magnitude_ratio": 1.0806883638769444
+    },
+    {
+      "family": "lot (production deciles)",
+      "objective": "group_dro",
+      "difference_at_3_seeds": -0.025683385575683726,
+      "difference_at_8_seeds": -0.020056513475263826,
+      "sign_preserved": true,
+      "magnitude_ratio": 1.2805508598171689
+    },
+    {
+      "family": "lot (production deciles)",
+      "objective": "mixup_domain",
+      "difference_at_3_seeds": -0.014271550988261938,
+      "difference_at_8_seeds": -0.01795928457690832,
+      "sign_preserved": true,
+      "magnitude_ratio": 0.794661442506012
+    },
+    {
+      "family": "lot (production deciles)",
+      "objective": "hsic",
+      "difference_at_3_seeds": -0.002614598495392584,
+      "difference_at_8_seeds": -0.002903269519190954,
+      "sign_preserved": true,
+      "magnitude_ratio": 0.9005703666537948
+    }
+  ]
+}

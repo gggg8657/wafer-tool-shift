@@ -4255,3 +4255,49 @@ is.
 Four hypotheses right, one half right, one wrong, one wrong-in-half: H64 6/6,
 H68 both halves, H69 right and informative, H71 half. H63 two of four. H66 badly
 wrong. Recorded together so the ratio stays visible rather than the wins.
+
+### 86. The title understated the result, and the one comforting claim in the abstract was never checked
+
+Two things in the paper's front matter, found by reading it against what the
+runs now say rather than against what it said yesterday.
+
+**The title read "…and why the domain-generalization toolbox does not help".**
+That was the accurate summary of a set of per-method nulls. It is now the weaker
+of two available claims: the family is significantly *worse* than ERM on `lot`
+(p = 0.00781) and on `size` (p = 0.00781), in both cases after dropping the
+members that are individually significant. Understating a measured result is the
+same class of error as overstating one — it is a claim that does not match the
+evidence, and the direction of the mismatch does not make it honest. The title
+now reads "makes it worse". The abstract also carries the `size` replication,
+which landed in the previous entry and had not reached the front.
+
+**The abstract's one piece of comfort had never been measured.** It says three
+seeds "are enough to get the sign of an effect right and nowhere near enough to
+get its size right". That sentence predates any arm going to eight seeds. It is
+the only reassuring thing this paper says about small budgets, and everything
+around it — sizes wrong, existence wrong in both directions, nulls that are not
+nulls — is measured. Leaving the reassurance as the single unmeasured claim in
+the paragraph is precisely the asymmetry a reader should not have to catch.
+
+Checkable, because twelve arms now have both a three-seed measurement (seeds
+0-2) and an eight-seed one on the same cells:
+
+**0 of 12 changed sign.** The three-seed estimate of the magnitude ranged from
+0.62 to 2.15 times the eight-seed one — so it is wrong by up to a factor of two
+in either direction while never pointing the wrong way. The sentence survives,
+and now with numbers behind it.
+
+One caveat I put in the JSON rather than the abstract: the three-seed set is a
+*subset* of the eight-seed set, not an independent replication. This measures
+what an experimenter who stopped early would have concluded, which is the
+practically relevant question, but it is not evidence that three fresh seeds
+would agree — they share three of their draws by construction. A cleaner test
+would compare disjoint triples, and that is not something these runs support.
+
+The pattern across entries 74, 80 and this one is the same: the documents drift
+from the evidence in small ways that no guard catches, because every guard here
+asks whether a number is current and none asks whether a *sentence* still
+matches what was found. Re-reading the front matter against the run outputs
+found three such gaps in three sittings, which is a high enough hit rate that it
+should be a standing item rather than something I do when a turn is otherwise
+free.
