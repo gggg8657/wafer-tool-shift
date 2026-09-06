@@ -90,25 +90,43 @@ def main():
         ns = [c["n_per_arm"] for c in entry["comparisons"] if c["n_per_arm"]]
         fl = [c["min_attainable_p"] for c in entry["comparisons"]
               if c.get("min_attainable_p")]
+        # Report the range and the count, not just the worst. Summarising a
+        # family by its minimum said "focal: n=2, cannot reach 0.05" after
+        # gamma = 2.0 had been taken to eight seeds and settled -- true of the
+        # weakest comparison and false of the family, which is the same
+        # collapsing-to-one-number error the per-protocol floor exists to
+        # prevent.
         entry["n_per_arm"] = min(ns) if ns else None
+        entry["n_per_arm_max"] = max(ns) if ns else None
         entry["min_attainable_p"] = max(fl) if fl else None
+        entry["n_comparisons"] = len(entry["comparisons"])
+        entry["n_powered"] = sum(1 for c in entry["comparisons"]
+                                 if c.get("could_reach_05"))
         entry["could_reach_05"] = bool(fl) and max(fl) <= 0.05
+        entry["partially_powered"] = (0 < entry["n_powered"]
+                                      < entry["n_comparisons"])
         res["families"].append(entry)
 
     res["n_families"] = len(res["families"])
     res["n_underpowered"] = sum(1 for e in res["families"]
                                 if not e["could_reach_05"])
+    res["n_comparisons_total"] = sum(e["n_comparisons"] for e in res["families"])
+    res["n_comparisons_powered"] = sum(e["n_powered"] for e in res["families"])
     Path("runs/null_power_audit.json").write_text(json.dumps(res, indent=2))
 
-    print(f"{'null':46s} {'n/arm':>6s} {'floor p':>9s}  could reach 0.05?")
-    print("-" * 82)
+    print(f"{'null':46s} {'n/arm':>9s} {'worst floor':>12s}  powered")
+    print("-" * 84)
     for e in res["families"]:
         f = e["min_attainable_p"]
-        print(f"{e['label'][:46]:46s} {str(e['n_per_arm']):>6s} "
-              f"{(f'{f:.4f}' if f else '-'):>9s}  "
-              f"{'yes' if e['could_reach_05'] else 'NO'}")
-    print(f"\n{res['n_underpowered']} of {res['n_families']} nulls rest on a "
-          "test that cannot return p < 0.05 at any effect size.")
+        n = (str(e["n_per_arm"]) if e["n_per_arm"] == e["n_per_arm_max"]
+             else f"{e['n_per_arm']}-{e['n_per_arm_max']}")
+        print(f"{e['label'][:46]:46s} {n:>9s} "
+              f"{(f'{f:.4f}' if f else '-'):>12s}  "
+              f"{e['n_powered']}/{e['n_comparisons']}")
+    print(f"\n{res['n_comparisons_powered']} of "
+          f"{res['n_comparisons_total']} individual comparisons can return "
+          f"p < 0.05; {res['n_underpowered']} of {res['n_families']} families "
+          "still contain at least one that cannot.")
     print("wrote runs/null_power_audit.json")
 
 

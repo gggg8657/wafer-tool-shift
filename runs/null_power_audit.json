@@ -27,8 +27,12 @@
         }
       ],
       "n_per_arm": 8,
+      "n_per_arm_max": 8,
       "min_attainable_p": 0.0001554001554001554,
-      "could_reach_05": true
+      "n_comparisons": 2,
+      "n_powered": 2,
+      "could_reach_05": true,
+      "partially_powered": false
     },
     {
       "label": "focal loss vs its bit-exact gamma = 0 control",
@@ -73,8 +77,12 @@
         }
       ],
       "n_per_arm": 2,
+      "n_per_arm_max": 8,
       "min_attainable_p": 0.3333333333333333,
-      "could_reach_05": false
+      "n_comparisons": 4,
+      "n_powered": 1,
+      "could_reach_05": false,
+      "partially_powered": true
     },
     {
       "label": "meanmean capacity control vs mean",
@@ -92,10 +100,16 @@
         }
       ],
       "n_per_arm": 8,
+      "n_per_arm_max": 8,
       "min_attainable_p": 0.0001554001554001554,
-      "could_reach_05": true
+      "n_comparisons": 1,
+      "n_powered": 1,
+      "could_reach_05": true,
+      "partially_powered": false
     }
   ],
   "n_families": 3,
-  "n_underpowered": 1
+  "n_underpowered": 1,
+  "n_comparisons_total": 7,
+  "n_comparisons_powered": 4
 }

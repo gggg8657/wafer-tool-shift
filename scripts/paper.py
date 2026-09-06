@@ -1389,25 +1389,44 @@ def main():
           "what the instrument could resolve is not a finding, so every null "
           "this paper rests on is listed here with its power.")
         W("")
-        W(table([[e["label"], str(e["n_per_arm"]),
+        W(table([[e["label"],
+                  (str(e["n_per_arm"])
+                   if e["n_per_arm"] == e.get("n_per_arm_max")
+                   else f"{e['n_per_arm']}–{e['n_per_arm_max']}"),
                   (f"{e['min_attainable_p']:.4f}"
                    if e["min_attainable_p"] else NM),
-                  "yes" if e["could_reach_05"] else "**no**"]
+                  f"{e['n_powered']}/{e['n_comparisons']}"]
                  for e in npa["families"]],
-                ["null", "seeds/arm", "smallest attainable p",
-                 "could reach 0.05?"]))
+                ["null", "seeds/arm", "worst attainable p",
+                 "comparisons that could reach 0.05"]))
         W("")
-        W(f"**{npa['n_underpowered']} of {npa['n_families']} rest on a test "
-          "that could not have returned p < 0.05 at any effect size.** They "
-          "are absence of evidence, and this paper has been writing them as "
-          "evidence of absence. `scripts/null_power_fix.sh` takes both to "
+        W(f"**{npa['n_comparisons_powered']} of "
+          f"{npa['n_comparisons_total']} individual comparisons can now return "
+          f"p < 0.05**, against two of seven when this section was written. "
+          "The count is per comparison and not per family on purpose: "
+          "summarising a family by its weakest member reported focal loss as "
+          "unpowered at two seeds after gamma = 2.0 had been settled at eight, "
+          "which is the same collapsing-to-one-number error the per-protocol "
+          "floor exists to prevent, one level down. What remains is focal at "
+          "gamma 0.5, 1.0 and 5.0; `scripts/focal_complete.sh` takes them to "
           "eight seeds.")
         W("")
         _mm = next((e for e in npa["families"]
                     if e["label"].startswith("meanmean")), None)
         _mmfloor = (f"{_mm['min_attainable_p']:.4f}" if _mm else NM)
-        W("**Neither is expected to reverse, and the reason matters more than "
-          "the expectation.** The RPCA withdrawal does not rest on its "
+        _rpq = next((e for e in npa["families"]
+                     if e["label"].startswith("RPCA")), None)
+        _tie = (min(abs(c["difference"]) for c in _rpq["comparisons"])
+                if _rpq else None)
+        _f2 = next((c for e in npa["families"] for c in e["comparisons"]
+                    if c["treatment"] == "focal2.0"), None)
+        W("**H68 predicted neither null would reverse at eight seeds. It has "
+          "been scored and neither did** — the RPCA arms tie a channel of "
+          f"zeros to within {_tie:.5f}"
+          + (f", and focal at gamma = 2.0 is null at p = "
+             f"{_f2['p_two_sided']:.4f}" if _f2 else "")
+          + ". The reason to have expected that matters more than the "
+          "prediction. The RPCA withdrawal does not rest on its "
           "ablation at all: the low-rank part is rank 0 for 94.83% of "
           "decomposed wafers, the residual is bit-identical to the raw "
           "failed-die mask for 95.27% of all of them, and `stack_channels` "
@@ -1422,10 +1441,10 @@ def main():
           "distinction is not rhetorical: `meanmean` versus `mean` is also a "
           f"null, and it is at eight seeds with a floor of {_mmfloor}, so it "
           "can "
-          "carry the weight the pooling result puts on it. **H68, on record: "
-          "at eight seeds neither the RPCA nor the focal null reverses.** If "
-          "either does, the corresponding withdrawal here is wrong and comes "
-          "back out.")
+          "carry the weight the pooling result puts on it. **H70, on record "
+          "for the three gammas still at two seeds: none separates from the "
+          "bit-exact gamma = 0 control at eight.** If one does, the focal "
+          "withdrawal here is wrong and comes back out.")
         W("")
     W("## 8. Threats to validity")
     W("")

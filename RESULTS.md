@@ -128,7 +128,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | die-graph GNN (wafer-only subgraph) | erm | - | 0.7557 | - | 0.4898 | - | 0.1269 | 0.8889 |
 | CNN + RPCA lot-signature channel | erm | - | 0.8813 | - | 0.5000 | - | 0.7466 | 0.9315 |
 
-**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the 251 `lot` cells in `runs/` that carry the column, 123 report the identical 0.4898 and 98 more report exactly 0.5000 -- 88% of them on two values, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them. This applies to every protocol table in this section; it is stated once.
+**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the 259 `lot` cells in `runs/` that carry the column, 128 report the identical 0.4898 and 99 more report exactly 0.5000 -- 88% of them on two values, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them. This applies to every protocol table in this section; it is stated once.
 
 ## Borrowed objectives vs ERM -- protocol `lot_time`
 
@@ -241,6 +241,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN on resized 64x64 (GroupNorm) | erm/gnbn | ema | 0.8734 | 0.8670 | -0.0064 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm/poolmean | ema | 0.8729 | 0.8697 | -0.0032 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm/poolmeanmax | ema | 0.8862 | 0.8850 | -0.0012 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm/poolmeanmaxD2 | ema | 0.7802 | 0.7802 | +0.0000 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm/poolmeanmaxSA | ema | 0.7946 | 0.7932 | -0.0014 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm/poolmeanmean | ema | 0.8709 | 0.8700 | -0.0010 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm/rpca2_3ch | ema | 0.8812 | 0.8760 | -0.0051 |
@@ -405,6 +406,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN on resized 64x64 (GroupNorm) | gnbn | 0.8734 | +0.0062 | 0.5000 | +0.0000 |
 | lot | CNN on resized 64x64 (GroupNorm) | poolmean | 0.8729 | +0.0057 | 0.5000 | +0.0000 |
 | lot | CNN on resized 64x64 (GroupNorm) | poolmeanmax | 0.8862 | +0.0190 | 0.5000 | +0.0000 |
+| lot | CNN on resized 64x64 (GroupNorm) | poolmeanmaxD2 | 0.7802 | -0.0870 | 0.4898 | -0.0102 |
 | lot | CNN on resized 64x64 (GroupNorm) | poolmeanmaxSA | 0.7946 | -0.0725 | 0.5000 | +0.0000 |
 | lot | CNN on resized 64x64 (GroupNorm) | poolmeanmean | 0.8709 | +0.0038 | 0.5000 | +0.0000 |
 | lot | CNN on resized 64x64 (GroupNorm) | rpca2_3ch | 0.8812 | +0.0140 | 0.5000 | +0.0000 |
@@ -510,6 +512,7 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot | CNN on resized 64x64 (GroupNorm) | erm | gnbn | 8 | 0.8726 | +/-0.0160 | 0.8734, 0.8680, 0.8589, 0.8705, 0.8708, 0.8736, 0.8750, 0.8908 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 8 | 0.8738 | +/-0.0163 | 0.8729, 0.8668, 0.8601, 0.8758, 0.8897, 0.8574, 0.8773, 0.8901 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 8 | 0.8888 | +/-0.0116 | 0.8862, 0.8796, 0.8860, 0.8857, 0.8983, 0.8815, 0.8903, 0.9027 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmaxD2 | 8 | 0.7735 | +/-0.0507 | 0.7802, 0.7892, 0.7266, 0.7903, 0.7289, 0.7603, 0.8279, 0.7846 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmaxSA | 8 | 0.7847 | +/-0.0296 | 0.7946, 0.7941, 0.7511, 0.8102, 0.7526, 0.7849, 0.8090, 0.7814 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmean | 8 | 0.8793 | +/-0.0171 | 0.8709, 0.8802, 0.8641, 0.8769, 0.8982, 0.8715, 0.8803, 0.8920 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm | rpca2_3ch | 3 | 0.8703 | +/-0.0096 | 0.8812, 0.8679, 0.8619 |
@@ -722,6 +725,7 @@ Both macro-F1 columns are averaged over **only the classes present in both halve
 | lot | CNN on resized 64x64 (GroupNorm) | erm/gnbn | 0.8734 | 0.8652 | 0.9056 | -0.0405 | 8 | 43,121 | 131 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm/poolmean | 0.8729 | 0.8627 | 0.9293 | -0.0666 | 8 | 43,121 | 131 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm/poolmeanmax | 0.8862 | 0.8758 | 0.9272 | -0.0515 | 8 | 43,121 | 131 |
+| lot | CNN on resized 64x64 (GroupNorm) | erm/poolmeanmaxD2 | 0.7802 | 0.7571 | 0.8178 | -0.0607 | 8 | 43,121 | 131 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm/poolmeanmaxSA | 0.7946 | 0.7697 | 0.9089 | -0.1393 | 8 | 43,121 | 131 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm/poolmeanmean | 0.8709 | 0.8596 | 0.8873 | -0.0277 | 8 | 43,121 | 131 |
 | lot | CNN on resized 64x64 (GroupNorm) | erm/rpca2_3ch | 0.8812 | 0.8731 | 0.9012 | -0.0281 | 8 | 43,121 | 131 |
@@ -969,7 +973,7 @@ The nuisance CE rising toward chance is the signal that the embedding is losing 
 
 ## Per-class F1, best `lot` cell (CNN + RPCA lot-signature channel, erm)
 
-Selected on validation macro-F1 (0.8993); its test macro-F1 is 0.8826. Selecting on *test* instead would have picked CNN on resized 64x64 (GroupNorm) / erm/poolmeanmax at 0.8862; that is selection on the test set across 73 cells and the number would be an artefact of it.
+Selected on validation macro-F1 (0.8993); its test macro-F1 is 0.8826. Selecting on *test* instead would have picked CNN on resized 64x64 (GroupNorm) / erm/poolmeanmax at 0.8862; that is selection on the test set across 74 cells and the number would be an artefact of it.
 
 | class | F1 |
 |---|---|

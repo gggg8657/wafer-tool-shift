@@ -65,7 +65,7 @@ The forward-only test side holds 19 geometries against 338 in training, and 14.1
 
 Every verdict in this section requires two things: the two cells' seed ranges must not overlap, **and** the margin between them must exceed the run-to-run spread between *identical* invocations of one cell — because seeds are run back to back on one pair of GPUs, so a seed range measures the seed and not the pipeline.
 
-That spread is **not one number**. Measured per protocol where it has been measured: `lot` 0.0054, `lot_time` 0.0162, `size` 0.0133. Protocols without their own measurement fall back to 0.0162, the largest measured, since being too strict withdraws a claim and being too lenient publishes one. A floor is only used if it came from at least 3 identical invocations: `iid` was measured over 1 and is rejected, so it is screened against the fallback instead. A range over one draw is zero, and a floor of zero is cleared by everything. Observed *seed* ranges differ by protocol far more than that: 0.009–0.019 on `lot` against 0.069–0.072 on `size`.
+That spread is **not one number**. Measured per protocol where it has been measured: `lot` 0.0054, `lot_time` 0.0162, `size` 0.0133. Protocols without their own measurement fall back to 0.0162, the largest measured, since being too strict withdraws a claim and being too lenient publishes one. Observed *seed* ranges differ by protocol far more than that: 0.009–0.019 on `lot` against 0.069–0.072 on `size`.
 
 **Protocol `lot`** (deltas against the same encoder under ERM):
 
@@ -356,6 +356,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (GroupNorm) | `erm` | gnbn | 8 | 0.8726 | ±0.0160 |
 | `lot` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8738 | ±0.0163 |
 | `lot` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.8888 | ±0.0116 |
+| `lot` | CNN (GroupNorm) | `erm` | poolmeanmaxD2 | 8 | 0.7735 | ±0.0507 |
 | `lot` | CNN (GroupNorm) | `erm` | poolmeanmaxSA | 8 | 0.7847 | ±0.0296 |
 | `lot` | CNN (GroupNorm) | `erm` | poolmeanmean | 8 | 0.8793 | ±0.0171 |
 | `lot` | CNN (GroupNorm) | `erm` | rpca2_3ch | 3 | 0.8703 | ±0.0096 |
@@ -524,17 +525,17 @@ A scratch is thin in units of *dies*, not pixels, and no resampling changes that
 
 Twice this project reported a null that turned out to be a property of the seed budget. "Nothing separates from ERM on `size`" came from three seeds per arm, where an exact permutation test cannot return below 0.10; at eight, 2 objectives separate at p = 0.0019 and p = 0.0050. A null stated with a difference and no statement of what the instrument could resolve is not a finding, so every null this paper rests on is listed here with its power.
 
-| null | seeds/arm | smallest attainable p | could reach 0.05? |
+| null | seeds/arm | worst attainable p | comparisons that could reach 0.05 |
 |---|---|---|---|
-| RPCA fourth channel vs a channel of zeros | 8 | 0.0002 | yes |
-| focal loss vs its bit-exact gamma = 0 control | 2 | 0.3333 | **no** |
-| meanmean capacity control vs mean | 8 | 0.0002 | yes |
+| RPCA fourth channel vs a channel of zeros | 8 | 0.0002 | 2/2 |
+| focal loss vs its bit-exact gamma = 0 control | 2–8 | 0.3333 | 1/4 |
+| meanmean capacity control vs mean | 8 | 0.0002 | 1/1 |
 
-**1 of 3 rest on a test that could not have returned p < 0.05 at any effect size.** They are absence of evidence, and this paper has been writing them as evidence of absence. `scripts/null_power_fix.sh` takes both to eight seeds.
+**4 of 7 individual comparisons can now return p < 0.05**, against two of seven when this section was written. The count is per comparison and not per family on purpose: summarising a family by its weakest member reported focal loss as unpowered at two seeds after gamma = 2.0 had been settled at eight, which is the same collapsing-to-one-number error the per-protocol floor exists to prevent, one level down. What remains is focal at gamma 0.5, 1.0 and 5.0; `scripts/focal_complete.sh` takes them to eight seeds.
 
-**Neither is expected to reverse, and the reason matters more than the expectation.** The RPCA withdrawal does not rest on its ablation at all: the low-rank part is rank 0 for 94.83% of decomposed wafers, the residual is bit-identical to the raw failed-die mask for 95.27% of all of them, and `stack_channels` concatenates the fourth channel to an *intact* one-hot, so the encoder reads an untouched copy of whatever the decomposition removed. The control could not have failed to tie. The ablation corroborates a mechanism; it was never the evidence, and the sentence that presented it as such was overstating a weak test while a strong argument sat beside it.
+**H68 predicted neither null would reverse at eight seeds. It has been scored and neither did** — the RPCA arms tie a channel of zeros to within 0.00005, and focal at gamma = 2.0 is null at p = 0.9442. The reason to have expected that matters more than the prediction. The RPCA withdrawal does not rest on its ablation at all: the low-rank part is rank 0 for 94.83% of decomposed wafers, the residual is bit-identical to the raw failed-die mask for 95.27% of all of them, and `stack_channels` concatenates the fourth channel to an *intact* one-hot, so the encoder reads an untouched copy of whatever the decomposition removed. The control could not have failed to tie. The ablation corroborates a mechanism; it was never the evidence, and the sentence that presented it as such was overstating a weak test while a strong argument sat beside it.
 
-The capacity control is the counter-example that shows the distinction is not rhetorical: `meanmean` versus `mean` is also a null, and it is at eight seeds with a floor of 0.0002, so it can carry the weight the pooling result puts on it. **H68, on record: at eight seeds neither the RPCA nor the focal null reverses.** If either does, the corresponding withdrawal here is wrong and comes back out.
+The capacity control is the counter-example that shows the distinction is not rhetorical: `meanmean` versus `mean` is also a null, and it is at eight seeds with a floor of 0.0002, so it can carry the weight the pooling result puts on it. **H70, on record for the three gammas still at two seeds: none separates from the bit-exact gamma = 0 control at eight.** If one does, the focal withdrawal here is wrong and comes back out.
 
 ## 8. Threats to validity
 

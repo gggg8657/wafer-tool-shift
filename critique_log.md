@@ -4045,3 +4045,58 @@ eight seeds on the focal side; `γ = 0.5`, `1.0` and `5.0` remain at two seeds
 with a floor of 0.3333, so "focal contributes nothing" is settled at one gamma
 and unsettled at three. And `lot_time`'s residual-ahead-at-every-seed
 observation is still n=3 and still recorded as a hypothesis.
+
+### 82. H68 scored on both halves, and a summary that hid a settled result
+
+H68 said neither underpowered null would reverse at eight seeds. Both halves are
+in and neither did.
+
+  * RPCA: `residual` vs zeros -0.00198 (p = 0.6651), `failmask` vs zeros
+    -0.00005 (p = 0.9925), floor 0.00016 on both.
+  * focal at γ = 2.0: -0.00032 (p = 0.9442), floor 0.00016.
+
+Two of the four hypotheses I have put on record this weekend have come in right
+(H64 six of six, H68), one half-right (H63 two of four) and one badly wrong
+(H66). That ratio is worth stating because a loop that only records the
+predictions it gets right is not keeping a record, it is keeping a highlight
+reel.
+
+**The interesting failure this turn was in the audit, not the experiment.**
+`null_power_audit.py` summarised each family by its *weakest* comparison, so
+after γ = 2.0 was settled at eight seeds the table still read:
+
+    focal loss vs its bit-exact gamma = 0 control    n=2    floor 0.3333    NO
+
+True of γ = 0.5, and false of the family. A settled result was invisible behind
+a summary statistic, and I would have gone on believing focal was entirely
+unpowered because that is what my own table said.
+
+This is the **same error as the single global floor**, one level down. That
+function exists because applying one protocol's run-to-run spread to every
+protocol is a substitution of a summary for the thing summarised — `size` is
+two and a half times `lot`. I then wrote a power audit that collapses four
+comparisons to their minimum. The lesson generalises past floors: any time a
+group is reduced to one number, ask which member that number is describing and
+whether the others differ enough to matter.
+
+It now reports seeds as a range, and powered comparisons as a count: 4 of 7
+individual comparisons can return p < 0.05, against 2 of 7 when the section was
+written.
+
+**H70, on record:** none of γ = 0.5, 1.0 or 5.0 separates from the bit-exact
+γ = 0 control at eight seeds. The reason is not the two-seed evidence, which is
+worth nothing at a floor of 0.3333, but that γ = 2.0 — the canonical value and
+the largest of the four effects — is null at a floor of 0.00016, and that the
+`Scratch` result showed this corpus's long tail to be an architecture problem
+rather than a class-weighting one. `scripts/focal_complete.sh` is queued behind
+the dilation control and the floor re-measurement.
+
+**Postscript to 82.** The first patch in this turn silently did nothing: it
+bundled three replacements in one script, the third assertion failed, and the
+script died before writing — so I regenerated the paper, saw "wrote
+paper_draft.md", and moved on with the stale paragraph still in place. The
+traceback was printed directly above the success line and I read the success
+line. Same shape as the ratchet miss in entry 78: the output that mattered was
+not the last one. The habit that catches it is checking the rendered document
+for the new sentence rather than the generator for a zero exit, which is what
+`check_all.py` does for numbers and nothing does for prose.
