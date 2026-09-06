@@ -455,6 +455,24 @@ def main():
                       "objective family as a whole is worse than ERM on this "
                       "corpus.**")
                     W("")
+                    rb = (fam.get("robustness") or {})
+                    io = rb.get("individually_unestablished_only")
+                    if io:
+                        W("**And it is not the two significant ones carrying "
+                          "the other four.** Drop `group_dro` and "
+                          "`mixup_domain` entirely and repeat the test on the "
+                          "four that individually fail to separate from ERM — "
+                          f"{', '.join('`' + o + '`' for o in io['objectives'])}"
+                          f" — and it still gives {io['n_negative']} of "
+                          f"{io['n_pairs']} seeds negative at "
+                          f"**p = {io['p_two_sided']:.5f}**, mean "
+                          f"{io['mean_difference']:+.4f}. Every one of the six "
+                          "leave-one-out subsets does the same. **Four methods "
+                          "that no individual test can distinguish from ERM "
+                          "are, together, clearly worse than it** — which is "
+                          "the cleanest statement of this benchmark's thesis "
+                          "that the repository contains.")
+                        W("")
                     if abs(ft["p_two_sided"] - ft["min_attainable_p"]) < 1e-12:
                         W(f"That p is the floor of this test — with "
                           f"{ft['n_pairs']} seeds, {ft['arrangements']} sign "

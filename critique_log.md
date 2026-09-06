@@ -3549,3 +3549,48 @@ raises it, and the audit demonstrates that it does.
 checks are evidence and which are not. A reader inheriting this on Monday should
 not have to take the green ticks on trust, and the one check that cannot support
 them says so in the document rather than only in its own output.
+
+### 73. The family result survives dropping the two objectives that carried it
+
+Entry 72 built a tool for asking whether a check could fail, and in the same
+session I had shipped a headline number from a routine with no test at all.
+`sign_flip_p` produces the p = 0.00781 behind "the borrowed objective family is
+worse than ERM", and it was written in one sitting and never checked. It is
+correct — identical arms give p = 1, n same-sign differences give the floor
+2/2^n, mirrored inputs agree, and it matches a brute-force enumeration written
+independently on 200 random vectors — but that is luck rather than process, and
+it is now in `tests/` and in `guard_audit.py`.
+
+**The substantive question was worse than the missing test.** A family test that
+fires only because of its largest members says nothing a per-objective test did
+not already say. `group_dro` (p = 0.00171) and `mixup_domain` (p = 0.00513) are
+individually significant, so the aggregate result could have been those two
+dragging four inert objectives along, dressed up as a statement about a family.
+
+It is not:
+
+| subset | mean vs ERM | seeds negative | p |
+|---|---|---|---|
+| all six | -0.0107 | 8/8 | 0.00781 |
+| **the four that individually fail to separate** | **-0.0066** | **8/8** | **0.00781** |
+
+`coral`, `dann`, `irm` and `hsic` have raw p-values of 0.087, 0.078, 0.338 and
+0.581. Not one of them can be distinguished from ERM on its own. Together they
+are worse than it on **every one of the eight seeds**, at the floor of the test.
+All six leave-one-out subsets do the same.
+
+**That is the cleanest statement of this benchmark's thesis anywhere in the
+repository, and it is stronger than the version I had been telling.** The story
+so far was "three seeds get the sign right and not the size", a claim about
+sample size. This is a claim about *aggregation*: four effects, each individually
+inside its own noise, are jointly unambiguous, because the seeds are shared and
+the pairing removes the variance that hides them one at a time. The under-powered
+screen was not merely imprecise about these four — it reported a null where a
+consistent effect was sitting in plain view, and no amount of extra seeds *per
+objective* would have been the efficient way to find it.
+
+Two honest limits. The four objectives are not independent of each other — they
+share a corpus, a split and a baseline — so this is evidence about "the average
+borrowed invariance objective on this corpus", not six separate confirmations.
+And p = 0.00781 is the floor at eight seeds, so the result is as strong as this
+budget can express and no stronger.

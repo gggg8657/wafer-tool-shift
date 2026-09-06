@@ -44,7 +44,10 @@ import sys
 from pathlib import Path
 
 SOURCES = ("scripts/report.py", "scripts/paper.py", "scripts/weekend.py")
-RATCHET = Path("runs/typed_decimal_ratchet.json")
+# Guard state, not a measurement. It lived in `runs/` for one commit and
+# `coverage_check.py` correctly called it an orphaned result: nothing under
+# `runs/` should be there unless a document can report it.
+RATCHET = Path("state/typed_decimal_ratchet.json")
 # >=3 fraction digits: 0.85 is a rounded restatement, 0.8523 is a measurement
 LITERAL = re.compile(r"(?<![\d.])(\d{1,2}\.\d{3,})(?![\d])")
 # things that are not measurements
@@ -161,6 +164,7 @@ def main():
     elif prev is not None and total_typed < prev:
         print(f"  lowered by {prev - total_typed}")
     if prev is None or total_typed < prev:
+        RATCHET.parent.mkdir(parents=True, exist_ok=True)
         RATCHET.write_text(json.dumps(
             {"count": total_typed, "sources": list(SOURCES),
              "what": "decimals with >=3 fraction digits typed into generator "

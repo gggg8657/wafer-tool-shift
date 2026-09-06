@@ -550,11 +550,11 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | size | CNN on resized 64x64 (BatchNorm) | coral | sizeseed | 7 | 0.7819 | +/-0.0422 | 0.7614, 0.7642, 0.7888, 0.7483, 0.8327, 0.7571, 0.8206 |
 | size | CNN on resized 64x64 (BatchNorm) | dann | sizeseed | 7 | 0.7709 | +/-0.0628 | 0.7426, 0.7618, 0.8189, 0.7046, 0.7956, 0.7425, 0.8302 |
 | size | CNN on resized 64x64 (BatchNorm) | erm | sess2 | 3 | 0.7843 | +/-0.0312 | 0.7724, 0.7590, 0.8214 |
-| size | CNN on resized 64x64 (BatchNorm) | erm | sizeseed | 7 | 0.7904 | +/-0.0606 | 0.7612, 0.7786, 0.8347, 0.7150, 0.8348, 0.7724, 0.8362 |
+| size | CNN on resized 64x64 (BatchNorm) | erm | sizeseed | 8 | 0.7931 | +/-0.0606 | 0.7612, 0.7786, 0.8347, 0.7150, 0.8348, 0.7724, 0.8362, 0.8122 |
 | size | CNN on resized 64x64 (BatchNorm) | group_dro | sizeseed | 7 | 0.6801 | +/-0.0988 | 0.5760, 0.5778, 0.7604, 0.6611, 0.6975, 0.7143, 0.7736 |
 | size | CNN on resized 64x64 (BatchNorm) | irm | sizeseed | 7 | 0.7725 | +/-0.0617 | 0.7482, 0.7127, 0.8362, 0.7303, 0.7949, 0.7670, 0.8180 |
-| size | CNN on resized 64x64 (BatchNorm) | logit_adjust | sizeseed | 6 | 0.6898 | +/-0.0684 | 0.6567, 0.6233, 0.7594, 0.6840, 0.7601, 0.6554 |
-| size | CNN on resized 64x64 (BatchNorm) | mixup_domain | sizeseed | 6 | 0.7741 | +/-0.0628 | 0.7643, 0.7478, 0.8287, 0.7054, 0.8311, 0.7673 |
+| size | CNN on resized 64x64 (BatchNorm) | logit_adjust | sizeseed | 7 | 0.6962 | +/-0.0684 | 0.6567, 0.6233, 0.7594, 0.6840, 0.7601, 0.6554, 0.7347 |
+| size | CNN on resized 64x64 (BatchNorm) | mixup_domain | sizeseed | 7 | 0.7830 | +/-0.0654 | 0.7643, 0.7478, 0.8287, 0.7054, 0.8311, 0.7673, 0.8362 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.8467 | +/-0.0346 | 0.8203, 0.8301, 0.8895 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 8 | 0.8462 | +/-0.0391 | 0.8231, 0.8114, 0.8868, 0.8088, 0.8756, 0.8202, 0.8871, 0.8568 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 8 | 0.8181 | +/-0.0700 | 0.8039, 0.7357, 0.8046, 0.8076, 0.8758, 0.8191, 0.8601, 0.8383 |

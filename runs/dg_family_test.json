@@ -84,5 +84,113 @@
     "p_two_sided": 0.0078125,
     "arrangements": 256,
     "min_attainable_p": 0.0078125
+  },
+  "robustness": {
+    "individually_unestablished_only": {
+      "objectives": [
+        "coral",
+        "dann",
+        "irm",
+        "hsic"
+      ],
+      "n_pairs": 8,
+      "mean_difference": -0.0065915563489085255,
+      "n_negative": 8,
+      "p_two_sided": 0.0078125,
+      "arrangements": 256,
+      "min_attainable_p": 0.0078125
+    },
+    "leave_one_out": {
+      "coral": {
+        "objectives": [
+          "dann",
+          "irm",
+          "group_dro",
+          "mixup_domain",
+          "hsic"
+        ],
+        "n_pairs": 8,
+        "mean_difference": -0.011041430998702695,
+        "n_negative": 8,
+        "p_two_sided": 0.0078125,
+        "arrangements": 256,
+        "min_attainable_p": 0.0078125
+      },
+      "dann": {
+        "objectives": [
+          "coral",
+          "irm",
+          "group_dro",
+          "mixup_domain",
+          "hsic"
+        ],
+        "n_pairs": 8,
+        "mean_difference": -0.01092467449292657,
+        "n_negative": 8,
+        "p_two_sided": 0.0078125,
+        "arrangements": 256,
+        "min_attainable_p": 0.0078125
+      },
+      "irm": {
+        "objectives": [
+          "coral",
+          "dann",
+          "group_dro",
+          "mixup_domain",
+          "hsic"
+        ],
+        "n_pairs": 8,
+        "mean_difference": -0.011970517401765884,
+        "n_negative": 8,
+        "p_two_sided": 0.0078125,
+        "arrangements": 256,
+        "min_attainable_p": 0.0078125
+      },
+      "group_dro": {
+        "objectives": [
+          "coral",
+          "dann",
+          "irm",
+          "mixup_domain",
+          "hsic"
+        ],
+        "n_pairs": 8,
+        "mean_difference": -0.008865101994508504,
+        "n_negative": 8,
+        "p_two_sided": 0.0078125,
+        "arrangements": 256,
+        "min_attainable_p": 0.0078125
+      },
+      "mixup_domain": {
+        "objectives": [
+          "coral",
+          "dann",
+          "irm",
+          "group_dro",
+          "hsic"
+        ],
+        "n_pairs": 8,
+        "mean_difference": -0.009284547774179558,
+        "n_negative": 8,
+        "p_two_sided": 0.0078125,
+        "arrangements": 256,
+        "min_attainable_p": 0.0078125
+      },
+      "hsic": {
+        "objectives": [
+          "coral",
+          "dann",
+          "irm",
+          "group_dro",
+          "mixup_domain"
+        ],
+        "n_pairs": 8,
+        "mean_difference": -0.012295750785723078,
+        "n_negative": 8,
+        "p_two_sided": 0.0078125,
+        "arrangements": 256,
+        "min_attainable_p": 0.0078125
+      }
+    }
   }
 }

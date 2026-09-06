@@ -93,6 +93,27 @@ def main():
     diffs = [sum(per[o][s] for o in OBJS) / len(OBJS) - base[s] for s in shared]
     p_fam, n_arr = sign_flip_p(diffs)
 
+    # ---- is the family result just the two significant objectives?
+    # A family test that only fires because of its largest members says
+    # nothing a per-objective test did not already say. The sharp version of
+    # the question is whether the objectives that individually *fail* to
+    # separate are collectively worse than ERM.
+    def family(objs):
+        d = [sum(per[o][s] for o in objs) / len(objs) - base[s] for s in shared]
+        pv, na = sign_flip_p(d)
+        return {"objectives": list(objs), "n_pairs": len(d),
+                "mean_difference": sum(d) / len(d),
+                "n_negative": sum(1 for v in d if v < 0),
+                "p_two_sided": pv, "arrangements": na,
+                "min_attainable_p": 2.0 / na}
+
+    insig = [o for o in OBJS if not multiplicity.get(o, {})
+             .get("significant_raw_05")]
+    robustness = {
+        "individually_unestablished_only": family(insig) if insig else None,
+        "leave_one_out": {o: family([x for x in OBJS if x != o]) for o in OBJS},
+    }
+
     res = {
         "what": "multiplicity correction and a family-level paired test for "
                 "the six borrowed DG objectives under domain-def time_decile",
@@ -124,6 +145,7 @@ def main():
             "arrangements": n_arr,
             "min_attainable_p": 2.0 / n_arr,
         },
+        "robustness": robustness,
     }
     Path("runs/dg_family_test.json").write_text(json.dumps(res, indent=2))
 
@@ -137,6 +159,19 @@ def main():
           f"{res['family_test']['n_negative']}/{len(diffs)} seeds negative")
     print(f"  p = {p_fam:.5f} over {n_arr} sign assignments "
           f"(floor {2.0 / n_arr:.5f})")
+    io = robustness["individually_unestablished_only"]
+    if io:
+        print(f"\nDropping the objectives that reach p < 0.05 on their own "
+              f"({', '.join(o for o in OBJS if o not in insig)}):")
+        print(f"  {', '.join(io['objectives'])}")
+        print(f"  mean {io['mean_difference']:+.4f}, "
+              f"{io['n_negative']}/{io['n_pairs']} seeds negative, "
+              f"p = {io['p_two_sided']:.5f}")
+    lo = robustness["leave_one_out"]
+    worst = max(lo.values(), key=lambda v: v["p_two_sided"])
+    print(f"\nLeave-one-out: worst p over the six subsets is "
+          f"{worst['p_two_sided']:.5f} "
+          f"(dropping `{[k for k, v in lo.items() if v is worst][0]}`)")
     print("\nwrote runs/dg_family_test.json")
 
 

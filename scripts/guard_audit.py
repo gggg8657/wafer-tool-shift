@@ -182,12 +182,23 @@ def audit_coverage_check():
             orphan.unlink()
 
 
+def audit_sign_flip_test():
+    """The exact test behind the headline family claim must not always fire."""
+    m = load("fam", "scripts/dg_family_test.py")
+    none, _ = m.sign_flip_p([0.0] * 8)
+    allneg, n = m.sign_flip_p([-0.01] * 8)
+    mixed, _ = m.sign_flip_p([1, -1, 2, -2, 3, -3, 4, -4])
+    return (none == 1.0 and abs(allneg - 2.0 / n) < 1e-12 and mixed == 1.0), \
+        "identical arms, and a perfectly balanced set, must give p = 1"
+
+
 AUDITS = [
     ("verify_stage.py", audit_verify_stage),
     ("prose_status_lint.py duplicated_blocks", audit_duplicated_blocks),
     ("section_census.py", audit_section_census),
     ("report.py separation (floor screen)", audit_floor_screen),
     ("gn_vs_bn.py perm_p", audit_permutation_test),
+    ("dg_family_test.py sign_flip_p", audit_sign_flip_test),
     ("coverage_check.py", audit_coverage_check),
     ("number_provenance.py traceability", audit_number_provenance_traceability),
     ("number_provenance.py ratchet", audit_number_provenance_ratchet),

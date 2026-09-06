@@ -579,3 +579,54 @@ def test_scale_aware_stem_is_exact_at_dilation_one_and_adds_no_parameters():
         assert _t.equal(scaled(x, hw_native)[perm],
                         scaled(x[perm], hw_native[perm])), \
             "output must not depend on batch order"
+
+
+def test_sign_flip_test_is_exact_and_matches_independent_enumeration():
+    """The routine behind the headline family result, which had no test.
+
+    `dg_family_test.py` reports that the six borrowed DG objectives are worse
+    than ERM in aggregate at p = 0.00781, from an exact two-sided sign-flip
+    test on eight per-seed paired differences. That number is the strongest
+    negative claim in the project and it rested on a function written in one
+    sitting and never checked -- exactly the gap `guard_audit.py` exists to
+    close, left open in the same session that built it.
+
+    Four properties, three of which have closed forms:
+
+      * identical arms give p = 1, not p = 0;
+      * n differences all of one sign give 2 / 2^n, the floor;
+      * flipping every input sign changes nothing, since the test is two-sided;
+      * and on random vectors it agrees with a brute-force enumeration written
+        independently of the implementation.
+    """
+    import importlib.util
+    import itertools
+    import random
+    from pathlib import Path as _Path
+
+    spec = importlib.util.spec_from_file_location(
+        "fam", _Path(__file__).resolve().parents[1] / "scripts"
+        / "dg_family_test.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+
+    assert m.sign_flip_p([0.0] * 8) == (1.0, 256), "no difference is not p=0"
+    assert m.sign_flip_p([-0.01] * 8) == (2 / 256, 256), "floor at n=8"
+    assert m.sign_flip_p([-0.01] * 4) == (2 / 16, 16), "floor at n=4"
+    assert m.sign_flip_p([1, -1, 2, -2, 3, -3, 4, -4])[0] == 1.0
+
+    d = [-0.03, -0.01, -0.02, 0.004, -0.011, -0.007, -0.02, -0.001]
+    assert m.sign_flip_p(d) == m.sign_flip_p([-v for v in d]), \
+        "a two-sided test must ignore the overall sign"
+
+    def brute(diffs):
+        obs = abs(sum(diffs))
+        n = len(diffs)
+        return sum(1 for s in itertools.product((1, -1), repeat=n)
+                   if abs(sum(x * y for x, y in zip(s, diffs)))
+                   >= obs - 1e-15) / 2 ** n
+
+    rng = random.Random(0)
+    for _ in range(50):
+        v = [rng.gauss(0, 1) for _ in range(7)]
+        assert abs(m.sign_flip_p(v)[0] - brute(v)) < 1e-12

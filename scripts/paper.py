@@ -143,6 +143,14 @@ def main():
     _famh = (", ".join(f"`{o}` at {_po[o]['p_holm']:.4f}" for o in _sur)
              if _sur else NM)
     _nfam = len(_fam.get("objectives") or []) or None
+    _io = ((_fam.get("robustness") or {}).get("individually_unestablished_only")
+           or {})
+    _faminsig = (
+        f"dropping both and repeating the test on the {len(_io['objectives'])} "
+        "that individually fail to separate still gives "
+        f"{_io['n_negative']} of {_io['n_pairs']} seeds negative at "
+        f"p = {_io['p_two_sided']:.5f}."
+        if _io else NM)
     n_obj = len({k[2] for k in C if k[2] not in ("erm", "focal")})
     words = {5: "Five", 6: "Six", 7: "Seven", 8: "Eight", 9: "Nine",
              10: "Ten"}
@@ -158,7 +166,8 @@ def main():
       "and the family is significantly worse than it in aggregate** — an "
       "exact sign-flip test on the per-seed paired differences gives "
       f"{_famp}, with every seed negative. Two objectives are individually "
-      f"worse after Holm correction over the six tests ({_famh}). Our own "
+      f"worse after Holm correction over the six tests ({_famh}), and the "
+      f"aggregate is not those two carrying the rest: {_faminsig} Our own "
       "three-seed screen had called them all unestablished; it was "
       "under-powered, and a null asserted from an under-powered test is the "
       "failure mode this paper spends most of its length on. Two methods we "
