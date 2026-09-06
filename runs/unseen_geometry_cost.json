@@ -1,0 +1,179 @@
+{
+  "what": "macro-F1 on the seen-geometry and unseen-geometry halves of the same lot_time test set, restricted to cells where both halves contain the same classes",
+  "why_restricted": "the unseen-geometry half is small and often misses a class; macro-F1 over eight classes is not comparable to macro-F1 over nine",
+  "n_cells_matched": 15,
+  "n_cells_dropped_class_mismatch": 22,
+  "cells": [
+    {
+      "file": "lot_time__cnn_bn__erm__sess2__s1.json",
+      "encoder": "cnn_bn",
+      "objective": "erm",
+      "tag": "sess2",
+      "seed": 1,
+      "n_classes": 9,
+      "seen": 0.6367113160720637,
+      "unseen": 0.6040724893794484,
+      "cost": -0.03263882669261531
+    },
+    {
+      "file": "lot_time__cnn_gn__erm__poolmean__s1.json",
+      "encoder": "cnn_gn",
+      "objective": "erm",
+      "tag": "poolmean",
+      "seed": 1,
+      "n_classes": 9,
+      "seen": 0.707880256637664,
+      "unseen": 0.7097536191171339,
+      "cost": 0.0018733624794698978
+    },
+    {
+      "file": "lot_time__cnn_gn__erm__poolmean__s3.json",
+      "encoder": "cnn_gn",
+      "objective": "erm",
+      "tag": "poolmean",
+      "seed": 3,
+      "n_classes": 9,
+      "seen": 0.6998539698429573,
+      "unseen": 0.7047258694580993,
+      "cost": 0.004871899615142006
+    },
+    {
+      "file": "lot_time__cnn_gn__erm__poolmean__s5.json",
+      "encoder": "cnn_gn",
+      "objective": "erm",
+      "tag": "poolmean",
+      "seed": 5,
+      "n_classes": 9,
+      "seen": 0.7092617006220256,
+      "unseen": 0.7125368044284878,
+      "cost": 0.0032751038064621207
+    },
+    {
+      "file": "lot_time__cnn_gn__erm__poolmean__s7.json",
+      "encoder": "cnn_gn",
+      "objective": "erm",
+      "tag": "poolmean",
+      "seed": 7,
+      "n_classes": 9,
+      "seen": 0.6988735297578619,
+      "unseen": 0.7025064793080406,
+      "cost": 0.003632949550178677
+    },
+    {
+      "file": "lot_time__cnn_gn__erm__poolmeanmax__s1.json",
+      "encoder": "cnn_gn",
+      "objective": "erm",
+      "tag": "poolmeanmax",
+      "seed": 1,
+      "n_classes": 9,
+      "seen": 0.6967208026216425,
+      "unseen": 0.6822471337197087,
+      "cost": -0.0144736689019338
+    },
+    {
+      "file": "lot_time__cnn_gn__erm__poolmeanmax__s3.json",
+      "encoder": "cnn_gn",
+      "objective": "erm",
+      "tag": "poolmeanmax",
+      "seed": 3,
+      "n_classes": 9,
+      "seen": 0.7191282653793413,
+      "unseen": 0.7201042684212289,
+      "cost": 0.0009760030418876076
+    },
+    {
+      "file": "lot_time__cnn_gn__erm__poolmeanmax__s5.json",
+      "encoder": "cnn_gn",
+      "objective": "erm",
+      "tag": "poolmeanmax",
+      "seed": 5,
+      "n_classes": 9,
+      "seen": 0.6986818601510634,
+      "unseen": 0.6447783697581438,
+      "cost": -0.05390349039291953
+    },
+    {
+      "file": "lot_time__cnn_gn__erm__poolmeanmax__s7.json",
+      "encoder": "cnn_gn",
+      "objective": "erm",
+      "tag": "poolmeanmax",
+      "seed": 7,
+      "n_classes": 9,
+      "seen": 0.709284405071315,
+      "unseen": 0.7061761251398637,
+      "cost": -0.003108279931451241
+    },
+    {
+      "file": "lot_time__cnn_gn__erm__poolmeanmean__s1.json",
+      "encoder": "cnn_gn",
+      "objective": "erm",
+      "tag": "poolmeanmean",
+      "seed": 1,
+      "n_classes": 9,
+      "seen": 0.7140456669863264,
+      "unseen": 0.7148156962237884,
+      "cost": 0.0007700292374619444
+    },
+    {
+      "file": "lot_time__cnn_gn__erm__sess2__s1.json",
+      "encoder": "cnn_gn",
+      "objective": "erm",
+      "tag": "sess2",
+      "seed": 1,
+      "n_classes": 9,
+      "seen": 0.6858277482493009,
+      "unseen": 0.6977315597618099,
+      "cost": 0.011903811512508966
+    },
+    {
+      "file": "lot_time__feat__erm__sess2__s1.json",
+      "encoder": "feat",
+      "objective": "erm",
+      "tag": "sess2",
+      "seed": 1,
+      "n_classes": 9,
+      "seen": 0.6446326190455864,
+      "unseen": 0.5734201161631423,
+      "cost": -0.07121250288244418
+    },
+    {
+      "file": "lot_time__graph__erm__sess2__s1.json",
+      "encoder": "graph",
+      "objective": "erm",
+      "tag": "sess2",
+      "seed": 1,
+      "n_classes": 9,
+      "seen": 0.5429037651428248,
+      "unseen": 0.519465042714644,
+      "cost": -0.02343872242818079
+    },
+    {
+      "file": "lot_time__rpca_cnn__erm__sess2__s1.json",
+      "encoder": "rpca_cnn",
+      "objective": "erm",
+      "tag": "sess2",
+      "seed": 1,
+      "n_classes": 9,
+      "seen": 0.695909216657168,
+      "unseen": 0.7134718277284109,
+      "cost": 0.017562611071242906
+    },
+    {
+      "file": "lot_time__spectral__erm__sess2__s1.json",
+      "encoder": "spectral",
+      "objective": "erm",
+      "tag": "sess2",
+      "seed": 1,
+      "n_classes": 9,
+      "seen": 0.5971961492494291,
+      "unseen": 0.6361911009843388,
+      "cost": 0.038994951734909744
+    }
+  ],
+  "cost_mean": -0.007660984612018733,
+  "cost_median": 0.0009760030418876076,
+  "cost_min": -0.07121250288244418,
+  "cost_max": 0.038994951734909744,
+  "n_negative": 6,
+  "sign": "unseen geometry is harder"
+}

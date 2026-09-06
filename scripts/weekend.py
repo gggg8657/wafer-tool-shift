@@ -862,10 +862,25 @@ def main():
       "these rules forbid, and the levers that remain — backbone, pooling, "
       "real mixed-type data — are not tuning.*")
     W("")
+    ug = js("unseen_geometry_cost.json") or {}
+    ugs = ""
+    if ug.get("n_cells_matched"):
+        ugs = (f"The geometry share is now measured and is not a share: over "
+               f"{ug['n_cells_matched']} cells whose seen and unseen halves "
+               f"contain the same classes, unseen-geometry macro-F1 differs "
+               f"from seen-geometry macro-F1 by {ug['cost_mean']:+.4f} on "
+               f"average and {ug['cost_median']:+.4f} at the median, with "
+               f"{ug['n_negative']} of {ug['n_cells_matched']} cells negative "
+               "— it straddles zero. Meeting a geometry never trained on, "
+               "which we assumed was the expensive part, costs approximately "
+               "nothing; the expensive part is that the slice is narrow. "
+               f"({ug['n_cells_dropped_class_mismatch']} further cells are "
+               "excluded because the two halves contain different classes and "
+               "macro-F1 over eight is not comparable to macro-F1 over nine.) ")
     W("**Decision 3 — how should the forward-only result be framed?** It is "
       "the largest number here and section 2.4 shows it is a compound: a "
-      "quarter of it is that the test slice is intrinsically hard, a further "
-      "unmeasured share is geometries never trained on, and the rest is drift. "
+      "quarter of it is that the test slice is intrinsically hard, and the "
+      "rest is drift. " + ugs +
       "Options: **(a)** reframe as *forward-only deployment* — a fab does meet "
       "new products going forward, so the geometry shift is part of the "
       "phenomenon rather than a confound; **(b)** build a geometry-controlled "
@@ -904,8 +919,9 @@ def main():
          "**answered** (section 2.0): max pooling beats global average pooling "
          "on `lot` and the capacity control does not"),
         ("`size_objectives_seeds.sh`", "logs/size_objectives.log",
-         "**answered**: nothing separates from ERM on `size` either, GroupDRO "
-         "included"),
+         "**superseded** — it reported that nothing separates from ERM on "
+         "`size`, which the instrument could not have shown: three seeds per "
+         "arm bottom out at p = 0.10. See `size_complete.sh`"),
         ("`gn_vs_bn.sh`", "logs/gn_vs_bn.log",
          "**answered**: GroupNorm beats BatchNorm, permutation p = 0.011 at "
          "eight seeds per arm"),
@@ -916,11 +932,29 @@ def main():
          "**answered on the second attempt**; the first was void because the "
          "one-hot planes sum to 1 and the 'hidden' plane was recoverable"),
         ("`pooling_protocols.sh`", "logs/pooling_protocols.log",
-         "the only open question: does the pooling win survive `iid`, `size` "
-         "and `lot_time`? Prediction on record — holds or grows on `iid`, "
-         "shrinks or reverses on `lot_time`, because max pooling keeps the "
-         "extreme a thin structure produces and forward-only shift is where "
-         "extremes move"),
+         "**answered** (section 2.0): the win holds on `iid`, `lot` and "
+         "`lot_time` at p <= 0.001 on `Scratch` and reverses on `size`. The "
+         "prediction on record was half right — it holds on `iid` and does "
+         "*not* shrink on `lot_time`; what breaks it is geometry holdout, not "
+         "forward-only shift"),
+        ("`dg_complete.sh`", "logs/dg_complete.log",
+         "**answered** (section 2.1): all six borrowed objectives at eight "
+         "seeds. The family is worse than ERM in aggregate, exact sign-flip "
+         "p = 0.00781; two survive Holm correction individually"),
+        ("`size_complete.sh`", "logs/size_complete.log",
+         "the seven `size` arms to eight seeds, because at three the exact "
+         "test cannot return anything below 0.10 and every arm's own seed "
+         "range is wider than its effect. Decides whether `size` is negative "
+         "or merely unresolved. **H64 on record** — `group_dro` and "
+         "`logit_adjust` separate; `coral`, `dann`, `irm`, `mixup_domain` do "
+         "not"),
+        ("`scale_aware_sweep.sh`", "logs/scale_aware.log",
+         "16 cells testing whether a receptive field dilated by round(64/w) "
+         "recovers the pooling gain on `size`. Measured with no model: the "
+         "resize makes a defect's apparent width a function of geometry, and "
+         "dilating the filter removes that. **H66 on record** — it beats plain "
+         "`meanmax` on `size` `Scratch` and turns the effect against `mean` "
+         "positive; little change on `lot`"),
     ]
     rows = []
     for name, log, what in stages:

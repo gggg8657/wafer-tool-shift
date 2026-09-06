@@ -3363,3 +3363,60 @@ already ran `poolmeanmax` and `poolmean` at eight seeds on both protocols — wi
 `cnn_gn`. Using `cnn_bn` for the treatment would have made it incomparable to
 the control it is meant to beat, which is the kind of quiet protocol change the
 brief forbids.
+
+### 70. Two stale verdicts in the hand-off, and a hole in the floor argument
+
+Reading `WEEKEND.md` as a hand-off document rather than as a set of tables, the
+way entry 65's duplicated section was found:
+
+**The stage table carried the claim I withdrew this session.**
+`size_objectives_seeds.sh` was listed as "**answered**: nothing separates from
+ERM on `size` either, GroupDRO included" — which is exactly the assertion entry
+66 established the instrument could not have made, since three seeds per arm
+bottom out at p = 0.10. A reader skimming section 5 would have taken the
+opposite conclusion from the one section 2.1 now reaches, four screens earlier
+in the same file. It reads **superseded** now, with the reason.
+
+`pooling_protocols.sh` was still described as "the only open question", though
+section 2.0 has reported all four protocols for some time. Its recorded
+prediction was half right and now says so: the win holds on `iid` as predicted,
+does *not* shrink on `lot_time` as predicted, and what breaks it is geometry
+holdout rather than forward-only shift. The three stages started since —
+`dg_complete.sh`, `size_complete.sh`, `scale_aware_sweep.sh` — were missing
+entirely, with their hypotheses.
+
+**Decision 3 promised a measurement that had already been made.** It described
+the forward-only drop as part narrow-slice, part drift, and "a further
+unmeasured share is geometries never trained on". `run_bench.py` has recorded
+`test_seen_geometry` and `test_unseen_geometry` per cell for a while.
+
+The measurement needs one guard, which is why it is now a script and not a table
+lookup. The unseen-geometry half of a `lot_time` test set is small and often
+missing one of the nine classes, and macro-F1 over eight is not comparable to
+macro-F1 over nine. Restricting to the 15 cells whose halves carry the same
+classes — and *dropping* the 22 that do not, rather than averaging over them —
+unseen minus seen is **-0.0077 mean, +0.0010 median, 6 of 15 cells negative**.
+It straddles zero. Meeting a geometry never trained on costs approximately
+nothing; the expensive part is that the slice is narrow. Had I averaged the 37
+cells without the class guard I would have gotten a number, and it would have
+been meaningless in a way nothing downstream could detect.
+
+**The hole.** This project's central methodological claim is that the run-to-run
+floor is a property of each protocol rather than one number, and it rests on
+exactly two measurements: `lot` at 0.0054 and `size` at 0.0133, a factor of 2.5.
+`lot_time` and `iid` have never had theirs measured. The headline forward-only
+result lives on `lot_time`, so every `lot_time` comparison in these documents is
+screened against a floor borrowed from another protocol — the same borrowing the
+paper criticises when a published baseline is carried across a protocol change.
+
+To its credit the code was already honest about it: `floors()` falls back to the
+**largest** measured floor, and I checked that rather than trusting the sentence
+— `_fallback` is 0.01325, equal to `size`'s, so unmeasured protocols are
+screened conservatively and the failure mode is withdrawing a true claim rather
+than publishing a false one. The paper says so in the text. But "conservative"
+is not "measured", and two more six-repeat runs either extend the per-protocol
+claim to four protocols or complicate it.
+
+`scripts/chain_after_size.sh` queues both behind the running sweep, after the
+scale-aware sweep, and waits on the tmux session rather than oversubscribing a
+lease that is already busy.
