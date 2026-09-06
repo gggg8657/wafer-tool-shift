@@ -160,6 +160,162 @@ def main():
     W("")
 
     # ---------------------------------------------------------------- headline
+    # ------------------------------------------------------------ five minutes
+    # The brief asks for a document readable in five minutes. Before this
+    # section it was 5,184 words -- twenty-two minutes -- because every result
+    # that landed was appended to it and nothing was ever compressed. The
+    # detail is not deleted; it moves below a stop marker, and the reading time
+    # of the part above that marker is measured into the text rather than
+    # claimed, on the same principle as every other number here.
+    _iidd = js("pooling_iid_perm_macro_f1.json") or {}
+    _iidp = (_iidd.get("permutation_test", _iidd) or {}).get("p_two_sided")
+    W("## The five-minute version")
+    W("")
+    W("**One measurement problem underneath everything.** Two identical "
+      "invocations of one cell differ by more than most of the effects the "
+      "Friday tables reported. Three seeds get an effect's sign right and its "
+      "size wrong, and can get its *existence* wrong in both directions. Four "
+      "three-seed results here shrank or vanished at eight seeds; one that "
+      + (f"three seeds called absent is real at p = {_iidp:.4f}."
+         if _iidp else "three seeds called absent is real at eight."))
+    W("")
+    W("**What survived.**")
+    W("")
+    def _pv(d):
+        """p and difference, whichever nesting the summary happens to use."""
+        if not d:
+            return None
+        v = d.get("permutation_test", d)
+        if v.get("p_two_sided") is None:
+            return None
+        return v["p_two_sided"], v.get("difference", d.get("difference"))
+
+    surv_lines = []
+    _sc = _pv(js("pooling_lot_perm_scratch.json"))
+    if _sc:
+        surv_lines.append(
+            "Replacing the encoder's global average pooling with mean-and-max "
+            f"moves the hardest class (`Scratch`) by {_sc[1]:+.4f} on `lot`, "
+            f"p = {_sc[0]:.5f} at 8 seeds, while a capacity control with "
+            "identical parameter count does not. It holds wherever test wafers "
+            "share geometry with training and reverses where geometry is held "
+            "out — measured, with no model, to be an artefact of the resize "
+            "rather than of the method. **The one actionable result.**")
+    _fm = js("dg_family_test.json") or {}
+    _ftt = _fm.get("family_test") or {}
+    _rb = ((_fm.get("robustness") or {}).get("individually_unestablished_only")
+           or {})
+    if _ftt:
+        _extra = (f" Dropping the two that are individually significant and "
+                  f"repeating on the {len(_rb['objectives'])} that are not "
+                  f"still gives {_rb['n_negative']}/{_rb['n_pairs']} negative "
+                  f"at p = {_rb['p_two_sided']:.5f}: four methods no single "
+                  "test can separate from ERM are jointly worse than it."
+                  if _rb else "")
+        surv_lines.append(
+            f"**The borrowed domain-generalization family is worse than ERM**, "
+            f"not merely no better — {_ftt['n_negative']} of "
+            f"{_ftt['n_pairs']} seeds negative, exact paired sign-flip "
+            f"p = {_ftt['p_two_sided']:.5f}." + _extra)
+    _gb = js("gn_vs_bn.json")
+    _gbp = _pv(_gb)
+    if _gbp:
+        surv_lines.append(
+            f"GroupNorm beats BatchNorm by {_gbp[1]:+.4f} on `lot`, "
+            f"p = {_gbp[0]:.4f} at 8 seeds per arm — an effect the "
+            "seed-range screen used elsewhere in this document cannot resolve "
+            "and never could.")
+    for _l in surv_lines:
+        W(f"- {_l}")
+    if not surv_lines:
+        W(f"- {NM}")
+    W("")
+    W("**What was withdrawn, and what each withdrawal closes off.** Six "
+      "Friday claims do not survive; none fell because a new idea beat an old "
+      "one.")
+    W("")
+    for _c, _r in (
+        ("The RPCA fourth channel helps",
+         "a fourth channel of *zeros* buys the same, and could not have failed "
+         "to, because `stack_channels` hands the encoder an intact copy of "
+         "what the decomposition removed. Closes off lot-signature channels "
+         "for this architecture (§2.3)"),
+        ("Lot-adversarial SSL pretraining helps",
+         "worse than random initialisation at every learning rate. Closes off "
+         "this pretraining objective (§2.3)"),
+        ("Active learning loses to random",
+         "it lost while training on a fifth of the labels. At matched *wafer* "
+         "budget entropy wins at every budget, so the answer depends on "
+         "whether metrology is priced per lot or per wafer — decision 4 "
+         "(§2.2)"),
+        ("No DG objective is distinguishable from ERM",
+         "replaced by something stronger: the family is significantly *worse* "
+         "(§2.1)"),
+        ("`lot_time` measures temporal drift",
+         "about a quarter of the drop is that its test slice is narrow, and "
+         "meeting an unseen geometry costs approximately nothing. It measures "
+         "forward-only deployment (§2.4)"),
+        ("Nothing separates from ERM on `size`",
+         "unresolved rather than negative — at three seeds the exact test "
+         "cannot return below 0.10, and every arm's seed range is wider than "
+         "its own effect (§2.1)"),
+    ):
+        W(f"- **{_c}** — {_r}")
+    W("")
+    W("**What needs a human.** Four decisions are set out with options in "
+      "section 4; in one line each: acquire MixedWM38 or accept the "
+      "clearly-labelled synthetic stand-in; keep the honest lot-disjoint "
+      "number as the headline rather than chase 0.95 on a looser split; frame "
+      "the forward-only result as deployment rather than drift; and tell us "
+      "whether metrology is priced per lot or per wafer, because the two "
+      "answers reverse the active-learning conclusion.")
+    W("")
+    # Status keyed on the artifact, not on the log. `determinism_repeats.sh`
+    # appends to one log for every protocol, so "done ===" was already in it
+    # from the `lot` run and the queued `lot_time` and `iid` floors reported
+    # themselves finished before they had started. A log says a script ran; a
+    # JSON says it produced something.
+    # Status keyed on what a stage was supposed to *produce*, not on its log
+    # and not on the mere existence of a summary file. `determinism_repeats.sh`
+    # appends to one log for every protocol, so "done ===" was in it from the
+    # `lot` run before `lot_time` had started; and `size_power_check.json`
+    # already existed from the three-seed pass, so an existence check called
+    # the eight-seed sweep finished while it was mid-flight. Both are the same
+    # error this document has made about other people's stages: a proxy for
+    # completion that was true for a different reason.
+    def _done_size():
+        return all(len(list(Path(a.runs).glob(
+            f"size__cnn_bn__{o}__sizeseed__s*.json"))) >= 8
+            for o in ("erm", "coral", "dann", "irm", "group_dro",
+                      "mixup_domain", "logit_adjust"))
+
+    def _done_sa():
+        return all(len(list(Path(a.runs).glob(
+            f"{pr}__cnn_gn__erm__poolmeanmaxSA__s*.json"))) >= 8
+            for pr in ("size", "lot"))
+
+    def _done_floors():
+        return all((Path(a.runs) / f"determinism__{pr}__cnn_gn.json").exists()
+                   for pr in ("lot_time", "iid"))
+
+    _run = [n for n, done in (
+        ("`size_complete.sh`", _done_size),
+        ("`scale_aware_sweep.sh` (H66)", _done_sa),
+        ("the two missing run-to-run floors (`lot_time`, `iid`)", _done_floors))
+        if not done()]
+    W("**Still running.** " + (", ".join(_run) + " — section 5 says how to "
+                               "check them and what each decides."
+                               if _run else "Nothing; all stages complete."))
+    W("")
+    W("---")
+    W("")
+    W("*That is the five-minute version — @@CORE@@. Everything below is the "
+      "evidence for it and takes @@REST@@ more; `critique_log.md` and "
+      "`paper_draft.md` are the long form. Stop here if five minutes is what "
+      "you have.*")
+    W("")
+    W("@@STOP@@")
+    W("")
     W("## 1. Headline numbers, Friday against now")
     W("")
     rows = []
@@ -1046,6 +1202,22 @@ def main():
       "Friday's `runs/` verbatim, gitignored, kept so any re-run can be "
       "checked against what it replaced.")
     W("")
+
+    # measured, not asserted: words above the stop marker at 230 wpm
+    def _mins(lines):
+        n = sum(len(x.split()) for x in lines)
+        return n, max(1, round(n / 230))
+
+    try:
+        cut = L.index("@@STOP@@")
+        n_core, m_core = _mins(L[:cut])
+        n_rest, m_rest = _mins(L[cut + 1:])
+        L = [x for x in L if x != "@@STOP@@"]
+        L = [x.replace("@@CORE@@", f"{n_core:,} words, about {m_core} minutes")
+              .replace("@@REST@@", f"{n_rest:,} words, about {m_rest} minutes")
+             for x in L]
+    except ValueError:
+        pass
 
     Path(a.out).write_text("\n".join(L) + "\n")
     print(f"wrote {a.out} from {len(C)} cells")

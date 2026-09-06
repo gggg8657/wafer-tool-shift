@@ -3594,3 +3594,58 @@ share a corpus, a split and a baseline — so this is evidence about "the averag
 borrowed invariance objective on this corpus", not six separate confirmations.
 And p = 0.00781 is the floor at eight seeds, so the result is as strong as this
 budget can express and no stronger.
+
+### 74. The Monday document was twenty-two minutes long and the brief asked for five
+
+The brief specifies a hand-off "readable in five minutes": headline numbers
+Friday against now, what failed and what that rules out, two or three decisions
+with options, what is still running. Measured at 230 words per minute,
+`WEEKEND.md` had reached **5,184 words — twenty-two and a half minutes.**
+
+Nothing had gone wrong in any single turn. Every result that landed was appended
+to the section it belonged in, each addition was a paragraph or two, and nothing
+was ever compressed. That is a slow failure with no moment at which it happened,
+and it is invisible from inside a turn because each addition improves the
+document locally. **It also cannot be caught by any guard here** — `section_census`
+asks whether inputs are present, `coverage_check` whether results are reported,
+`prose_status_lint` whether sentences are stale and sections duplicated. None
+asks whether the document still does the job it was commissioned for. The one
+check that would have caught it is reading the spec again, which I had not done
+since the first turn.
+
+The fix keeps every finding. A **five-minute version** now sits above a stop
+marker: the measurement problem in one paragraph, the three surviving results
+with their p-values, the six withdrawals each with the direction it closes off,
+the four decisions in one line each, and what is still running. Everything else
+becomes explicitly-marked evidence below it.
+
+And the reading time is **measured into the text rather than claimed** — 955
+words above the marker, about four minutes, against 4,969 and twenty-two below.
+Asserting "five minutes" in a document whose whole thesis is that unmeasured
+claims decay would have been the exact error this project exists to catch, and I
+nearly typed it.
+
+**Two status bugs found while writing the running line, both the same error I
+have criticised in other people's stages.** First I keyed "still running" on
+whether a log contained `done ===`. `determinism_repeats.sh` appends to one log
+for every protocol, so the string was already there from the `lot` floor and the
+queued `lot_time` and `iid` floors reported themselves finished before they had
+started. I then keyed on the existence of the summary JSON —
+`size_power_check.json` already existed from the three-seed pass, so the
+eight-seed sweep was called complete mid-flight.
+
+Both are a proxy for completion that is true for a different reason. Status is
+now keyed on what a stage was supposed to *produce*: seven `size` arms at eight
+seeds, two scale-aware arms at eight, two named floor files. A log says a script
+ran; a JSON says it produced something; only a count says it produced what it
+promised — which is the argument `verify_stage.py` has been making since the
+first stage lied about finishing.
+
+**Postscript to 74, one turn later.** The ratchet built in entry 72 fired on its
+first live use, against me: 45 typed decimals where the baseline was 44. The
+offender was in the five-minute section written *in this entry* — "one that
+three seeds called absent is real at p = 0.0003" — a number I typed while
+writing about the danger of typing numbers. It now comes from
+`pooling_iid_perm_macro_f1.json` and the count is back to 44. A guard that
+catches its author within one commit of being built is the only kind worth
+having.
