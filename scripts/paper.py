@@ -238,7 +238,10 @@ def main():
             f"GroupNorm beats BatchNorm by {gb['difference']:+.4f} "
             f"(permutation p = {gb['permutation_test']['p_two_sided']:.3f} at "
             f"{gb['n_per_arm']} seeds per arm), which the seed-range criterion "
-            "used elsewhere in this paper cannot resolve and never could")
+            "used elsewhere in this paper cannot resolve and never could — "
+            "**though that result turns out to be conditional on the first, "
+            "in a way we did not notice until we measured them against "
+            "each other**")
     if bits:
         W("Two things survive. First, " + bits[0] + ". Second, "
           + (bits[1] if len(bits) > 1 else "") + ".")
@@ -1483,6 +1486,96 @@ def main():
     W("")
 
     # ---------------------------------------------------------------- seeds
+    npi = js("norm_pooling_interaction.json")
+    if npi and npi.get("protocols"):
+        W("## 5.5 The two surviving results are not independent")
+        W("")
+        W("This paper's two positive findings were measured separately and "
+          "never against each other. `meanmax` pooling was compared under a "
+          "fixed encoder; GroupNorm was compared under `pool=mean`, which is "
+          "what the `gnbn` arms carry. Measuring them together, on `lot` and "
+          "`size`, eight seeds per arm:")
+        W("")
+        rows = []
+        for proto, e in npi["protocols"].items():
+            for met, v in e.items():
+                rows.append([
+                    f"`{proto}` / {met.replace('class:', '')}",
+                    f"{v['gap_under_mean']:+.4f}",
+                    (f"**{v['p_gn_beats_bn_under_mean']:.4f}**"
+                     if v["established_under_mean"]
+                     else f"{v['p_gn_beats_bn_under_mean']:.4f}"),
+                    f"{v['gap_under_meanmax']:+.4f}",
+                    (f"**{v['p_gn_beats_bn_under_meanmax']:.4f}**"
+                     if v["established_under_meanmax"]
+                     else f"{v['p_gn_beats_bn_under_meanmax']:.4f}"),
+                    f"{v['n_seeds_gap_shrinks']}/{v['n_pairs']}",
+                    f"**{v['p_change']:.5f}**" if v["p_change"] < 0.05
+                    else f"{v['p_change']:.5f}"])
+        W(table(rows, ["comparison", "GN−BN under `mean`", "p",
+                       "GN−BN under `meanmax`", "p", "seeds gap shrinks",
+                       "p (change)"]))
+        W("")
+        _lm = npi["protocols"]["lot"]["macro_f1"]
+        _sm = npi["protocols"]["size"]["macro_f1"]
+        W("**On macro-F1 the GroupNorm advantage is established under `mean` "
+          "on both protocols and established under `meanmax` on neither.** The "
+          f"gap falls from {_lm['gap_under_mean']:+.4f} to "
+          f"{_lm['gap_under_meanmax']:+.4f} on `lot` and from "
+          f"{_sm['gap_under_mean']:+.4f} to {_sm['gap_under_meanmax']:+.4f} on "
+          "`size`, shrinking on every one of the eight seeds in both cases "
+          f"(p = {_lm['p_change']:.5f} and {_sm['p_change']:.5f}). Adding a "
+          "max to the pooled representation buys BatchNorm most of what "
+          "GroupNorm was providing.")
+        W("")
+        _ss = npi["protocols"]["size"].get("class:Scratch")
+        if _ss and _ss["established_under_meanmax"]:
+            W("On `size`, `Scratch` F1, it goes further: under `meanmax` "
+              f"BatchNorm *beats* GroupNorm by {abs(_ss['gap_under_meanmax']):.4f} "
+              f"(p = {_ss['p_gn_beats_bn_under_meanmax']:.4f}), where under "
+              "`mean` the two are indistinguishable "
+              f"(p = {_ss['p_gn_beats_bn_under_mean']:.4f}).")
+            W("")
+        W("**Neither measurement was wrong; the conditional was missing.** A "
+          "reader told \"use mean-and-max\" and \"use GroupNorm\" would "
+          "reasonably expect the second to hold once they had done the first, "
+          "and on this corpus it does not. We report the change in the gap "
+          "rather than leaning on the `meanmax` comparison alone, because "
+          "\"not established\" is not \"absent\" — the remaining "
+          f"{_lm['gap_under_meanmax']:+.4f} on `lot` is unresolved, not zero — "
+          "whereas the change is paired across seeds and exact.")
+        W("")
+        # The same p-values were also produced independently by
+        # `gn_vs_bn.py`, which builds its arms by globbing run files rather
+        # than by the path `norm_pooling_interaction.py` takes. Two routes to
+        # the same number is worth a line, because most of this weekend's
+        # errors were in the plumbing rather than the statistics.
+        _x1 = js("gn_vs_bn_mean_macro_f1.json")
+        _x2 = js("gn_vs_bn_meanmax_macro_f1.json")
+        _xs = js("gn_vs_bn_mean_class_Scratch.json")
+        _xm = js("gn_vs_bn_meanmax_class_Scratch.json")
+        if _x1 and _x2 and _xs and _xm:
+            _agree = all(
+                abs(a["permutation_test"]["p_two_sided"] - b) < 1e-12
+                for a, b in ((_x1, _lm["p_gn_beats_bn_under_mean"]),
+                             (_x2, _lm["p_gn_beats_bn_under_meanmax"])))
+            W("Both p-values above were produced twice, by "
+              "`norm_pooling_interaction.py` and independently by "
+              "`gn_vs_bn.py`, which assembles its arms by globbing run files "
+              "rather than by the route the former takes. They agree "
+              + ("exactly" if _agree else "**they do not agree, which is a "
+                 "plumbing bug and not a result**")
+              + ". That is worth a line because most of this weekend's errors "
+              "were in the plumbing rather than in the statistics.")
+            W("")
+        W("The question was raised post hoc, by an encoder-by-pooling "
+          "interaction noticed while checking whether the `size` failure "
+          "replicated. What makes it more than an artefact of looking is that "
+          "it replicates: the same direction, the same "
+          f"{_lm['n_seeds_gap_shrinks']}-of-{_lm['n_pairs']} seeds, and "
+          f"p = {_lm['p_change']:.5f} on both protocols independently.")
+        W("")
+
     W("## 6. Seed spread is a result, not an appendix")
     W("")
     multi = {k: v for k, v in C.items() if len(v) > 1}

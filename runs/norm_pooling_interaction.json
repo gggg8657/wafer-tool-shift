@@ -1,0 +1,63 @@
+{
+  "what": "does the GroupNorm advantage survive the pooling this paper recommends",
+  "why": "the GN-vs-BN result was measured at pool=mean; the pooling result recommends meanmax. The two were never measured against each other.",
+  "caveat": "post hoc -- the question was raised by an encoder x pooling interaction noticed on `size`. The change in the gap is paired by seed and exact; whether GN still beats BN under meanmax is a statement about one comparison's power, and 'not established' is not 'absent'.",
+  "protocols": {
+    "lot": {
+      "macro_f1": {
+        "gap_under_mean": 0.01618892616460381,
+        "gap_under_meanmax": 0.005541573564737529,
+        "p_gn_beats_bn_under_mean": 0.01554001554001554,
+        "p_gn_beats_bn_under_meanmax": 0.21507381507381507,
+        "change_in_gap": -0.01064735259986628,
+        "n_seeds_gap_shrinks": 8,
+        "n_pairs": 8,
+        "p_change": 0.0078125,
+        "arrangements": 256,
+        "established_under_mean": true,
+        "established_under_meanmax": false
+      },
+      "class:Scratch": {
+        "gap_under_mean": -0.010658545725836424,
+        "gap_under_meanmax": 0.004422677703168856,
+        "p_gn_beats_bn_under_mean": 0.29292929292929293,
+        "p_gn_beats_bn_under_meanmax": 0.6318570318570319,
+        "change_in_gap": 0.01508122342900528,
+        "n_seeds_gap_shrinks": 2,
+        "n_pairs": 8,
+        "p_change": 0.1796875,
+        "arrangements": 256,
+        "established_under_mean": false,
+        "established_under_meanmax": false
+      }
+    },
+    "size": {
+      "macro_f1": {
+        "gap_under_mean": 0.05206461754702779,
+        "gap_under_meanmax": -0.006271010048039968,
+        "p_gn_beats_bn_under_mean": 0.016317016317016316,
+        "p_gn_beats_bn_under_meanmax": 0.7613053613053613,
+        "change_in_gap": -0.05833562759506776,
+        "n_seeds_gap_shrinks": 8,
+        "n_pairs": 8,
+        "p_change": 0.0078125,
+        "arrangements": 256,
+        "established_under_mean": true,
+        "established_under_meanmax": false
+      },
+      "class:Scratch": {
+        "gap_under_mean": 0.004024578422440375,
+        "gap_under_meanmax": -0.08119504451649556,
+        "p_gn_beats_bn_under_mean": 0.8790986790986791,
+        "p_gn_beats_bn_under_meanmax": 0.009324009324009324,
+        "change_in_gap": -0.08521962293893594,
+        "n_seeds_gap_shrinks": 7,
+        "n_pairs": 8,
+        "p_change": 0.0234375,
+        "arrangements": 256,
+        "established_under_mean": false,
+        "established_under_meanmax": true
+      }
+    }
+  }
+}
