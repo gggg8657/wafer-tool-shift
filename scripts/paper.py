@@ -1617,6 +1617,55 @@ def main():
           "most of its length establishing has a *negative* point estimate "
           "there.")
         W("")
+        mt = js("combination_maxt.json")
+        if mt and mt.get("protocols"):
+            _lm = mt["protocols"]["lot"]["macro_f1"]
+            _ls = mt["protocols"]["lot"]["class:Scratch"]
+            _pm = next(r for r in _lm["rows"]
+                       if r["rival"] == "GroupNorm + mean")
+            _ps = next(r for r in _ls["rows"]
+                       if r["rival"] == "GroupNorm + mean")
+            W("**And selecting the best of four has a price, which we measured "
+              "rather than argued about.** The p-values above are per "
+              "comparison, and the winner was chosen by the same data that "
+              "scores it. Correcting for that with a max-statistic "
+              "permutation test — permuting the four arms *within* each seed, "
+              "so the pairing that makes these comparisons tight is preserved "
+              f"— over {mt['draws']:,} Monte Carlo draws:")
+            W("")
+            W(table([[r["rival"], f"{r['difference']:+.4f}",
+                      (f"**{r['p_family_wise']:.4f}**"
+                       if r["survives_05"] else f"{r['p_family_wise']:.4f}"),
+                      f"{r['monte_carlo_se']:.4f}"]
+                     for r in _lm["rows"]],
+                    ["`lot` macro-F1: best vs", "difference",
+                     "family-wise p", "MC SE"]))
+            W("")
+            _ctp = ((js("combination_table.json") or {})
+                    .get("protocols", {}).get("lot", {}).get("macro_f1", {}))
+            _pc = next((r["p_vs_best"] for r in _ctp.get("rows", [])
+                        if r["combination"] == "GroupNorm + mean"), None)
+            W("**The macro-F1 pooling comparison does not survive it.** "
+              f"`meanmax` over `mean` is {_pm['difference']:+.4f} at a "
+              f"per-comparison p of "
+              + (f"{_pc:.5f}" if _pc is not None else NM)
+              + " and a family-wise "
+              f"p of {_pm['p_family_wise']:.4f}. On `Scratch` F1, where this "
+              "effect was always concentrated and where the mechanism "
+              "predicted it before the run, it survives comfortably: "
+              f"{_ps['difference']:+.4f} at family-wise "
+              f"p = {_ps['p_family_wise']:.4f}.")
+            W("")
+            W("Both numbers answer real questions and they are different "
+              "questions. As a **planned single comparison** — does adding a "
+              "max help, at a fixed normalisation, which is what was specified "
+              "in advance — the per-comparison p is the right one and the "
+              "macro-F1 effect stands. As part of **choosing the best of four "
+              "after seeing all four**, it does not. A reader picking a "
+              "configuration is doing the second thing, so the honest headline "
+              "for that reader is the `Scratch` number, and the reason to "
+              "trust it is not that it is larger but that it was predicted.")
+            W("")
         W("A reader deploying this would want the honest version: if the wafers "
           "you will see share their geometry with your training set, add the "
           "max; if they will not, we cannot show that anything here beats the "

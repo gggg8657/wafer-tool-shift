@@ -1,0 +1,124 @@
+{
+  "what": "family-wise correction for having selected the best of four combinations before testing it",
+  "null": "within each seed, which arm produced which number is arbitrary -- this keeps the seed pairing, which permuting all thirty-two values would discard",
+  "method": "Monte Carlo max-statistic over 20,000 draws (4!^8 is about 1.1e11, so not exact)",
+  "draws": 20000,
+  "protocols": {
+    "lot": {
+      "macro_f1": {
+        "best": "GroupNorm + mean-and-max",
+        "n_rivals_beaten_family_wise": 1,
+        "n_rivals": 3,
+        "rows": [
+          {
+            "rival": "BatchNorm + mean-and-max",
+            "difference": 0.005541573564737501,
+            "p_family_wise": 0.872656367181641,
+            "monte_carlo_se": 0.0023571935855905214,
+            "survives_05": false
+          },
+          {
+            "rival": "GroupNorm + mean",
+            "difference": 0.015017906269299885,
+            "p_family_wise": 0.1368931553422329,
+            "monte_carlo_se": 0.002430570091179024,
+            "survives_05": false
+          },
+          {
+            "rival": "BatchNorm + mean",
+            "difference": 0.031206832433903653,
+            "p_family_wise": 4.999750012499375e-05,
+            "monte_carlo_se": 4.999750012499375e-05,
+            "survives_05": true
+          }
+        ]
+      },
+      "class:Scratch": {
+        "best": "GroupNorm + mean-and-max",
+        "n_rivals_beaten_family_wise": 2,
+        "n_rivals": 3,
+        "rows": [
+          {
+            "rival": "BatchNorm + mean-and-max",
+            "difference": 0.0044226777031688425,
+            "p_family_wise": 0.9908004599770012,
+            "monte_carlo_se": 0.0006750891973052181,
+            "survives_05": false
+          },
+          {
+            "rival": "BatchNorm + mean",
+            "difference": 0.03660259243646036,
+            "p_family_wise": 0.03569821508924554,
+            "monte_carlo_se": 0.0013119423106350274,
+            "survives_05": true
+          },
+          {
+            "rival": "GroupNorm + mean",
+            "difference": 0.04726113816229682,
+            "p_family_wise": 0.0009499525023748813,
+            "monte_carlo_se": 0.0002178359580760386,
+            "survives_05": true
+          }
+        ]
+      }
+    },
+    "size": {
+      "macro_f1": {
+        "best": "GroupNorm + mean",
+        "n_rivals_beaten_family_wise": 1,
+        "n_rivals": 3,
+        "rows": [
+          {
+            "rival": "BatchNorm + mean-and-max",
+            "difference": 0.02183568848983508,
+            "p_family_wise": 0.37803109844507776,
+            "monte_carlo_se": 0.0034287285329512866,
+            "survives_05": false
+          },
+          {
+            "rival": "GroupNorm + mean-and-max",
+            "difference": 0.028106698537875174,
+            "p_family_wise": 0.1495425228738563,
+            "monte_carlo_se": 0.002521701377308369,
+            "survives_05": false
+          },
+          {
+            "rival": "BatchNorm + mean",
+            "difference": 0.052064617547027736,
+            "p_family_wise": 0.00014999250037498125,
+            "monte_carlo_se": 8.659388044914389e-05,
+            "survives_05": true
+          }
+        ]
+      },
+      "class:Scratch": {
+        "best": "BatchNorm + mean-and-max",
+        "n_rivals_beaten_family_wise": 1,
+        "n_rivals": 3,
+        "rows": [
+          {
+            "rival": "GroupNorm + mean",
+            "difference": 0.03851857222004429,
+            "p_family_wise": 0.36658167091645416,
+            "monte_carlo_se": 0.003407341701859051,
+            "survives_05": false
+          },
+          {
+            "rival": "BatchNorm + mean",
+            "difference": 0.042543150642484706,
+            "p_family_wise": 0.26923653817309134,
+            "monte_carlo_se": 0.003136464766944313,
+            "survives_05": false
+          },
+          {
+            "rival": "GroupNorm + mean-and-max",
+            "difference": 0.08119504451649562,
+            "p_family_wise": 0.0005499725013749313,
+            "monte_carlo_se": 0.00016578148744999586,
+            "survives_05": true
+          }
+        ]
+      }
+    }
+  }
+}

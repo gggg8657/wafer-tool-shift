@@ -436,12 +436,27 @@ Neither headline result answers that. `meanmax` over `mean` was measured at a fi
 
 **The recommendation is protocol-dependent, and on one protocol it is to change nothing.** On `lot` the best combination uses mean-and-max and is established over both `mean` arms, while the normalisation choice becomes unresolved once the max is there. On `size` the best is **GroupNorm + mean** — the unmodified baseline — and nothing is established over it except that BatchNorm with plain mean pooling is worse. The architectural change this paper spent most of its length establishing has a *negative* point estimate there.
 
+**And selecting the best of four has a price, which we measured rather than argued about.** The p-values above are per comparison, and the winner was chosen by the same data that scores it. Correcting for that with a max-statistic permutation test — permuting the four arms *within* each seed, so the pairing that makes these comparisons tight is preserved — over 20,000 Monte Carlo draws:
+
+| `lot` macro-F1: best vs | difference | family-wise p | MC SE |
+|---|---|---|---|
+| BatchNorm + mean-and-max | +0.0055 | 0.8727 | 0.0024 |
+| GroupNorm + mean | +0.0150 | 0.1369 | 0.0024 |
+| BatchNorm + mean | +0.0312 | **0.0000** | 0.0000 |
+
+**The macro-F1 pooling comparison does not survive it.** `meanmax` over `mean` is +0.0150 at a per-comparison p of 0.01197 and a family-wise p of 0.1369. On `Scratch` F1, where this effect was always concentrated and where the mechanism predicted it before the run, it survives comfortably: +0.0473 at family-wise p = 0.0009.
+
+Both numbers answer real questions and they are different questions. As a **planned single comparison** — does adding a max help, at a fixed normalisation, which is what was specified in advance — the per-comparison p is the right one and the macro-F1 effect stands. As part of **choosing the best of four after seeing all four**, it does not. A reader picking a configuration is doing the second thing, so the honest headline for that reader is the `Scratch` number, and the reason to trust it is not that it is larger but that it was predicted.
+
 A reader deploying this would want the honest version: if the wafers you will see share their geometry with your training set, add the max; if they will not, we cannot show that anything here beats the plain baseline. That is a narrower recommendation than either of our two positive results reads like on its own, and it is the one the measurements support.
 
 ## 6. Seed spread is a result, not an appendix
 
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range |
 |---|---|---|---|---|---|---|
+| `iid` | CNN (BatchNorm) | `erm` | poolmean | 2 | 0.8674 | ±0.0034 |
+| `iid` | CNN (BatchNorm) | `erm` | poolmeanmax | 2 | 0.8868 | ±0.0078 |
+| `iid` | CNN (BatchNorm) | `erm` | poolmeanmean | 2 | 0.8630 | ±0.0011 |
 | `iid` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.8625 | ±0.0042 |
 | `iid` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8833 | ±0.0057 |
 | `iid` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.8946 | ±0.0063 |
@@ -502,6 +517,7 @@ A reader deploying this would want the honest version: if the wafers you will se
 | `lot` | CNN + 4th channel | `erm` | sess2 | 3 | 0.8717 | ±0.0079 |
 | `lot` | CNN + 4th channel | `erm` | zerochan | 3 | 0.8689 | ±0.0075 |
 | `lot` | spectral operator | `erm` | sess2 | 3 | 0.8405 | ±0.0216 |
+| `lot_time` | CNN (BatchNorm) | `erm` | poolmean | 2 | 0.6597 | ±0.0096 |
 | `lot_time` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.6438 | ±0.0017 |
 | `lot_time` | CNN (GroupNorm) | `erm` | — | 3 | 0.6985 | ±0.0045 |
 | `lot_time` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.7081 | ±0.0117 |

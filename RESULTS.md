@@ -175,6 +175,9 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | iid | CNN on resized 64x64 (BatchNorm) | erm | adabn | 0.8594 | 0.8613 | +0.0019 |
 | iid | CNN on resized 64x64 (BatchNorm) | erm | tent | 0.8594 | 0.8407 | -0.0187 |
 | iid | CNN on resized 64x64 (BatchNorm) | erm | ema | 0.8594 | 0.8566 | -0.0028 |
+| iid | CNN on resized 64x64 (BatchNorm) | erm/poolmean | ema | 0.8640 | 0.8583 | -0.0057 |
+| iid | CNN on resized 64x64 (BatchNorm) | erm/poolmeanmax | ema | 0.8790 | 0.8888 | +0.0097 |
+| iid | CNN on resized 64x64 (BatchNorm) | erm/poolmeanmean | ema | 0.8618 | 0.8629 | +0.0011 |
 | iid | CNN on resized 64x64 (BatchNorm) | erm/sess2 | ema | 0.8623 | 0.8603 | -0.0020 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm | tent | 0.8855 | 0.8448 | -0.0407 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm | ema | 0.8855 | 0.8851 | -0.0004 |
@@ -292,6 +295,9 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot_time | CNN on resized 64x64 (BatchNorm) | erm | adabn | 0.6440 | 0.5643 | -0.0797 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | erm | tent | 0.6440 | 0.6459 | +0.0019 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | erm | ema | 0.6440 | 0.6409 | -0.0031 |
+| lot_time | CNN on resized 64x64 (BatchNorm) | erm/poolmean | ema | 0.6692 | 0.6596 | -0.0096 |
+| lot_time | CNN on resized 64x64 (BatchNorm) | erm/poolmeanmax | ema | 0.6956 | 0.7033 | +0.0076 |
+| lot_time | CNN on resized 64x64 (BatchNorm) | erm/poolmeanmean | ema | 0.6392 | 0.6361 | -0.0031 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | erm/sess2 | ema | 0.6458 | 0.6552 | +0.0094 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | tent | 0.6935 | 0.5933 | -0.1003 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | ema | 0.6935 | 0.7086 | +0.0151 |
@@ -387,6 +393,9 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 
 | protocol | representation | variant | macro-F1 | vs plain | p10 domain F1 | vs plain |
 |---|---|---|---|---|---|---|
+| iid | CNN on resized 64x64 (BatchNorm) | poolmean | 0.8640 | +0.0046 | 0.4807 | +0.0000 |
+| iid | CNN on resized 64x64 (BatchNorm) | poolmeanmax | 0.8790 | +0.0196 | 0.5185 | +0.0378 |
+| iid | CNN on resized 64x64 (BatchNorm) | poolmeanmean | 0.8618 | +0.0024 | 0.4807 | +0.0000 |
 | iid | CNN on resized 64x64 (BatchNorm) | sess2 | 0.8623 | +0.0029 | 0.4907 | +0.0100 |
 | iid | CNN on resized 64x64 (GroupNorm) | poolmean | 0.8855 | -0.0000 | 0.8412 | +0.3505 |
 | iid | CNN on resized 64x64 (GroupNorm) | poolmeanmax | 0.8933 | +0.0078 | 0.5000 | +0.0093 |
@@ -447,6 +456,9 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN + RPCA lot-signature channel | sess2 | 0.8819 | +0.0006 | 0.5000 | +0.0000 |
 | lot | CNN + RPCA lot-signature channel | 4th channel = zeros (RPCA control) | 0.8772 | -0.0041 | 0.5000 | +0.0000 |
 | lot | spectral operator, native resolution | sess2 | 0.8551 | +0.0012 | 0.4898 | +0.0000 |
+| lot_time | CNN on resized 64x64 (BatchNorm) | poolmean | 0.6692 | +0.0253 | 0.4898 | +0.0000 |
+| lot_time | CNN on resized 64x64 (BatchNorm) | poolmeanmax | 0.6956 | +0.0517 | 0.4898 | +0.0000 |
+| lot_time | CNN on resized 64x64 (BatchNorm) | poolmeanmean | 0.6392 | -0.0048 | 0.4898 | +0.0000 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | sess2 | 0.6458 | +0.0019 | 0.4898 | +0.0000 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | poolmean | 0.6958 | +0.0022 | 0.4898 | +0.0000 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | poolmeanmax | 0.7093 | +0.0158 | 0.4898 | +0.0000 |
@@ -502,6 +514,9 @@ Each seed reshuffles the model init *and* which training domains become the inne
 
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range | per seed |
 |---|---|---|---|---|---|---|---|
+| iid | CNN on resized 64x64 (BatchNorm) | erm | poolmean | 2 | 0.8674 | +/-0.0034 | 0.8640, 0.8708 |
+| iid | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmax | 2 | 0.8868 | +/-0.0078 | 0.8790, 0.8945 |
+| iid | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmean | 2 | 0.8630 | +/-0.0011 | 0.8618, 0.8641 |
 | iid | CNN on resized 64x64 (BatchNorm) | erm | sess2 | 3 | 0.8625 | +/-0.0042 | 0.8623, 0.8668, 0.8584 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 8 | 0.8833 | +/-0.0057 | 0.8855, 0.8795, 0.8858, 0.8865, 0.8798, 0.8772, 0.8885, 0.8839 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 8 | 0.8946 | +/-0.0063 | 0.8933, 0.8946, 0.8899, 0.8865, 0.8961, 0.8989, 0.8991, 0.8983 |
@@ -562,6 +577,9 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot | CNN + RPCA lot-signature channel | erm | sess2 | 3 | 0.8717 | +/-0.0079 | 0.8819, 0.8662, 0.8669 |
 | lot | CNN + RPCA lot-signature channel | erm | 4th channel = zeros (RPCA control) | 3 | 0.8689 | +/-0.0075 | 0.8772, 0.8673, 0.8622 |
 | lot | spectral operator, native resolution | erm | sess2 | 3 | 0.8405 | +/-0.0216 | 0.8551, 0.8118, 0.8547 |
+| lot_time | CNN on resized 64x64 (BatchNorm) | erm | poolmean | 2 | 0.6597 | +/-0.0096 | 0.6692, 0.6501 |
+| lot_time | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmax | 2 | 0.6647 | +/-0.0309 | 0.6956, 0.6338 |
+| lot_time | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmean | 2 | 0.6435 | +/-0.0043 | 0.6392, 0.6479 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | erm | sess2 | 3 | 0.6438 | +/-0.0017 | 0.6458, 0.6423, 0.6434 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.6985 | +/-0.0045 | 0.6935, 0.6993, 0.7026 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 8 | 0.7081 | +/-0.0117 | 0.6958, 0.7191, 0.6990, 0.7159, 0.6976, 0.7092, 0.7154, 0.7125 |
@@ -729,6 +747,9 @@ Both macro-F1 columns are averaged over **only the classes present in both halve
 
 | protocol | representation | objective | macro-F1 all | seen geom. (matched) | unseen geom. (matched) | seen - unseen | shared classes | n seen | n unseen |
 |---|---|---|---|---|---|---|---|---|---|
+| iid | CNN on resized 64x64 (BatchNorm) | erm/poolmean | 0.8640 | - | - | - | - | 43,209 | 28 |
+| iid | CNN on resized 64x64 (BatchNorm) | erm/poolmeanmax | 0.8790 | - | - | - | - | 43,209 | 28 |
+| iid | CNN on resized 64x64 (BatchNorm) | erm/poolmeanmean | 0.8618 | - | - | - | - | 43,209 | 28 |
 | iid | CNN on resized 64x64 (BatchNorm) | erm/sess2 | 0.8623 | - | - | - | - | 43,209 | 28 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm/poolmean | 0.8855 | - | - | - | - | 43,209 | 28 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm/poolmeanmax | 0.8933 | - | - | - | - | 43,209 | 28 |
@@ -780,6 +801,9 @@ Both macro-F1 columns are averaged over **only the classes present in both halve
 | lot | CNN + RPCA lot-signature channel | erm/rpca2_zeros | 0.8720 | 0.8639 | 0.8523 | +0.0116 | 8 | 43,121 | 131 |
 | lot | CNN + RPCA lot-signature channel | erm/sess2 | 0.8819 | 0.8685 | 0.9230 | -0.0545 | 8 | 43,121 | 131 |
 | lot | spectral operator, native resolution | erm/sess2 | 0.8551 | 0.8437 | 0.8246 | +0.0191 | 8 | 43,121 | 131 |
+| lot_time | CNN on resized 64x64 (BatchNorm) | erm/poolmean | 0.6692 | 0.6742 | 0.6996 | -0.0254 | 8 | 35,607 | 7,630 |
+| lot_time | CNN on resized 64x64 (BatchNorm) | erm/poolmeanmax | 0.6956 | 0.7166 | 0.6926 | +0.0240 | 8 | 35,607 | 7,630 |
+| lot_time | CNN on resized 64x64 (BatchNorm) | erm/poolmeanmean | 0.6392 | 0.6641 | 0.6649 | -0.0008 | 8 | 35,607 | 7,630 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | erm/sess2 | 0.6458 | 0.6646 | 0.6802 | -0.0155 | 8 | 35,607 | 7,630 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm/poolmean | 0.6958 | 0.7067 | 0.7049 | +0.0018 | 8 | 35,607 | 7,630 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm/poolmeanmax | 0.7093 | 0.7202 | 0.7298 | -0.0097 | 8 | 35,607 | 7,630 |
