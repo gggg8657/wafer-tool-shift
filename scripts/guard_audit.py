@@ -224,6 +224,20 @@ def audit_section_diff():
             "a section whose guard was conditioned on a problem that got fixed"
 
 
+def audit_reading_budget():
+    """An over-long core must fail; a short one must pass."""
+    m = load("rb", "scripts/reading_budget.py")
+    long_core = ("word " * 2000) + m.MARKER + " tail"
+    short_core = ("word " * 100) + m.MARKER + " tail"
+    lc, _ = m.split_core(long_core)
+    sc, _ = m.split_core(short_core)
+    over = len(lc.split()) / m.WPM > m.BUDGET_MIN
+    under = len(sc.split()) / m.WPM <= m.BUDGET_MIN
+    missing = m.split_core("a document with no stop marker")[0] is None
+    return (over and under and missing), \
+        "a core that has drifted past the brief's five minutes"
+
+
 AUDITS = [
     ("verify_stage.py", audit_verify_stage),
     ("prose_status_lint.py duplicated_blocks", audit_duplicated_blocks),
@@ -234,6 +248,7 @@ AUDITS = [
     ("dg_family_test.py sign_flip_p", audit_sign_flip_test),
     ("coverage_check.py", audit_coverage_check),
     ("section_diff.py", audit_section_diff),
+    ("reading_budget.py", audit_reading_budget),
     ("number_provenance.py traceability", audit_number_provenance_traceability),
     ("number_provenance.py ratchet", audit_number_provenance_ratchet),
 ]

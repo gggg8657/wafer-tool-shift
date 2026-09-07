@@ -4420,3 +4420,50 @@ Fresh arms under the `lot` ablation's tags rather than topping up the existing
 three, because those carry tags from an earlier session and this project has
 already been bitten once by mixing seeds measured in different sessions on
 different GPUs.
+
+### 89. The five-minute version had drifted to 5.4, and the fix is a budget rather than a trim
+
+Entry 74 found `WEEKEND.md` at 5,184 words — twenty-two minutes against a brief
+asking for five — and split it into a core above a stop marker and a body below,
+with the core measured into the text at 949 words.
+
+Measuring it once does not keep it measured. Since that split the core has taken
+a clause per turn: the sinkhorn verdict, the `size` replication, the RPCA tie at
+118 times below the floor. Each addition was locally right — every one of them
+is a real result and belongs in a summary of the weekend. Together they carried
+the core to **1,237 words, 5.4 minutes**, which is the original failure running
+slower.
+
+The document was not lying about it. It reports its own reading time, and 5.4
+rounds to "about 5 minutes", so the drift was visible to anyone who divided.
+That is exactly the kind of true-but-unread number this project keeps finding.
+
+**So the fix is a check, not a trim.** `reading_budget.py` fails when the core
+exceeds five minutes at 230 words per minute — the five comes from the brief and
+the rate is stated in the script so it can be argued with rather than assumed.
+It is in `check_all.py` (8 checks) and `guard_audit.py` (11 of 12), fed a core
+that has drifted and one that has not.
+
+Trimming to pass it was the smaller half of the work and worth recording for
+what it revealed about how the drift happens. Nothing was deleted; four bullets
+were carrying explanations that the detail sections already give in full:
+
+  * the RPCA bullet re-derived why the control could not have differed;
+  * the sinkhorn bullet reproduced most of §2.3a's diagnosis;
+  * the DG bullet printed `p = 0.00781` three times in four sentences;
+  * the "what needs a human" paragraph restated all four decisions that
+    section 4 sets out with options, when only one of them actually blocks
+    work — the metrology cost model, which nobody in this repository can settle.
+
+The pattern is that a summary bullet drifts toward becoming the section it
+summarises, because each turn the most recent finding feels like the one that
+needs explaining. Naming the *claim* and pointing at the section is the job; the
+mechanism is what the pointer is for.
+
+**A note on what this check cannot do.** It counts words. A core could pass at
+1,148 words and still be unreadable, or could pass by cutting a finding rather
+than moving detail below the marker — the script says so in its own failure
+message, which is the only defence available. It enforces a budget, not quality,
+and the distinction matters because the previous entry's guard has the same
+shape: `section_diff.py` notices a heading vanishing and cannot notice a section
+becoming wrong.

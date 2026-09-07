@@ -42,6 +42,8 @@ CHECKS = [
      [PY, "scripts/number_provenance.py", "--strict"], True),
     ("did a regeneration silently remove a section?",
      [PY, "scripts/section_diff.py", "--strict"], True),
+    ("is the five-minute hand-off still five minutes?",
+     [PY, "scripts/reading_budget.py", "--strict"], True),
 ]
 
 

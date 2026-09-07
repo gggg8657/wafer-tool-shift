@@ -190,15 +190,13 @@ def main():
                  if e["label"].startswith("RPCA")), None)
     _flot = floor_for(F, "lot")
     _rpca_line = (
-        "a fourth channel of *zeros* buys the same, and could not have failed "
-        "to, because `stack_channels` hands the encoder an intact copy of what "
-        "the decomposition removed. Now measured with a test that could have "
-        "said otherwise: at eight seeds per arm the raw failed-die mask and a "
-        "channel of zeros differ by "
-        f"{min(abs(c['difference']) for c in _rpf['comparisons']):.6f}, "
+        "a fourth channel of *zeros* buys the same, and the encoder is handed "
+        "an intact copy of what the decomposition removed, so it could not "
+        "have differed. At eight seeds the two are "
+        f"{min(abs(c['difference']) for c in _rpf['comparisons']):.6f} apart, "
         f"{_flot / min(abs(c['difference']) for c in _rpf['comparisons']):.0f} "
-        "times below the run-to-run floor. Closes off lot-signature channels "
-        "for this architecture (§2.3)"
+        "times below the floor, with a test that could have said otherwise. "
+        "Closes off lot-signature channels for this architecture (§2.3)"
         if _rpf and _rpf.get("could_reach_05") else
         "a fourth channel of *zeros* buys the same, and could not have failed "
         "to, because `stack_channels` hands the encoder an intact copy of what "
@@ -209,14 +207,12 @@ def main():
         _z = _sv["lambda_zero_control"]
         _cl = ", ".join(str(x) for x in _sv["collapsed_lambdas"])
         _sink_line = (
-            "it is a badly chosen weight, and this was one of the four "
-            "questions handed to the session. The cell was run at the default "
-            f"transport weight; at lambda = {_cl} the model collapses to a "
-            "single class. With the penalty switched off it lands "
+            "it is a badly chosen weight — one of the four questions handed "
+            f"over. At the default lambda = {_cl} the model collapses to one "
+            "class; with the penalty off it lands "
             f"{_z['distance_to_nearest_erm_seed']:.4f} from the nearest ERM "
-            "seed on the same cell — inside the run-to-run floor — so the "
-            "code path is sound and the collapse is the weight. No lambda in "
-            "the sweep beats zero, so there is no operating point (§2.3)")
+            "seed, inside the floor, so the code is sound. No lambda beats "
+            "zero, so there is no operating point (§2.3a)")
     else:
         _sink_line = NM
     _iidd = js("pooling_iid_perm_macro_f1.json") or {}
@@ -251,18 +247,17 @@ def main():
             f"p = {_sc[0]:.5f} at 8 seeds, while a capacity control with "
             "identical parameter count does not. It holds wherever test wafers "
             "share geometry with training and reverses where geometry is held "
-            "out — measured, with no model, to be an artefact of the resize "
-            "rather than of the method. **The one actionable result.**")
+            "out, which is an artefact of the resize rather than of the "
+            "method. **The one actionable result.**")
     _fm = js("dg_family_test.json") or {}
     _ftt = _fm.get("family_test") or {}
     _rb = ((_fm.get("robustness") or {}).get("individually_unestablished_only")
            or {})
     if _ftt:
-        _extra = (f" Dropping the two that are individually significant and "
-                  f"repeating on the {len(_rb['objectives'])} that are not "
-                  f"still gives {_rb['n_negative']}/{_rb['n_pairs']} negative "
-                  f"at p = {_rb['p_two_sided']:.5f}: four methods no single "
-                  "test can separate from ERM are jointly worse than it."
+        _extra = (f" Dropping the two that are individually significant "
+                  f"leaves {_rb['n_negative']}/{_rb['n_pairs']} negative at "
+                  "the same p: methods no single test can separate from ERM "
+                  "are jointly worse than it."
                   if _rb else "")
         _szr = _fm.get("size_replication") or {}
         _sza = _szr.get("all") or {}
@@ -315,9 +310,9 @@ def main():
          "meeting an unseen geometry costs approximately nothing. It measures "
          "forward-only deployment (§2.4)"),
         ("Nothing separates from ERM on `size`",
-         "false. At three seeds the exact test could not return below 0.10; "
-         f"at eight, {_size_sig} clearly worse than ERM. The null was a "
-         "property of the seed budget (§2.1)"),
+         f"false. At eight seeds {_size_sig} clearly worse than ERM; at three "
+         "the exact test could not return below 0.10 at any effect size. The "
+         "null was a property of the seed budget (§2.1)"),
         ("The sinkhorn cell's 0.10 macro-F1 is a finding about the method",
          _sink_line),
         ("An arm scattering wider than its effect is unstable, not worse",
@@ -328,13 +323,10 @@ def main():
     ):
         W(f"- **{_c}** — {_r}")
     W("")
-    W("**What needs a human.** Four decisions are set out with options in "
-      "section 4; in one line each: acquire MixedWM38 or accept the "
-      "clearly-labelled synthetic stand-in; keep the honest lot-disjoint "
-      "number as the headline rather than chase 0.95 on a looser split; frame "
-      "the forward-only result as deployment rather than drift; and tell us "
-      "whether metrology is priced per lot or per wafer, because the two "
-      "answers reverse the active-learning conclusion.")
+    W("**What needs a human.** Four decisions with options are in section 4. "
+      "Only one blocks work: whether metrology is priced per lot or per "
+      "wafer, because the two answers reverse the active-learning conclusion "
+      "and nobody here can settle it.")
     W("")
     # Status keyed on the artifact, not on the log. `determinism_repeats.sh`
     # appends to one log for every protocol, so "done ===" was already in it
