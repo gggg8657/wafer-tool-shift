@@ -305,6 +305,8 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot_time | die-graph GNN (wafer-only subgraph) | erm/sess2 | ema | 0.5501 | 0.5656 | +0.0155 |
 | lot_time | CNN + RPCA lot-signature channel | erm | ema | 0.7020 | 0.6887 | -0.0132 |
 | lot_time | CNN + RPCA lot-signature channel | erm/failmask | ema | 0.6905 | 0.6797 | -0.0109 |
+| lot_time | CNN + RPCA lot-signature channel | erm/rpca2_failmask | ema | 0.6865 | 0.6880 | +0.0015 |
+| lot_time | CNN + RPCA lot-signature channel | erm/rpca2_residual | ema | 0.7138 | 0.7042 | -0.0097 |
 | lot_time | CNN + RPCA lot-signature channel | erm/sess2 | ema | 0.7175 | 0.7038 | -0.0138 |
 | lot_time | CNN + RPCA lot-signature channel | erm/zerochan | ema | 0.6991 | 0.7033 | +0.0042 |
 | lot_time | spectral operator, native resolution | erm | ema | 0.6796 | 0.6644 | -0.0152 |
@@ -445,6 +447,8 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot_time | size-invariant descriptors + MLP | sess2 | 0.6496 | +0.0000 | 0.4898 | +0.0000 |
 | lot_time | die-graph GNN (wafer-only subgraph) | sess2 | 0.5501 | +0.0000 | 0.4894 | +0.0000 |
 | lot_time | CNN + RPCA lot-signature channel | 4th channel = raw failed-die mask (RPCA control) | 0.6905 | -0.0114 | 0.4898 | +0.0000 |
+| lot_time | CNN + RPCA lot-signature channel | rpca2_failmask | 0.6865 | -0.0154 | 0.4898 | +0.0000 |
+| lot_time | CNN + RPCA lot-signature channel | rpca2_residual | 0.7138 | +0.0119 | 0.4898 | +0.0000 |
 | lot_time | CNN + RPCA lot-signature channel | sess2 | 0.7175 | +0.0156 | 0.4898 | +0.0000 |
 | lot_time | CNN + RPCA lot-signature channel | 4th channel = zeros (RPCA control) | 0.6991 | -0.0028 | 0.4898 | +0.0000 |
 | lot_time | spectral operator, native resolution | sess2 | 0.6759 | -0.0037 | 0.4898 | +0.0000 |
@@ -757,6 +761,8 @@ Both macro-F1 columns are averaged over **only the classes present in both halve
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm/sess2 | 0.6997 | 0.7046 | 0.7312 | -0.0266 | 8 | 35,607 | 7,630 |
 | lot_time | size-invariant descriptors + MLP | erm/sess2 | 0.6496 | 0.6330 | 0.6435 | -0.0105 | 8 | 35,607 | 7,630 |
 | lot_time | die-graph GNN (wafer-only subgraph) | erm/sess2 | 0.5501 | 0.5909 | 0.5871 | +0.0037 | 8 | 35,607 | 7,630 |
+| lot_time | CNN + RPCA lot-signature channel | erm/rpca2_failmask | 0.6865 | 0.7026 | 0.7249 | -0.0224 | 8 | 35,607 | 7,630 |
+| lot_time | CNN + RPCA lot-signature channel | erm/rpca2_residual | 0.7138 | 0.7209 | 0.7457 | -0.0248 | 8 | 35,607 | 7,630 |
 | lot_time | CNN + RPCA lot-signature channel | erm/sess2 | 0.7175 | 0.7332 | 0.7627 | -0.0295 | 8 | 35,607 | 7,630 |
 | lot_time | spectral operator, native resolution | erm/sess2 | 0.6759 | 0.6564 | 0.7281 | -0.0718 | 8 | 35,607 | 7,630 |
 | size | CNN on resized 64x64 (BatchNorm) | coral/sizeseed | 0.7614 | - | - | - | - | 0 | 44,908 |

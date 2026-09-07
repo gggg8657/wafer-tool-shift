@@ -40,6 +40,8 @@ CHECKS = [
      [PY, "scripts/prose_status_lint.py", "--strict"], True),
     ("has anyone typed a new number into generator prose?",
      [PY, "scripts/number_provenance.py", "--strict"], True),
+    ("did a regeneration silently remove a section?",
+     [PY, "scripts/section_diff.py", "--strict"], True),
 ]
 
 

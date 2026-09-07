@@ -1250,6 +1250,7 @@ def main():
     W("ls -t runs/*.json | head             # newest cells")
     W("python scripts/report.py && python scripts/paper.py && python scripts/weekend.py")
     W("python scripts/check_all.py          # <- run this one; it runs the rest")
+    W("python scripts/section_diff.py --accept   # after an intended section change")
     W("python tests/run_tests.py            # no pytest in the shared pdeno env, by design")
     W("python scripts/guard_audit.py        # do the checks themselves catch anything?")
     W("```")
@@ -1327,15 +1328,15 @@ def main():
       "anyway because the line that was read came from the patch script "
       "rather than the guard. If you inherit this, run the one command.")
     W("")
-    W("**A gap worth knowing about, since none of these covers it.** Every "
-      "check here reasons about inputs and generator source: whether a JSON is "
-      "present, whether it is read, whether a sentence is stale, whether a "
-      "paragraph repeats. None compares the rendered document against what it "
-      "contained last time. A section of `paper_draft.md` disappeared "
-      "silently this weekend because its guard was conditioned on a problem "
-      "existing and the problem was fixed, and all six checks passed on the "
-      "shorter paper. A regeneration that *removes* a heading should warn; it "
-      "does not yet.")
+    W("**One of these was added because the others could not see it.** A "
+      "section of `paper_draft.md` disappeared silently when its guard turned "
+      "out to be conditioned on a problem existing and the problem was fixed — "
+      "and every check passed on the shorter paper, because they all reason "
+      "about inputs and generator source rather than about the rendered "
+      "document. `section_diff.py` compares each document's headings against "
+      "the last accepted shape and fails when one is removed. Growth never "
+      "fails; a deliberate removal is recorded with `--accept`, which leaves a "
+      "diff in git rather than silence.")
     W("")
     W("Run it before trusting anything below. One check is currently vacuous "
       "by construction and says so: `number_provenance.py`'s traceability "

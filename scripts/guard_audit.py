@@ -207,6 +207,23 @@ def audit_floor_min_repeats():
             "a one-repeat range of 0.0000 offered as a protocol's floor"
 
 
+def audit_section_diff():
+    """A section that stops rendering must be reported; growth must not fail."""
+    m = load("sd", "scripts/section_diff.py")
+    with tempfile.TemporaryDirectory() as d:
+        p = Path(d, "doc.md")
+        p.write_text("# T\n\n## 7.9 Power\n\nx\n\n## 8. Threats\n\nx\n")
+        before = m.headings(p)
+        p.write_text("# T\n\n## 8. Threats\n\nx\n")
+        gone, _ = m.compare(before, m.headings(p))
+        p.write_text("# T\n\n## 7.9 Power\n\nx\n\n## 8. Threats\n\nx\n"
+                     "\n## 9. New\n\nx\n")
+        grew_removed, grew_added = m.compare(before, m.headings(p))
+        return (len(gone) == 1 and grew_removed == []
+                and len(grew_added) == 1), \
+            "a section whose guard was conditioned on a problem that got fixed"
+
+
 AUDITS = [
     ("verify_stage.py", audit_verify_stage),
     ("prose_status_lint.py duplicated_blocks", audit_duplicated_blocks),
@@ -216,6 +233,7 @@ AUDITS = [
     ("gn_vs_bn.py perm_p", audit_permutation_test),
     ("dg_family_test.py sign_flip_p", audit_sign_flip_test),
     ("coverage_check.py", audit_coverage_check),
+    ("section_diff.py", audit_section_diff),
     ("number_provenance.py traceability", audit_number_provenance_traceability),
     ("number_provenance.py ratchet", audit_number_provenance_ratchet),
 ]

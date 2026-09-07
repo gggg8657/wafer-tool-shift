@@ -4356,3 +4356,67 @@ whoever picks this up, with the failure that motivates it written down.
 
 The guard is now `if npa and npa.get("families")` — conditioned on the data
 existing rather than on the problem existing.
+
+### 88. The guard for entry 87, built with time rather than in a hurry
+
+Entry 87 named a gap and deliberately did not fill it: every check here reasons
+about inputs and generator source, none compares the rendered document against
+what it contained last time, and section 7.9 of the paper vanished without a
+single check noticing. I recorded it rather than building it in the last minutes
+of the weekend, on the grounds that a guard written in a hurry is how
+`number_provenance`'s traceability half ended up accepting 86% of random numbers
+and how the first `section_census` passed its own broken repository.
+
+`section_diff.py` snapshots each document's headings and fails when one is
+removed. Added headings are reported and never fail — documents are meant to
+grow — and a deliberate removal is recorded with `--accept`, which leaves a diff
+in git rather than silence.
+
+**Two things went right that would not have gone right in a hurry.**
+
+*The test failed first, and it was the test that was wrong.* My first assertion
+looked for the literal "7.9" in the removed heading; the guard reported
+`# How much each null could have shown`. The guard had caught the removal
+correctly — I had written an assertion against my own implementation rather than
+against the behaviour.
+
+*And that failure exposed a real design flaw.* I had normalised every number in
+a heading to `#`, so that a title carrying a measured value would not read as
+removed when the value moved. That also erased section *numbering*, making
+`## 7.9 Foo` and `## 8.1 Foo` the same heading — so the guard would have been
+blind to renumbering, which is exactly the sort of silent restructuring it
+exists to surface. Checking the actual documents, no heading carries a measured
+value at all, so the normalisation is now narrow: a decimal with three or more
+fraction digits, or a percentage. The test asserts both directions — a moving
+p-value in a title must not look like a removal, and a renumbered section must.
+
+That flaw was reachable only because the first version was tested against
+something other than its own construction. A guard tested only on the example
+that motivated it inherits whatever the author already believed.
+
+It is in `check_all.py` (7 checks) and in `guard_audit.py` (10 of 11 now
+demonstrably reject a defect they claim to catch), fed the same defect that
+produced it: a section conditioned on a problem that has since been fixed.
+
+**Meanwhile, the last hypothesis in the paper without a powered test is
+running.** `paper_draft.md` has said all weekend that on `lot_time` the RPCA
+residual leads both controls at every seed and that this is recorded as a
+hypothesis, not a result. At three seeds the lead is about 0.013 — smaller than
+`lot_time`'s own floor of 0.0187, so inside the spread of re-running one
+configuration unchanged.
+
+**H72, on record:** the residual does not separate from the zeros channel on
+`lot_time` either. The argument is structural and is the one that predicted the
+tight `lot` null correctly — `stack_channels` concatenates the fourth channel to
+an intact one-hot, so the encoder reads an untouched copy of whatever was
+removed, and that is a property of the input pipeline which does not know which
+protocol it is under. What would make me wrong: leading at 3 of 3 seeds happens
+by chance a quarter of the time but is not nothing, and `lot_time` orders lots in
+production time, so a tool signature is likelier to carry information there than
+anywhere else. If it survives eight seeds, section 4.1 needs rewriting rather
+than extending.
+
+Fresh arms under the `lot` ablation's tags rather than topping up the existing
+three, because those carry tags from an earlier session and this project has
+already been bitten once by mixing seeds measured in different sessions on
+different GPUs.

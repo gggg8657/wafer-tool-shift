@@ -713,3 +713,65 @@ def test_check_all_reports_failure_when_any_check_fails():
     # and the real check list must name questions, not scripts
     assert all("?" in q for q, _, _ in m.CHECKS), \
         "each check should state the question it answers"
+
+
+def test_section_diff_catches_a_vanished_section_and_tolerates_growth():
+    """The guard for critique entry 87, tested against the defect that caused it.
+
+    Section 7.9 of `paper_draft.md` was guarded by
+    `if npa and npa.get("n_underpowered")`. When the last underpowered null was
+    fixed that count went to zero and the whole section disappeared, deleting
+    the evidence the problem had been solved. All six existing checks passed on
+    the shorter paper, because every one of them reasons about inputs and
+    generator source rather than about the rendered document.
+
+    Three properties. A removed heading must be reported; an added one must not
+    fail, since documents are meant to grow; and a heading whose title contains
+    a measured number must not read as removed when that number changes, or the
+    guard cries wolf on every regeneration and stops being read -- the failure
+    mode that made `number_provenance`'s traceability half worthless.
+    """
+    import importlib.util
+    import tempfile
+    from pathlib import Path as _Path
+
+    spec = importlib.util.spec_from_file_location(
+        "sd", _Path(__file__).resolve().parents[1] / "scripts"
+        / "section_diff.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+
+    with tempfile.TemporaryDirectory() as d:
+        p = _Path(d, "doc.md")
+        p.write_text("# Title\n\n## 7.9 How much each null could have shown\n\n"
+                     "text\n\n## 8. Threats\n\ntext\n")
+        before = m.headings(p)
+
+        # the real failure: a section stops rendering
+        p.write_text("# Title\n\n## 8. Threats\n\ntext\n")
+        removed, added = m.compare(before, m.headings(p))
+        assert len(removed) == 1 and "7.9" in removed[0], removed
+        assert added == []
+
+        # growth must not be an error
+        p.write_text("# Title\n\n## 7.9 How much each null could have shown\n\n"
+                     "t\n\n## 8. Threats\n\nt\n\n## 9. New section\n\nt\n")
+        removed, added = m.compare(before, m.headings(p))
+        assert removed == [] and len(added) == 1
+
+        # a *measured* value in a heading must not look like a removal when
+        # it moves, but a section number must still be part of its identity --
+        # the first version stripped every digit, which made `7.9 Foo` and
+        # `8.1 Foo` the same heading and hid renumbering entirely
+        q = _Path(d, "num.md")
+        q.write_text("## Result at p = 0.00781\n")
+        b2 = m.headings(q)
+        q.write_text("## Result at p = 0.02344\n")
+        removed, added = m.compare(b2, m.headings(q))
+        assert removed == [] and added == [], (removed, added)
+
+        q.write_text("## 7.9 Power\n")
+        b3 = m.headings(q)
+        q.write_text("## 8.1 Power\n")
+        removed, added = m.compare(b3, m.headings(q))
+        assert len(removed) == 1 and len(added) == 1, "renumbering must show"
