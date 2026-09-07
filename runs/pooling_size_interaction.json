@@ -1,0 +1,27 @@
+{
+  "what": "encoder x pooling interaction on the size protocol",
+  "why": "the mechanism attributes the size behaviour to the resize, which does not know which encoder follows it, so the two encoders should behave alike. They do not.",
+  "caveat": "post hoc: the comparison was suggested by the sign disagreement rather than specified in advance, and it is one test among many run this weekend. Paired by seed, which fixes the split and the ordering but not the model.",
+  "metrics": {
+    "class:Scratch": {
+      "cnn_gn_effect": -0.04267647229645129,
+      "cnn_bn_effect": 0.04254315064248465,
+      "interaction_mean": 0.08521962293893594,
+      "n_positive": 7,
+      "n_pairs": 8,
+      "p_two_sided": 0.0234375,
+      "arrangements": 256,
+      "min_attainable_p": 0.0078125
+    },
+    "macro_f1": {
+      "cnn_gn_effect": -0.028106698537875133,
+      "cnn_bn_effect": 0.030228929057192627,
+      "interaction_mean": 0.05833562759506776,
+      "n_positive": 8,
+      "n_pairs": 8,
+      "p_two_sided": 0.0078125,
+      "arrangements": 256,
+      "min_attainable_p": 0.0078125
+    }
+  }
+}

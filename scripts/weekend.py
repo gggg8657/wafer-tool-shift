@@ -220,7 +220,7 @@ def main():
     W("## The five-minute version")
     W("")
     W("**One measurement problem underneath everything.** Two identical "
-      "invocations of one cell differ by more than most of the effects the "
+      "invocations of one cell differ by more than most effects the "
       "Friday tables reported. Three seeds get an effect's sign right and its "
       "size wrong, and can get its *existence* wrong in both directions. Four "
       "three-seed results here shrank or vanished at eight seeds; one that "
@@ -629,9 +629,9 @@ def main():
         W("*Caveat, resolved. This began as a single-protocol win on `lot` with "
           "the note that the other three were still running. They have since "
           "finished and are in the table above, and the caveat was half right: "
-          "the effect replicates on `iid` and `lot_time` and does not survive "
-          f"`size` ({_szp}, and the point estimate is negative). The claim is "
-          "therefore conditional on the geometry being represented in training, "
+          "the effect replicates on `iid` and `lot_time` and is not established "
+          f"on `size` ({_szp}). The claim is "
+          "therefore conditional on geometry being represented in training, "
           "which is stated as the finding rather than as a limitation. It is "
           f"{_enc2}*")
         W("")

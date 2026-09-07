@@ -270,7 +270,7 @@ What was left is that `CnnResized.embed` is a global average over the final feat
 | `iid` | `meanmax` (treatment) | +0.0113 | overlaps | +0.0389 | overlaps |
 | `iid` | `meanmean` (**control**) | +0.0006 | overlaps | +0.0094 | overlaps |
 | `size` | `meanmax` (treatment) | -0.0281 | overlaps | -0.0427 | overlaps |
-| `size` | `meanmean` (**control**) | -0.0011 | overlaps | +0.0068 | overlaps |
+| `size` | `meanmean` (**control**) | +0.0005 | overlaps | +0.0028 | overlaps |
 | `lot_time` | `meanmax` (treatment) | +0.0038 | overlaps | +0.0391 | overlaps |
 | `lot_time` | `meanmean` (**control**) | +0.0135 | overlaps | +0.0045 | overlaps |
 
@@ -344,7 +344,28 @@ What this does **not** overturn is the measurement in the table above. The resiz
 
 **It replicates.** The gain is not a property of GroupNorm, and the capacity control stays null on the second encoder as it did on the first — which is what the mechanism requires, since what global average pooling discards about a thin connected line is a fact about the class and the operator rather than about the normalisation layer.
 
-The claim, at the strength the data supports: **on a lot-disjoint split, replacing global average pooling with mean-and-max moves the hardest class by 0.057 while its capacity control moves it by −0.001, and the same on `cnn_bn` at +0.0322 against +0.0130. On the other three protocols it is not established, and on geometry holdout its mean effect is negative.** An architectural change that reads as a general improvement turns out to be protocol-specific — which is the thing this benchmark was built to detect, applied for once to our own result.
+**The geometry-holdout behaviour does *not* replicate, and that costs the explanation.** The gain replicating on a second encoder says it is not a GroupNorm artefact. Whether the *failure* replicates is the stronger test, because the explanation for it is that `resize_nearest` couples a defect's apparent width to native geometry — a property of the input pipeline, which does not know which normalisation layer follows it. On `size`, `Scratch` F1, eight seeds per arm:
+
+| comparison on `size` | difference | exact permutation p |
+|---|---|---|
+| `cnn_gn`: `meanmax` vs `mean` | -0.0427 | 0.20233 |
+| `cnn_bn`: `meanmax` vs `mean` | +0.0425 | 0.08096 |
+| `cnn_bn`: `meanmean` vs `mean` (capacity control) | +0.0072 | 0.80124 |
+
+**Neither encoder shows an established effect here**, and the point estimates have opposite signs. The prediction on record was that the point estimate would be at or below zero, *or* if positive would not reach p < 0.05. The second clause is satisfied, and reporting only that would be using a disjunction to claim a success the data does not support.
+
+Both encoders ran the same eight seeds, so the per-seed difference of differences can be sign-flipped exactly. If the mechanism were the whole story this would be null:
+
+| metric | `cnn_gn` | `cnn_bn` | interaction | seeds | exact p |
+|---|---|---|---|---|---|
+| `Scratch` F1 | -0.0427 | +0.0425 | +0.0852 | 7/8 | **0.02344** |
+| macro-F1 | -0.0281 | +0.0302 | +0.0583 | 8/8 | **0.00781** |
+
+**It is not null on either metric.** There is an encoder-by-pooling interaction on geometry holdout that the mechanism did not predict and that a cause located entirely in the resize cannot produce. What survives is the measurement itself: the resize really does make a defect's apparent width a function of its geometry, measured on the corpus with no model, and it survived a native-resolution control. What is withdrawn is the inference from that measurement to the behaviour of trained models on `size`. We identified a real property of the preprocessing and attached it to a protocol-level result it does not by itself explain.
+
+The honest statement about `size` is weaker than the one this section carried: **the pooling effect is unresolved there on both encoders, its sign depends on the normalisation layer, and why is unexplained.** The interaction test is also post hoc — suggested by the sign disagreement rather than specified in advance, and one test among many run this weekend — so it is reported as a result that undermines our own explanation rather than as an established interaction to build on.
+
+The claim, at the strength the data supports: **on a lot-disjoint split, replacing global average pooling with mean-and-max moves the hardest class by 0.057 while its capacity control moves it by −0.001, and the same on `cnn_bn` at +0.0322 against +0.0130. On the other three protocols it is not established, and on geometry holdout it is unresolved on both encoders, with opposite signs.** An architectural change that reads as a general improvement turns out to be protocol-specific — which is the thing this benchmark was built to detect, applied for once to our own result.
 
 ## 5. Withdrawn: "active learning loses to random lot selection"
 
@@ -454,8 +475,8 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `size` | CNN (BatchNorm) | `coral` | sizeseed | 8 | 0.7838 | ±0.0422 |
 | `size` | CNN (BatchNorm) | `dann` | sizeseed | 8 | 0.7707 | ±0.0628 |
 | `size` | CNN (BatchNorm) | `erm` | poolmean | 8 | 0.7942 | ±0.0486 |
-| `size` | CNN (BatchNorm) | `erm` | poolmeanmax | 7 | 0.8213 | ±0.0540 |
-| `size` | CNN (BatchNorm) | `erm` | poolmeanmean | 7 | 0.7971 | ±0.0463 |
+| `size` | CNN (BatchNorm) | `erm` | poolmeanmax | 8 | 0.8244 | ±0.0540 |
+| `size` | CNN (BatchNorm) | `erm` | poolmeanmean | 8 | 0.7989 | ±0.0463 |
 | `size` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.7843 | ±0.0312 |
 | `size` | CNN (BatchNorm) | `erm` | sizeseed | 8 | 0.7931 | ±0.0606 |
 | `size` | CNN (BatchNorm) | `group_dro` | sizeseed | 8 | 0.6640 | ±0.1110 |
@@ -466,7 +487,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `size` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8462 | ±0.0391 |
 | `size` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.8181 | ±0.0700 |
 | `size` | CNN (GroupNorm) | `erm` | poolmeanmaxSA | 8 | 0.7458 | ±0.0740 |
-| `size` | CNN (GroupNorm) | `erm` | poolmeanmean | 7 | 0.8451 | ±0.0392 |
+| `size` | CNN (GroupNorm) | `erm` | poolmeanmean | 8 | 0.8467 | ±0.0392 |
 | `size` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.8413 | ±0.0369 |
 | `size` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.7711 | ±0.0265 |
 | `size` | descriptors + MLP | `coral` | sizeseed | 3 | 0.8036 | ±0.0284 |

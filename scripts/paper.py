@@ -1337,48 +1337,77 @@ def main():
 
         _sb = js("pooling_size_bn_perm_class_Scratch.json")
         _sbc = js("pooling_size_bn_control_perm_class_Scratch.json")
-        if _sb and _sbc:
-            _sbp = _sb["permutation_test"]["p_two_sided"]
-            _neg = _sb["difference"] <= 0 or _sbp >= 0.05
-            W("**And the geometry-holdout failure replicates too, which is the "
-              "part that tests the mechanism.** The gain replicating on a "
-              "second encoder says it is not a GroupNorm artefact. Whether the "
-              "*failure* replicates says something stronger, because the "
-              "explanation for it is that `resize_nearest` makes a defect's "
-              "apparent width a function of native geometry — a property of "
-              "the input pipeline, which does not know which normalisation "
-              "layer follows. On `size` with `cnn_bn`, eight seeds per arm:")
+        _gs = js("pooling_size_perm_class_Scratch.json")
+        _ix = js("pooling_size_interaction.json")
+        if _sb and _sbc and _gs and _ix:
+            _s = _ix["metrics"].get("class:Scratch", {})
+            _m = _ix["metrics"].get("macro_f1", {})
+            W("**The geometry-holdout behaviour does *not* replicate, and that "
+              "costs the explanation.** The gain replicating on a second "
+              "encoder says it is not a GroupNorm artefact. Whether the "
+              "*failure* replicates is the stronger test, because the "
+              "explanation for it is that `resize_nearest` couples a defect's "
+              "apparent width to native geometry — a property of the input "
+              "pipeline, which does not know which normalisation layer follows "
+              "it. On `size`, `Scratch` F1, eight seeds per arm:")
             W("")
-            W(table([["`meanmax` vs `mean` (treatment)",
-                      f"{_sb['difference']:+.4f}",
-                      (f"**{_sbp:.5f}**" if _sbp < 0.05 else f"{_sbp:.5f}")],
-                     ["`meanmean` vs `mean` (capacity control)",
-                      f"{_sbc['difference']:+.4f}",
-                      f"{_sbc['permutation_test']['p_two_sided']:.5f}"]],
-                    ["comparison on `size` / `cnn_bn`", "difference",
-                     "exact permutation p"]))
+            W(table([
+                ["`cnn_gn`: `meanmax` vs `mean`",
+                 f"{_gs['difference']:+.4f}",
+                 f"{_gs['permutation_test']['p_two_sided']:.5f}"],
+                ["`cnn_bn`: `meanmax` vs `mean`",
+                 f"{_sb['difference']:+.4f}",
+                 f"{_sb['permutation_test']['p_two_sided']:.5f}"],
+                ["`cnn_bn`: `meanmean` vs `mean` (capacity control)",
+                 f"{_sbc['difference']:+.4f}",
+                 f"{_sbc['permutation_test']['p_two_sided']:.5f}"]],
+                ["comparison on `size`", "difference", "exact permutation p"]))
             W("")
-            if _neg:
-                _gs = js("pooling_size_perm_class_Scratch.json") or {}
-                _gsr = (f"the effect is {_gs['difference']:+.4f} on `Scratch` "
-                        f"at p = {_gs['permutation_test']['p_two_sided']:.5f}"
-                        if _gs else NM)
-                W("**It does not help here either**, matching `cnn_gn`, where "
-                  f"{_gsr}. Both "
-                  "encoders gain on the protocols that share geometry and "
-                  "neither gains when geometry is held out, which is what a "
-                  "cause located in the resize predicts and what a cause "
-                  "located in the normalisation layer would not.")
-            else:
-                W("**It helps here, and that falsifies the explanation.** If "
-                  "`meanmax` gains on `size` under `cnn_bn` while losing under "
-                  "`cnn_gn`, the geometry-holdout failure is not a fact about "
-                  "the resize — it is a fact about GroupNorm. The mechanism in "
-                  "this section survived a model-free control and does not "
-                  "survive this, and the honest reading is that the "
-                  "measurement of what the resize does to apparent width is "
-                  "still correct while its connection to the `size` result is "
-                  "withdrawn.")
+            W("**Neither encoder shows an established effect here**, and the "
+              "point estimates have opposite signs. The prediction on record "
+              "was that the point estimate would be at or below zero, *or* if "
+              "positive would not reach p < 0.05. The second clause is "
+              "satisfied, and reporting only that would be using a disjunction "
+              "to claim a success the data does not support.")
+            W("")
+            W("Both encoders ran the same eight seeds, so the per-seed "
+              "difference of differences can be sign-flipped exactly. If the "
+              "mechanism were the whole story this would be null:")
+            W("")
+            W(table([
+                ["`Scratch` F1", f"{_s['cnn_gn_effect']:+.4f}",
+                 f"{_s['cnn_bn_effect']:+.4f}",
+                 f"{_s['interaction_mean']:+.4f}",
+                 f"{_s['n_positive']}/{_s['n_pairs']}",
+                 f"**{_s['p_two_sided']:.5f}**"],
+                ["macro-F1", f"{_m['cnn_gn_effect']:+.4f}",
+                 f"{_m['cnn_bn_effect']:+.4f}",
+                 f"{_m['interaction_mean']:+.4f}",
+                 f"{_m['n_positive']}/{_m['n_pairs']}",
+                 f"**{_m['p_two_sided']:.5f}**"]],
+                ["metric", "`cnn_gn`", "`cnn_bn`", "interaction", "seeds",
+                 "exact p"]))
+            W("")
+            W("**It is not null on either metric.** There is an "
+              "encoder-by-pooling interaction on geometry holdout that the "
+              "mechanism did not predict and that a cause located entirely in "
+              "the resize cannot produce. What survives is the measurement "
+              "itself: the resize really does make a defect's apparent width a "
+              "function of its geometry, measured on the corpus with no model, "
+              "and it survived a native-resolution control. What is withdrawn "
+              "is the inference from that measurement to the behaviour of "
+              "trained models on `size`. We identified a real property of the "
+              "preprocessing and attached it to a protocol-level result it "
+              "does not by itself explain.")
+            W("")
+            W("The honest statement about `size` is weaker than the one this "
+              "section carried: **the pooling effect is unresolved there on "
+              "both encoders, its sign depends on the normalisation layer, and "
+              "why is unexplained.** The interaction test is also post hoc — "
+              "suggested by the sign disagreement rather than specified in "
+              "advance, and one test among many run this weekend — so it is "
+              "reported as a result that undermines our own explanation rather "
+              "than as an established interaction to build on.")
             W("")
 
         W("The claim, at the strength the data supports: **on a lot-disjoint "
@@ -1386,7 +1415,8 @@ def main():
           "hardest class by 0.057 while its capacity control moves it by "
           "−0.001, and the same on `cnn_bn` at "
           f"{_b2['difference']:+.4f} against {_b2c['difference']:+.4f}. On the other three protocols it is not established, and on "
-          "geometry holdout its mean effect is negative.** An architectural "
+          "geometry holdout it is unresolved on both encoders, with opposite "
+          "signs.** An architectural "
           "change that reads as a general improvement turns out to be "
           "protocol-specific — which is the thing this benchmark was built to "
           "detect, applied for once to our own result.")

@@ -582,8 +582,8 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | size | CNN on resized 64x64 (BatchNorm) | coral | sizeseed | 8 | 0.7838 | +/-0.0422 | 0.7614, 0.7642, 0.7888, 0.7483, 0.8327, 0.7571, 0.8206, 0.7977 |
 | size | CNN on resized 64x64 (BatchNorm) | dann | sizeseed | 8 | 0.7707 | +/-0.0628 | 0.7426, 0.7618, 0.8189, 0.7046, 0.7956, 0.7425, 0.8302, 0.7690 |
 | size | CNN on resized 64x64 (BatchNorm) | erm | poolmean | 8 | 0.7942 | +/-0.0486 | 0.7670, 0.7601, 0.8352, 0.7403, 0.8375, 0.7603, 0.8359, 0.8170 |
-| size | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmax | 7 | 0.8213 | +/-0.0540 | 0.8013, 0.7570, 0.8457, 0.7914, 0.8650, 0.8273, 0.8615 |
-| size | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmean | 7 | 0.7971 | +/-0.0463 | 0.7731, 0.7510, 0.8203, 0.7811, 0.8436, 0.7743, 0.8365 |
+| size | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmax | 8 | 0.8244 | +/-0.0540 | 0.8013, 0.7570, 0.8457, 0.7914, 0.8650, 0.8273, 0.8615, 0.8459 |
+| size | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmean | 8 | 0.7989 | +/-0.0463 | 0.7731, 0.7510, 0.8203, 0.7811, 0.8436, 0.7743, 0.8365, 0.8110 |
 | size | CNN on resized 64x64 (BatchNorm) | erm | sess2 | 3 | 0.7843 | +/-0.0312 | 0.7724, 0.7590, 0.8214 |
 | size | CNN on resized 64x64 (BatchNorm) | erm | sizeseed | 8 | 0.7931 | +/-0.0606 | 0.7612, 0.7786, 0.8347, 0.7150, 0.8348, 0.7724, 0.8362, 0.8122 |
 | size | CNN on resized 64x64 (BatchNorm) | group_dro | sizeseed | 8 | 0.6640 | +/-0.1110 | 0.5760, 0.5778, 0.7604, 0.6611, 0.6975, 0.7143, 0.7736, 0.5516 |
@@ -594,7 +594,7 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | size | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 8 | 0.8462 | +/-0.0391 | 0.8231, 0.8114, 0.8868, 0.8088, 0.8756, 0.8202, 0.8871, 0.8568 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 8 | 0.8181 | +/-0.0700 | 0.8039, 0.7357, 0.8046, 0.8076, 0.8758, 0.8191, 0.8601, 0.8383 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmaxSA | 8 | 0.7458 | +/-0.0740 | 0.7623, 0.6534, 0.7423, 0.7167, 0.8003, 0.8013, 0.7912, 0.6988 |
-| size | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmean | 6 | 0.8382 | +/-0.0346 | 0.8318, 0.8190, 0.8770, 0.8078, 0.8756, 0.8183 |
+| size | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmean | 8 | 0.8467 | +/-0.0392 | 0.8318, 0.8190, 0.8770, 0.8078, 0.8756, 0.8183, 0.8862, 0.8581 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | sess2 | 3 | 0.8413 | +/-0.0369 | 0.8274, 0.8113, 0.8852 |
 | size | CNN on resized 64x64 (GroupNorm) | erm | + lot-adversarial SSL initialization | 3 | 0.7711 | +/-0.0265 | 0.7602, 0.7500, 0.8030 |
 | size | size-invariant descriptors + MLP | coral | sizeseed | 3 | 0.8036 | +/-0.0284 | 0.7937, 0.7802, 0.8370 |
