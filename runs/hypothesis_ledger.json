@@ -2,8 +2,8 @@
   "what": "every hypothesis stated before a run, and whether the critique log ever reports its outcome",
   "why": "a prediction that went badly and was never mentioned again leaves a record of predictions that came true",
   "limit": "this checks that a hypothesis was scored, not that it was scored correctly -- that still needs reading",
-  "n_stated": 18,
-  "n_scored": 18,
+  "n_stated": 19,
+  "n_scored": 19,
   "n_stated_never_scored": 0,
   "n_in_flight": 0,
   "hypotheses": [
@@ -207,6 +207,17 @@
       "stated": true,
       "scored": true,
       "sweep_finished": true
+    },
+    {
+      "hypothesis": "H77",
+      "stated_in": [
+        "geometry_interaction.py"
+      ],
+      "verdict": "falsified",
+      "entry": 105,
+      "stated": true,
+      "scored": true,
+      "sweep_finished": false
     }
   ]
 }

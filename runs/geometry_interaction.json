@@ -1,0 +1,81 @@
+{
+  "what": "does the Scratch norm-by-pooling interaction depend on whether the test wafer's geometry was seen in training",
+  "how": "within lot_time, using the seen/unseen geometry decomposition each cell already records, so the models, the training data and the seeds are identical across the two halves",
+  "limits": [
+    "the unseen half is 14.15% of the test set, so its estimates are noisier by construction",
+    "cells whose halves disagree on whether Scratch is present are dropped, not averaged"
+  ],
+  "halves": {
+    "test_seen_geometry": {
+      "n_usable_seeds": 8,
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "cnn_gn_effect": 0.03460400609963156,
+      "cnn_bn_effect": 0.07786922852882731,
+      "interaction_mean": 0.043265222429195754,
+      "per_seed_interaction": [
+        0.0034912998159957187,
+        0.03251590039217023,
+        0.1089473502273286,
+        0.040124148917007996,
+        0.0538888347515436,
+        0.06195956911735345,
+        0.008612298328447676,
+        0.036582377883718764
+      ],
+      "n_positive": 8,
+      "p_two_sided": 0.0078125,
+      "arrangements": 256,
+      "min_attainable_p": 0.0078125
+    },
+    "test_unseen_geometry": {
+      "n_usable_seeds": 8,
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "cnn_gn_effect": 0.05391862105874219,
+      "cnn_bn_effect": 0.0411294134755228,
+      "interaction_mean": -0.012789207583219393,
+      "per_seed_interaction": [
+        -0.028647057036476686,
+        -0.0557819681922922,
+        -0.10211154094132813,
+        0.11781124602426418,
+        0.08141159735586978,
+        -0.013805147654705308,
+        -0.16120608074096443,
+        0.06001529051987764
+      ],
+      "n_positive": 3,
+      "p_two_sided": 0.703125,
+      "arrangements": 256,
+      "min_attainable_p": 0.0078125
+    }
+  },
+  "unseen_minus_seen_interaction": -0.05605443001241515,
+  "larger_on_unseen": false,
+  "halves_differ": {
+    "mean": -0.05605443001241515,
+    "n_pairs": 8,
+    "n_negative": 5,
+    "p_two_sided": 0.171875,
+    "arrangements": 256,
+    "established": false,
+    "note": "if this is not established, the interaction is not shown to be specific to either half -- only established on one and not on the other, which is a weaker statement"
+  }
+}

@@ -2100,6 +2100,58 @@ def main():
         import collections as _c
         _t = _c.Counter(v["verdict"] for v in _o.values())
         _done = sum(n for k, n in _t.items() if k != "in_flight")
+    gi = js("geometry_interaction.json")
+    if gi and gi.get("halves"):
+        _s = gi["halves"].get("test_seen_geometry") or {}
+        _u = gi["halves"].get("test_unseen_geometry") or {}
+        _hd = gi.get("halves_differ") or {}
+        if _s.get("n_usable_seeds") and _u.get("n_usable_seeds"):
+            W("## 7.96 The obvious explanation for the class-specific "
+              "interaction, tested and dropped")
+            W("")
+            W("The `Scratch` interaction fires on `size` and `lot_time` and "
+              "not on `lot` or `iid`, and the two where it fires are the two "
+              "that hold geometry out or test on a narrow geometry slice. "
+              "Geometry exposure is the obvious candidate, and four protocols "
+              "differ in too many ways at once to test it.")
+            W("")
+            W("`lot_time` scores its test set twice — on wafers whose "
+              "geometry appeared in training and on those whose did not — so "
+              "the same models, training data and seeds can be split by "
+              "exposure alone. **We predicted the interaction would be larger "
+              "on the unseen half.**")
+            W("")
+            W(table([
+                ["seen geometry", f"{_s['cnn_gn_effect']:+.4f}",
+                 f"{_s['cnn_bn_effect']:+.4f}",
+                 f"{_s['interaction_mean']:+.4f}",
+                 f"{_s['n_positive']}/{_s['n_usable_seeds']}",
+                 f"**{_s['p_two_sided']:.5f}**"],
+                ["unseen geometry", f"{_u['cnn_gn_effect']:+.4f}",
+                 f"{_u['cnn_bn_effect']:+.4f}",
+                 f"{_u['interaction_mean']:+.4f}",
+                 f"{_u['n_positive']}/{_u['n_usable_seeds']}",
+                 f"{_u['p_two_sided']:.5f}"]],
+                ["`lot_time` test half", "`cnn_gn`", "`cnn_bn`",
+                 "interaction", "seeds", "exact p"]))
+            W("")
+            W("**It is the other way round.** The interaction is established "
+              "on the *seen*-geometry half and null on the unseen one, so the "
+              "geometry-exposure explanation is dropped: the across-protocol "
+              "pattern is driven by something else those two protocols share, "
+              "or by nothing.")
+            W("")
+            W("We are not claiming the reverse either. The two halves are not "
+              f"shown to differ ({_hd.get('mean', 0):+.4f}, "
+              f"{_hd.get('n_negative', 0)}/{_hd.get('n_pairs', 0)} seeds, "
+              f"p = {_hd.get('p_two_sided', float('nan')):.5f}), and the "
+              "unseen half is 7,630 of 43,237 test wafers with a visibly wider "
+              "per-seed spread — so its null is partly a power statement. "
+              "What the test establishes is that our prediction was wrong, "
+              "which is enough to drop the explanation and not enough to "
+              "install its opposite.")
+            W("")
+
         W("## 7.97 How often were we right, before the run?")
         W("")
         W("Every sweep in this project states a prediction in its header "

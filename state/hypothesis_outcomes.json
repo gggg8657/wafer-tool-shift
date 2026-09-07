@@ -98,6 +98,11 @@
       "verdict": "confirmed",
       "entry": 104,
       "note": "the interaction replicates on iid and lot_time, 7/8 seeds each, p = 0.01562 both; the stated failure mode -- vanishing on iid, which would have made it about generalisation -- did not occur"
+    },
+    "H77": {
+      "verdict": "falsified",
+      "entry": 105,
+      "note": "predicted the Scratch interaction would be larger on the unseen-geometry half of lot_time; it is established on the SEEN half (+0.0433, 8/8, p = 0.00781) and null on the unseen (-0.0128, 3/8, p = 0.70312). The halves are not shown to differ (p = 0.17188), so the reverse is not established either"
     }
   }
 }

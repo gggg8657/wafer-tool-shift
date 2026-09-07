@@ -710,18 +710,33 @@ So the screen at three seeds is not the trap that anecdote made it look. It find
 
 **What survives is the count, and it survives because it is arithmetic rather than an example.** The permutation test at three per arm has a floor of 0.10 on *every* triple, so none of the 17 established effects is reachable on any of the 56 — not on average, not at best. And the screen's roughly even odds of finding a real effect are their own argument: half the established results here would have been missed by a three-seed protocol, which is a weaker and more defensible statement than the one this section made first.
 
+## 7.96 The obvious explanation for the class-specific interaction, tested and dropped
+
+The `Scratch` interaction fires on `size` and `lot_time` and not on `lot` or `iid`, and the two where it fires are the two that hold geometry out or test on a narrow geometry slice. Geometry exposure is the obvious candidate, and four protocols differ in too many ways at once to test it.
+
+`lot_time` scores its test set twice — on wafers whose geometry appeared in training and on those whose did not — so the same models, training data and seeds can be split by exposure alone. **We predicted the interaction would be larger on the unseen half.**
+
+| `lot_time` test half | `cnn_gn` | `cnn_bn` | interaction | seeds | exact p |
+|---|---|---|---|---|---|
+| seen geometry | +0.0346 | +0.0779 | +0.0433 | 8/8 | **0.00781** |
+| unseen geometry | +0.0539 | +0.0411 | -0.0128 | 3/8 | 0.70312 |
+
+**It is the other way round.** The interaction is established on the *seen*-geometry half and null on the unseen one, so the geometry-exposure explanation is dropped: the across-protocol pattern is driven by something else those two protocols share, or by nothing.
+
+We are not claiming the reverse either. The two halves are not shown to differ (-0.0561, 5/8 seeds, p = 0.17188), and the unseen half is 7,630 of 43,237 test wafers with a visibly wider per-seed spread — so its null is partly a power statement. What the test establishes is that our prediction was wrong, which is enough to drop the explanation and not enough to install its opposite.
+
 ## 7.97 How often were we right, before the run?
 
 Every sweep in this project states a prediction in its header before it launches, and the critique log scores it afterwards. That record is the only thing distinguishing an effect we specified in advance from one we noticed — a post-hoc correction cannot tell them apart — so it is worth reporting what it says about us rather than only about the methods.
 
 | verdict on the stated prediction | count |
 |---|---|
-| confirmed | 9 |
+| confirmed | 10 |
 | partly | 4 |
-| falsified | 4 |
-| still running | 1 |
+| falsified | 5 |
+| still running | 0 |
 
-**9 of 17 predictions held as stated** — 53%. 4 were partly right, usually getting a direction correct and a threshold wrong, and 4 failed outright. The worst was a prediction that a fix would work which turned out to make the encoder dramatically worse on both protocols; the most useful was a prediction phrased as a disjunction wide enough to cover both signs, which we satisfied on a literal reading and recorded as a failure anyway.
+**10 of 19 predictions held as stated** — 53%. 4 were partly right, usually getting a direction correct and a threshold wrong, and 5 failed outright. The worst was a prediction that a fix would work which turned out to make the encoder dramatically worse on both protocols; the most useful was a prediction phrased as a disjunction wide enough to cover both signs, which we satisfied on a literal reading and recorded as a failure anyway.
 
 A little over half is not a flattering number and it is the point. A record showing near-perfect foresight would mean the predictions were being written to be safe, or written after the fact, and either way it could not do the job this one is for. The verdicts are in `state/hypothesis_outcomes.json`, one per hypothesis with the entry that argues it, and `scripts/hypothesis_ledger.py` fails if a hypothesis whose sweep has finished has no verdict recorded.
 
