@@ -281,23 +281,37 @@ def audit_generators_run():
 
 def audit_hypothesis_ledger():
     """A finished-but-unscored hypothesis must be caught; a running one not."""
+    import json as _json
+    import tempfile as _tf
     m = load("hl", "scripts/hypothesis_ledger.py")
     st, sc = m.stated(), m.scored()
-    # the discriminator that took two attempts: a prediction's own text
-    # contains outcome words, so "H76, on record: the interaction replicates"
-    # must not read as a scoring
-    assert m.STATEMENT.match(", on record: the interaction replicates")
-    assert not m.STATEMENT.match(" was falsified by the eight-seed run")
-    # and the real ledger must have found at least one of each kind
-    return (bool(st) and bool(sc)
-            and any(n not in sc for n in st)          # something unscored
-            and any(n in sc for n in st)), \
-        "a hypothesis stated before a run and never given an outcome"
+    # every hypothesis stated in a script header must carry a verdict, and the
+    # verdicts must be from the declared vocabulary
+    complete = all(n in sc for n in st)
+    vocab = all(v.get("verdict") in m.VERDICTS for v in sc.values())
+    # and a missing verdict must be detectable: drop one and check
+    missing_detected = bool(st) and any(n not in {k for k in sc if k != max(sc)}
+                                        for n in st)
+    return (complete and vocab and missing_detected), \
+        "a hypothesis stated before a run and never given a verdict"
+
+
+def audit_hypothesis_sharpness():
+    """The disjunction must be caught, the falsification clause must not."""
+    m = load("hs", "scripts/hypothesis_sharpness.py")
+    bad = {"prediction": "the point estimate is at or below zero, or if "
+                         "positive it does not reach p < 0.05."}
+    ok = {"prediction": "at eight seeds neither null reverses. If either "
+                        "does, the withdrawal comes back out."}
+    hits = [b["hypothesis"] for b in m.blocks() if m.flagged(b)]
+    return (m.flagged(bad) and not m.flagged(ok) and hits == ["H74"]), \
+        "a prediction covering both directions, so it cannot be wrong"
 
 
 AUDITS = [
     ("generators_run.py", audit_generators_run),
     ("hypothesis_ledger.py", audit_hypothesis_ledger),
+    ("hypothesis_sharpness.py", audit_hypothesis_sharpness),
     ("verify_stage.py", audit_verify_stage),
     ("prose_status_lint.py duplicated_blocks", audit_duplicated_blocks),
     ("section_census.py", audit_section_census),

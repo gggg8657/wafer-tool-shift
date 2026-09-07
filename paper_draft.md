@@ -454,9 +454,9 @@ A reader deploying this would want the honest version: if the wafers you will se
 
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range |
 |---|---|---|---|---|---|---|
-| `iid` | CNN (BatchNorm) | `erm` | poolmean | 4 | 0.8641 | ±0.0074 |
-| `iid` | CNN (BatchNorm) | `erm` | poolmeanmax | 4 | 0.8867 | ±0.0078 |
-| `iid` | CNN (BatchNorm) | `erm` | poolmeanmean | 4 | 0.8629 | ±0.0041 |
+| `iid` | CNN (BatchNorm) | `erm` | poolmean | 6 | 0.8636 | ±0.0074 |
+| `iid` | CNN (BatchNorm) | `erm` | poolmeanmax | 6 | 0.8893 | ±0.0089 |
+| `iid` | CNN (BatchNorm) | `erm` | poolmeanmean | 6 | 0.8630 | ±0.0081 |
 | `iid` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.8625 | ±0.0042 |
 | `iid` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8833 | ±0.0057 |
 | `iid` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.8946 | ±0.0063 |
@@ -517,9 +517,9 @@ A reader deploying this would want the honest version: if the wafers you will se
 | `lot` | CNN + 4th channel | `erm` | sess2 | 3 | 0.8717 | ±0.0079 |
 | `lot` | CNN + 4th channel | `erm` | zerochan | 3 | 0.8689 | ±0.0075 |
 | `lot` | spectral operator | `erm` | sess2 | 3 | 0.8405 | ±0.0216 |
-| `lot_time` | CNN (BatchNorm) | `erm` | poolmean | 4 | 0.6565 | ±0.0126 |
-| `lot_time` | CNN (BatchNorm) | `erm` | poolmeanmax | 3 | 0.6775 | ±0.0347 |
-| `lot_time` | CNN (BatchNorm) | `erm` | poolmeanmean | 3 | 0.6418 | ±0.0047 |
+| `lot_time` | CNN (BatchNorm) | `erm` | poolmean | 6 | 0.6540 | ±0.0167 |
+| `lot_time` | CNN (BatchNorm) | `erm` | poolmeanmax | 6 | 0.6871 | ±0.0367 |
+| `lot_time` | CNN (BatchNorm) | `erm` | poolmeanmean | 6 | 0.6487 | ±0.0172 |
 | `lot_time` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.6438 | ±0.0017 |
 | `lot_time` | CNN (GroupNorm) | `erm` | — | 3 | 0.6985 | ±0.0045 |
 | `lot_time` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.7081 | ±0.0117 |
@@ -703,6 +703,21 @@ This paper's thesis has been argued case by case: results that shrank at eight s
 So the screen at three seeds is not the trap that anecdote made it look. It finds a real effect on 55% of triples on average and calls a null comparison separated on 1% — a sensitivity of about a half at a false-positive rate of about one in a hundred. **That is a defensible screen, which is what we have always claimed it is.** The capacity control fires on 2 of 56 triples, and seeds 0-2 are one of the two. Reporting that draw as what a three-seed experiment would conclude was picking the tail and calling it the distribution.
 
 **What survives is the count, and it survives because it is arithmetic rather than an example.** The permutation test at three per arm has a floor of 0.10 on *every* triple, so none of the 17 established effects is reachable on any of the 56 — not on average, not at best. And the screen's roughly even odds of finding a real effect are their own argument: half the established results here would have been missed by a three-seed protocol, which is a weaker and more defensible statement than the one this section made first.
+
+## 7.97 How often were we right, before the run?
+
+Every sweep in this project states a prediction in its header before it launches, and the critique log scores it afterwards. That record is the only thing distinguishing an effect we specified in advance from one we noticed — a post-hoc correction cannot tell them apart — so it is worth reporting what it says about us rather than only about the methods.
+
+| verdict on the stated prediction | count |
+|---|---|
+| confirmed | 9 |
+| partly | 4 |
+| falsified | 4 |
+| still running | 1 |
+
+**9 of 17 predictions held as stated** — 53%. 4 were partly right, usually getting a direction correct and a threshold wrong, and 4 failed outright. The worst was a prediction that a fix would work which turned out to make the encoder dramatically worse on both protocols; the most useful was a prediction phrased as a disjunction wide enough to cover both signs, which we satisfied on a literal reading and recorded as a failure anyway.
+
+A little over half is not a flattering number and it is the point. A record showing near-perfect foresight would mean the predictions were being written to be safe, or written after the fact, and either way it could not do the job this one is for. The verdicts are in `state/hypothesis_outcomes.json`, one per hypothesis with the entry that argues it, and `scripts/hypothesis_ledger.py` fails if a hypothesis whose sweep has finished has no verdict recorded.
 
 ## 8. Threats to validity
 

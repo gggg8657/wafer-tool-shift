@@ -2071,6 +2071,46 @@ def main():
               "missed by a three-seed protocol, which is a weaker and more "
               "defensible statement than the one this section made first.")
             W("")
+    hl = js("hypothesis_ledger.json")
+    _out = Path("state/hypothesis_outcomes.json")
+    if hl and _out.exists():
+        _o = json.loads(_out.read_text())["outcomes"]
+        import collections as _c
+        _t = _c.Counter(v["verdict"] for v in _o.values())
+        _done = sum(n for k, n in _t.items() if k != "in_flight")
+        W("## 7.97 How often were we right, before the run?")
+        W("")
+        W("Every sweep in this project states a prediction in its header "
+          "before it launches, and the critique log scores it afterwards. That "
+          "record is the only thing distinguishing an effect we specified in "
+          "advance from one we noticed — a post-hoc correction cannot tell "
+          "them apart — so it is worth reporting what it says about us rather "
+          "than only about the methods.")
+        W("")
+        W(table([[k, str(_t[k])] for k in ("confirmed", "partly", "falsified")
+                 if _t.get(k)]
+                + [["still running", str(_t.get("in_flight", 0))]],
+                ["verdict on the stated prediction", "count"]))
+        W("")
+        W(f"**{_t['confirmed']} of {_done} predictions held as stated** — "
+          f"{100 * _t['confirmed'] / _done:.0f}%. {_t['partly']} were partly "
+          f"right, usually getting a direction correct and a threshold wrong, "
+          f"and {_t['falsified']} failed outright. The worst was a prediction "
+          "that a fix would work which turned out to make the encoder "
+          "dramatically worse on both protocols; the most useful was a "
+          "prediction phrased as a disjunction wide enough to cover both "
+          "signs, which we satisfied on a literal reading and recorded as a "
+          "failure anyway.")
+        W("")
+        W("A little over half is not a flattering number and it is the point. "
+          "A record showing near-perfect foresight would mean the predictions "
+          "were being written to be safe, or written after the fact, and "
+          "either way it could not do the job this one is for. The verdicts "
+          "are in `state/hypothesis_outcomes.json`, one per hypothesis with "
+          "the entry that argues it, and `scripts/hypothesis_ledger.py` fails "
+          "if a hypothesis whose sweep has finished has no verdict recorded.")
+        W("")
+
     W("## 8. Threats to validity")
     W("")
     W("1. **Time is a proxy, and the forward-only split is not purely "

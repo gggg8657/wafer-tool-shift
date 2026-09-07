@@ -52,41 +52,29 @@ def stated():
     return {k: sorted(set(v)) for k, v in out.items()}
 
 
-# A mention is not an outcome. The first version of this counted any `H<n>`
-# in any entry, so H76 -- stated in entry 100 and still running -- read as
-# scored by the very entry that launched it. An outcome needs a verdict word
-# near the mention.
-STATEMENT = re.compile(
-    r"\s*(,\s*)?(on record|before (?:the|any) run|before computing|"
-    r"before the data|predicted)", re.I)
-VERDICT = re.compile(
-    r"\b(confirmed|falsifi\w+|scored|right|wrong|holds|held|survives?|"
-    r"survived|does not|did not|withdraw\w*|reverses?|dissolv\w+|"
-    r"replicates?|replicated|of (?:four|six|two)|correct)\b", re.I)
+# Detecting "was this scored?" from prose is not reliably automatable, and I
+# spent three attempts proving it. Counting any mention marked H76 as scored by
+# the entry that launched it. Requiring a verdict word nearby failed too, since
+# a prediction's own text contains outcome words. Tightening the window then
+# failed on entry 102, which is *about* this ledger -- prose discussing the
+# record is indistinguishable from prose scoring it.
+#
+# So the verdict is recorded explicitly instead. `state/hypothesis_outcomes.json`
+# holds one line per hypothesis with a verdict and the entry that argues it, and
+# this script's job is to enforce that none is missing. The judgement stays
+# human, which it has to be -- H74 was satisfied on a literal reading and
+# reported as a failure, and no pattern would have made that call. What a
+# machine can do is refuse to let a stated hypothesis have no recorded verdict.
+OUTCOMES = Path("state/hypothesis_outcomes.json")
+VERDICTS = {"confirmed", "falsified", "partly", "superseded", "in_flight"}
 
 
 def scored():
-    """Hypotheses the critique log reports an *outcome* for, not merely names."""
-    text = Path("critique_log.md").read_text()
-    out = defaultdict(list)
-    for block in re.split(r"^### ", text, flags=re.M)[1:]:
-        head = block.split("\n", 1)[0]
-        n = re.match(r"(\d+)\.", head)
-        entry = int(n.group(1)) if n else None
-        for m in H.finditer(block):
-            # A prediction's own text contains outcome words, because it
-            # predicts an outcome: entry 100 says "H76 on record: the
-            # interaction replicates". So a mention followed by a statement
-            # marker is a statement, whatever words surround it, and only the
-            # rest can be a scoring.
-            tail = block[m.end():m.end() + 30]
-            if STATEMENT.match(tail):
-                continue
-            lo, hi = max(0, m.start() - 200), min(len(block), m.end() + 400)
-            if VERDICT.search(block[lo:hi]):
-                out[int(m.group(1))].append(entry)
-    return {k: sorted({v for v in vs if v is not None})
-            for k, vs in out.items()}
+    """Explicit verdicts, keyed by hypothesis number."""
+    if not OUTCOMES.exists():
+        return {}
+    d = json.loads(OUTCOMES.read_text()).get("outcomes", {})
+    return {int(k.lstrip("Hh")): v for k, v in d.items()}
 
 
 def main():
@@ -97,10 +85,13 @@ def main():
     st, sc = stated(), scored()
     rows = []
     for n in sorted(set(st) | set(sc)):
+        o = sc.get(n) or {}
         rows.append({"hypothesis": f"H{n}",
                      "stated_in": st.get(n, []),
-                     "scored_in_entries": sc.get(n, []),
-                     "stated": n in st, "scored": bool(sc.get(n))})
+                     "verdict": o.get("verdict"),
+                     "entry": o.get("entry"),
+                     "stated": n in st,
+                     "scored": bool(o.get("verdict"))})
     # A hypothesis whose sweep is still running is not a gap in the record.
     # The failure mode is a sweep that *finished* and was never scored, so
     # completion is read from the stage's own log rather than assumed.
@@ -117,8 +108,9 @@ def main():
         r["sweep_finished"] = sweep_done(r["stated_in"])
     unscored = [r for r in rows
                 if r["stated"] and not r["scored"] and r["sweep_finished"]]
-    in_flight = [r for r in rows
-                 if r["stated"] and not r["scored"] and not r["sweep_finished"]]
+    in_flight = [r for r in rows if r["verdict"] == "in_flight"
+                 or (r["stated"] and not r["scored"]
+                     and not r["sweep_finished"])]
     res = {"what": "every hypothesis stated before a run, and whether the "
                    "critique log ever reports its outcome",
            "why": "a prediction that went badly and was never mentioned again "
@@ -138,9 +130,10 @@ def main():
         mark = ("  " if r["scored"]
                 else ("running " if not r["sweep_finished"] else "UNSCORED"))
         where = ", ".join(r["stated_in"]) or "-"
-        ent = ("entry " + ", ".join(str(e) for e in r["scored_in_entries"])
-               if r["scored_in_entries"] else "never")
-        print(f"  {mark} {r['hypothesis']:5s} {where[:34]:34s} {ent}")
+        v = r["verdict"] or "-"
+        ent = f"entry {r['entry']}" if r.get("entry") else ""
+        print(f"  {mark} {r['hypothesis']:5s} {where[:30]:30s} "
+              f"{v:11s} {ent}")
     if unscored:
         print(f"\n{len(unscored)} hypothesis(es) whose sweep finished and "
               "which were never scored. That is the one failure mode this "

@@ -791,3 +791,54 @@ def test_section_diff_catches_a_vanished_section_and_tolerates_growth():
         r.write_text("## Per-class F1, best `lot` cell (CNN BatchNorm, erm)\n")
         removed, added, renamed = m.compare(b4, m.headings(r))
         assert renamed and removed == [] and added == [], (removed, added)
+
+
+def test_hypothesis_sharpness_flags_a_disjunction_and_not_a_falsification_clause():
+    """The guard for critique entry 103, tested against the case that motivated it.
+
+    H74 was recorded as "the point estimate is at or below zero, *or* if
+    positive it does not reach p < 0.05" -- a disjunction wide enough that a
+    sign flip satisfies it. I reported it as a failure anyway, but only because
+    I noticed.
+
+    The hard part is not finding that phrasing, it is *not* finding the four
+    other hypotheses that read similarly and are fine: "if either does, the
+    withdrawal comes back out" is a falsification clause, and "not established
+    either way" is an adverb. A lint that flagged those would fire on most of
+    the record and be turned off, which is entry 79's failure mode.
+    """
+    import importlib.util
+    from pathlib import Path as _Path
+
+    spec = importlib.util.spec_from_file_location(
+        "hs", _Path(__file__).resolve().parents[1] / "scripts"
+        / "hypothesis_sharpness.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+
+    bad = {"hypothesis": "Hx", "file": "f",
+           "prediction": "the point estimate is at or below zero, or if "
+                         "positive it does not reach p < 0.05."}
+    assert m.flagged(bad), "the disjunction that motivated this must be caught"
+
+    for ok in (
+        # a falsification clause, not a hedge
+        "at eight seeds neither null reverses. If either does, the "
+        "withdrawal is wrong and comes back out.",
+        # "either way" as an adverb
+        "the -0.059 is real and eight seeds give p below 0.05. If it does "
+        "not, max pooling is not established either way on `size`.",
+        # a plain directional prediction
+        "coral and dann separate from ERM at p < 0.05 and are worse; irm "
+        "and hsic do not.",
+        # a null prediction with a threshold
+        "no gamma separates from the bit-exact gamma = 0 control at eight "
+        "seeds.",
+    ):
+        assert not m.flagged({"hypothesis": "Hy", "file": "f",
+                              "prediction": ok}), ok[:60]
+
+    # and on the real record it must find exactly the one known case
+    bs = m.blocks()
+    hits = [b["hypothesis"] for b in bs if m.flagged(b)]
+    assert hits == ["H74"], hits
