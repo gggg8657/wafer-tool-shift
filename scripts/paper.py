@@ -1757,6 +1757,83 @@ def main():
           "bit-exact gamma = 0 control at eight.** If one does, the focal "
           "withdrawal here is wrong and comes back out.")
         W("")
+    tsc = js("three_seed_cost.json")
+    if tsc and tsc.get("n_comparisons"):
+        W("## 7.95 What three seeds would have concluded, counted")
+        W("")
+        W("This paper's thesis has been argued case by case: results that "
+          "shrank at eight seeds, a null that turned into two significant "
+          "effects, a streak of three-of-three that was a coin. It has not "
+          "been counted. Every comparison here that reached eight seeds per "
+          "arm can be re-scored on its first three, which is exactly what an "
+          "experimenter who stopped early would have had.")
+        W("")
+        W(table([
+            ["comparisons with eight seeds on both arms",
+             str(tsc["n_comparisons"])],
+            ["of those, established at p < 0.05 with eight seeds",
+             str(tsc["n_established_at_8"])],
+            ["**of those, reachable with three seeds**",
+             f"**{tsc['n_of_those_reachable_at_3']}**"],
+            ["comparisons whose *range-screen* verdict differs at three",
+             str(tsc["n_range_screen_disagrees"])]],
+            ["", "count"]))
+        W("")
+        W(f"**None of the {tsc['n_established_at_8']} established effects "
+          "could have been found with three seeds, and that is not bad "
+          "luck.** An exact permutation test at three per arm admits twenty "
+          f"arrangements, so its smallest two-sided p is "
+          f"{tsc['permutation_floor_at_3']:.2f}. It cannot return a value "
+          "below 0.05 at any effect size whatsoever. A three-seed protocol "
+          "does not under-detect these effects; it is arithmetically incapable "
+          "of detecting any of them.")
+        W("")
+        _fl = [r for r in tsc["comparisons"]
+               if r["range_verdict_3"].startswith("**separated")
+               != r["range_verdict_8"].startswith("**separated")]
+        if _fl:
+            _same = all(r["range_verdict_3"].startswith("**separated")
+                        for r in _fl)
+            W("**The range screen fails differently, and in one direction "
+              f"only.** All {len(_fl)} of the verdicts that change call an "
+              "effect separated at three seeds and overlapping at eight"
+              + (", every one of them in that direction" if _same else "")
+              + " — because a sample's range grows with the sample, so the "
+              "screen gets *stricter* as evidence accumulates. That is the "
+              "opposite of how a reader expects a test to behave, and it is "
+              "why this paper treats the screen as a floor rather than a "
+              "verdict.")
+            W("")
+        _t = next((r for r in tsc["comparisons"]
+                   if r["encoder"] == "cnn_bn" and r["arm"] == "erm/poolmeanmax"
+                   and r["metric"] == "class:Scratch"), None)
+        _c = next((r for r in tsc["comparisons"]
+                   if r["encoder"] == "cnn_bn"
+                   and "poolmeanmean" in r["arm"]
+                   and r["metric"] == "class:Scratch"), None)
+        if _t and _c:
+            W("**The sharpest case is this paper's own best result.** On "
+              "`lot`/`cnn_bn`, `Scratch` F1, at three seeds the range screen "
+              "calls the treatment separated and it calls the **capacity "
+              "control separated too**:")
+            W("")
+            W(table([
+                ["`meanmax` (treatment)", _t["range_verdict_3"],
+                 f"{_t['p_8_seeds']:.4f}"],
+                ["`meanmean` (capacity control)", _c["range_verdict_3"],
+                 f"{_c['p_8_seeds']:.4f}"]],
+                ["arm", "three-seed range verdict", "eight-seed permutation p"]))
+            W("")
+            W("At eight seeds the treatment is real and the control is not. At "
+              "three, both look separated — so the experiment cannot "
+              "distinguish *max pooling helps* from *a wider head helps*, "
+              "which is the entire question the control exists to answer. The "
+              "control would not have failed; it would have appeared to "
+              "succeed, which is worse, because a control that fires alongside "
+              "its treatment reads as confirmation that something real is "
+              "happening.")
+            W("")
+
     W("## 8. Threats to validity")
     W("")
     W("1. **Time is a proxy, and the forward-only split is not purely "

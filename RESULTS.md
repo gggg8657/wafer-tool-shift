@@ -581,7 +581,9 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot_time | spectral operator, native resolution | erm | sess2 | 3 | 0.6530 | +/-0.0242 | 0.6759, 0.6276, 0.6556 |
 | size | CNN on resized 64x64 (BatchNorm) | coral | sizeseed | 8 | 0.7838 | +/-0.0422 | 0.7614, 0.7642, 0.7888, 0.7483, 0.8327, 0.7571, 0.8206, 0.7977 |
 | size | CNN on resized 64x64 (BatchNorm) | dann | sizeseed | 8 | 0.7707 | +/-0.0628 | 0.7426, 0.7618, 0.8189, 0.7046, 0.7956, 0.7425, 0.8302, 0.7690 |
-| size | CNN on resized 64x64 (BatchNorm) | erm | poolmean | 2 | 0.7635 | +/-0.0035 | 0.7670, 0.7601 |
+| size | CNN on resized 64x64 (BatchNorm) | erm | poolmean | 5 | 0.7880 | +/-0.0486 | 0.7670, 0.7601, 0.8352, 0.7403, 0.8375 |
+| size | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmax | 4 | 0.7989 | +/-0.0444 | 0.8013, 0.7570, 0.8457, 0.7914 |
+| size | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmean | 4 | 0.7814 | +/-0.0347 | 0.7731, 0.7510, 0.8203, 0.7811 |
 | size | CNN on resized 64x64 (BatchNorm) | erm | sess2 | 3 | 0.7843 | +/-0.0312 | 0.7724, 0.7590, 0.8214 |
 | size | CNN on resized 64x64 (BatchNorm) | erm | sizeseed | 8 | 0.7931 | +/-0.0606 | 0.7612, 0.7786, 0.8347, 0.7150, 0.8348, 0.7724, 0.8362, 0.8122 |
 | size | CNN on resized 64x64 (BatchNorm) | group_dro | sizeseed | 8 | 0.6640 | +/-0.1110 | 0.5760, 0.5778, 0.7604, 0.6611, 0.6975, 0.7143, 0.7736, 0.5516 |

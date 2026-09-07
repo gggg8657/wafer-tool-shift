@@ -453,6 +453,9 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot_time` | spectral operator | `erm` | sess2 | 3 | 0.6530 | ±0.0242 |
 | `size` | CNN (BatchNorm) | `coral` | sizeseed | 8 | 0.7838 | ±0.0422 |
 | `size` | CNN (BatchNorm) | `dann` | sizeseed | 8 | 0.7707 | ±0.0628 |
+| `size` | CNN (BatchNorm) | `erm` | poolmean | 4 | 0.7757 | ±0.0475 |
+| `size` | CNN (BatchNorm) | `erm` | poolmeanmax | 4 | 0.7989 | ±0.0444 |
+| `size` | CNN (BatchNorm) | `erm` | poolmeanmean | 4 | 0.7814 | ±0.0347 |
 | `size` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.7843 | ±0.0312 |
 | `size` | CNN (BatchNorm) | `erm` | sizeseed | 8 | 0.7931 | ±0.0606 |
 | `size` | CNN (BatchNorm) | `group_dro` | sizeseed | 8 | 0.6640 | ±0.1110 |
@@ -588,6 +591,30 @@ Twice this project reported a null that turned out to be a property of the seed 
 **H68 predicted neither null would reverse at eight seeds. It has been scored and neither did** — the RPCA arms tie a channel of zeros to within 0.00005, and focal at gamma = 2.0 is null at p = 0.9442. The reason to have expected that matters more than the prediction. The RPCA withdrawal does not rest on its ablation at all: the low-rank part is rank 0 for 94.83% of decomposed wafers, the residual is bit-identical to the raw failed-die mask for 95.27% of all of them, and `stack_channels` concatenates the fourth channel to an *intact* one-hot, so the encoder reads an untouched copy of whatever the decomposition removed. The control could not have failed to tie. The ablation corroborates a mechanism; it was never the evidence, and the sentence that presented it as such was overstating a weak test while a strong argument sat beside it.
 
 The capacity control is the counter-example that shows the distinction is not rhetorical: `meanmean` versus `mean` is also a null, and it is at eight seeds with a floor of 0.0002, so it can carry the weight the pooling result puts on it. **H70, on record for the three gammas still at two seeds: none separates from the bit-exact gamma = 0 control at eight.** If one does, the focal withdrawal here is wrong and comes back out.
+
+## 7.95 What three seeds would have concluded, counted
+
+This paper's thesis has been argued case by case: results that shrank at eight seeds, a null that turned into two significant effects, a streak of three-of-three that was a coin. It has not been counted. Every comparison here that reached eight seeds per arm can be re-scored on its first three, which is exactly what an experimenter who stopped early would have had.
+
+|  | count |
+|---|---|
+| comparisons with eight seeds on both arms | 48 |
+| of those, established at p < 0.05 with eight seeds | 17 |
+| **of those, reachable with three seeds** | **0** |
+| comparisons whose *range-screen* verdict differs at three | 8 |
+
+**None of the 17 established effects could have been found with three seeds, and that is not bad luck.** An exact permutation test at three per arm admits twenty arrangements, so its smallest two-sided p is 0.10. It cannot return a value below 0.05 at any effect size whatsoever. A three-seed protocol does not under-detect these effects; it is arithmetically incapable of detecting any of them.
+
+**The range screen fails differently, and in one direction only.** All 8 of the verdicts that change call an effect separated at three seeds and overlapping at eight, every one of them in that direction — because a sample's range grows with the sample, so the screen gets *stricter* as evidence accumulates. That is the opposite of how a reader expects a test to behave, and it is why this paper treats the screen as a floor rather than a verdict.
+
+**The sharpest case is this paper's own best result.** On `lot`/`cnn_bn`, `Scratch` F1, at three seeds the range screen calls the treatment separated and it calls the **capacity control separated too**:
+
+| arm | three-seed range verdict | eight-seed permutation p |
+|---|---|---|
+| `meanmax` (treatment) | **separated** (margin 0.0189 > floor 0.0054) | 0.0101 |
+| `meanmean` (capacity control) | **separated** (margin 0.0171 > floor 0.0054) | 0.2578 |
+
+At eight seeds the treatment is real and the control is not. At three, both look separated — so the experiment cannot distinguish *max pooling helps* from *a wider head helps*, which is the entire question the control exists to answer. The control would not have failed; it would have appeared to succeed, which is worse, because a control that fires alongside its treatment reads as confirmation that something real is happening.
 
 ## 8. Threats to validity
 
