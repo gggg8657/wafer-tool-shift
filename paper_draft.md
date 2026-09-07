@@ -412,6 +412,32 @@ Both p-values above were produced twice, by `norm_pooling_interaction.py` and in
 
 The question was raised post hoc, by an encoder-by-pooling interaction noticed while checking whether the `size` failure replicated. What makes it more than an artefact of looking is that it replicates: the same direction, the same 8-of-8 seeds, and p = 0.00781 on both protocols independently.
 
+## 5.6 So which combination should anyone use?
+
+Neither headline result answers that. `meanmax` over `mean` was measured at a fixed normalisation; GroupNorm over BatchNorm at a fixed pooling; and section 5.5 shows they do not compose. All four combinations are at eight seeds on `lot` and `size`, so each protocol's best can be tested against the other three directly.
+
+**`lot`, macro-F1.** Best: **GroupNorm + mean-and-max** — beats 2 of 3 rivals at p < 0.05.
+
+| combination | macro-F1 | seed range | vs best | exact p |
+|---|---|---|---|---|
+| GroupNorm + mean-and-max | 0.8888 | 0.0231 | — | — |
+| BatchNorm + mean-and-max | 0.8832 | 0.0229 | +0.0055 | 0.21507 |
+| GroupNorm + mean | 0.8738 | 0.0327 | +0.0150 | **0.01197** |
+| BatchNorm + mean | 0.8576 | 0.0254 | +0.0312 | **0.00016** |
+
+**`size`, macro-F1.** Best: **GroupNorm + mean** — beats 1 of 3 rivals at p < 0.05.
+
+| combination | macro-F1 | seed range | vs best | exact p |
+|---|---|---|---|---|
+| GroupNorm + mean | 0.8462 | 0.0782 | — | — |
+| BatchNorm + mean-and-max | 0.8244 | 0.1080 | +0.0218 | 0.24522 |
+| GroupNorm + mean-and-max | 0.8181 | 0.1401 | +0.0281 | 0.16177 |
+| BatchNorm + mean | 0.7942 | 0.0972 | +0.0521 | **0.01632** |
+
+**The recommendation is protocol-dependent, and on one protocol it is to change nothing.** On `lot` the best combination uses mean-and-max and is established over both `mean` arms, while the normalisation choice becomes unresolved once the max is there. On `size` the best is **GroupNorm + mean** — the unmodified baseline — and nothing is established over it except that BatchNorm with plain mean pooling is worse. The architectural change this paper spent most of its length establishing has a *negative* point estimate there.
+
+A reader deploying this would want the honest version: if the wafers you will see share their geometry with your training set, add the max; if they will not, we cannot show that anything here beats the plain baseline. That is a narrower recommendation than either of our two positive results reads like on its own, and it is the one the measurements support.
+
 ## 6. Seed spread is a result, not an appendix
 
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range |

@@ -58,7 +58,7 @@ def main():
                      "BN under meanmax is a statement about one comparison's "
                      "power, and 'not established' is not 'absent'.",
            "protocols": {}}
-    for proto in ("lot", "size"):
+    for proto in ("lot", "size", "iid", "lot_time"):
         entry = {}
         for met in ("macro_f1", "class:Scratch"):
             gaps = {}

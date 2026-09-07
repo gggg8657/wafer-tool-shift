@@ -1576,6 +1576,55 @@ def main():
           f"p = {_lm['p_change']:.5f} on both protocols independently.")
         W("")
 
+    ct = js("combination_table.json")
+    if ct and ct.get("protocols"):
+        W("## 5.6 So which combination should anyone use?")
+        W("")
+        W("Neither headline result answers that. `meanmax` over `mean` was "
+          "measured at a fixed normalisation; GroupNorm over BatchNorm at a "
+          "fixed pooling; and section 5.5 shows they do not compose. All four "
+          "combinations are at eight seeds on `lot` and `size`, so each "
+          "protocol's best can be tested against the other three directly.")
+        W("")
+        for proto in ("lot", "size"):
+            e = ct["protocols"].get(proto, {}).get("macro_f1")
+            if not e:
+                continue
+            W(f"**`{proto}`, macro-F1.** Best: **{e['best']}** — beats "
+              f"{e['n_rivals_beaten_at_05']} of {e['n_rivals']} rivals at "
+              "p < 0.05.")
+            W("")
+            W(table([[r["combination"], f"{r['mean']:.4f}",
+                      f"{r['seed_range']:.4f}",
+                      "—" if r["is_best"] else f"{r['difference']:+.4f}",
+                      "—" if r["p_vs_best"] is None
+                      else (f"**{r['p_vs_best']:.5f}**"
+                            if r["p_vs_best"] < 0.05
+                            else f"{r['p_vs_best']:.5f}")]
+                     for r in e["rows"]],
+                    ["combination", "macro-F1", "seed range", "vs best",
+                     "exact p"]))
+            W("")
+        _l = ct["protocols"]["lot"]["macro_f1"]
+        _s = ct["protocols"]["size"]["macro_f1"]
+        W("**The recommendation is protocol-dependent, and on one protocol it "
+          "is to change nothing.** On `lot` the best combination uses "
+          "mean-and-max and is established over both `mean` arms, while the "
+          "normalisation choice becomes unresolved once the max is there. On "
+          f"`size` the best is **{_s['best']}** — the unmodified baseline — "
+          "and nothing is established over it except that BatchNorm with plain "
+          "mean pooling is worse. The architectural change this paper spent "
+          "most of its length establishing has a *negative* point estimate "
+          "there.")
+        W("")
+        W("A reader deploying this would want the honest version: if the wafers "
+          "you will see share their geometry with your training set, add the "
+          "max; if they will not, we cannot show that anything here beats the "
+          "plain baseline. That is a narrower recommendation than either of "
+          "our two positive results reads like on its own, and it is the one "
+          "the measurements support.")
+        W("")
+
     W("## 6. Seed spread is a result, not an appendix")
     W("")
     multi = {k: v for k, v in C.items() if len(v) > 1}

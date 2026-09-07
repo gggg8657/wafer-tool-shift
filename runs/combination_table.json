@@ -1,0 +1,166 @@
+{
+  "what": "which normalisation-by-pooling combination is best, per protocol, with every rival tested against it",
+  "why": "the two headline results do not compose, so neither answers the question a reader actually has",
+  "protocols": {
+    "lot": {
+      "macro_f1": {
+        "best": "GroupNorm + mean-and-max",
+        "n_rivals_beaten_at_05": 2,
+        "n_rivals": 3,
+        "rows": [
+          {
+            "combination": "GroupNorm + mean-and-max",
+            "mean": 0.8887785430498818,
+            "seed_range": 0.02312042527124203,
+            "is_best": true,
+            "difference": 0.0,
+            "p_vs_best": null
+          },
+          {
+            "combination": "BatchNorm + mean-and-max",
+            "mean": 0.8832369694851443,
+            "seed_range": 0.02289975443064307,
+            "is_best": false,
+            "difference": 0.005541573564737501,
+            "p_vs_best": 0.21507381507381507
+          },
+          {
+            "combination": "GroupNorm + mean",
+            "mean": 0.8737606367805819,
+            "seed_range": 0.03268471073277468,
+            "is_best": false,
+            "difference": 0.015017906269299885,
+            "p_vs_best": 0.011965811965811967
+          },
+          {
+            "combination": "BatchNorm + mean",
+            "mean": 0.8575717106159781,
+            "seed_range": 0.025436482241682712,
+            "is_best": false,
+            "difference": 0.031206832433903653,
+            "p_vs_best": 0.0001554001554001554
+          }
+        ]
+      },
+      "class:Scratch": {
+        "best": "GroupNorm + mean-and-max",
+        "n_rivals_beaten_at_05": 2,
+        "n_rivals": 3,
+        "rows": [
+          {
+            "combination": "GroupNorm + mean-and-max",
+            "mean": 0.776426057440458,
+            "seed_range": 0.05126637043205573,
+            "is_best": true,
+            "difference": 0.0,
+            "p_vs_best": null
+          },
+          {
+            "combination": "BatchNorm + mean-and-max",
+            "mean": 0.7720033797372892,
+            "seed_range": 0.05149190360457967,
+            "is_best": false,
+            "difference": 0.0044226777031688425,
+            "p_vs_best": 0.6318570318570319
+          },
+          {
+            "combination": "BatchNorm + mean",
+            "mean": 0.7398234650039976,
+            "seed_range": 0.063003663003663,
+            "is_best": false,
+            "difference": 0.03660259243646036,
+            "p_vs_best": 0.005439005439005439
+          },
+          {
+            "combination": "GroupNorm + mean",
+            "mean": 0.7291649192781612,
+            "seed_range": 0.03793600916977924,
+            "is_best": false,
+            "difference": 0.04726113816229682,
+            "p_vs_best": 0.0004662004662004662
+          }
+        ]
+      }
+    },
+    "size": {
+      "macro_f1": {
+        "best": "GroupNorm + mean",
+        "n_rivals_beaten_at_05": 1,
+        "n_rivals": 3,
+        "rows": [
+          {
+            "combination": "GroupNorm + mean",
+            "mean": 0.8462305379734328,
+            "seed_range": 0.07824379563777806,
+            "is_best": true,
+            "difference": 0.0,
+            "p_vs_best": null
+          },
+          {
+            "combination": "BatchNorm + mean-and-max",
+            "mean": 0.8243948494835978,
+            "seed_range": 0.10797337607915025,
+            "is_best": false,
+            "difference": 0.02183568848983508,
+            "p_vs_best": 0.24522144522144523
+          },
+          {
+            "combination": "GroupNorm + mean-and-max",
+            "mean": 0.8181238394355577,
+            "seed_range": 0.14009866626598944,
+            "is_best": false,
+            "difference": 0.028106698537875174,
+            "p_vs_best": 0.16177156177156177
+          },
+          {
+            "combination": "BatchNorm + mean",
+            "mean": 0.7941659204264051,
+            "seed_range": 0.09718209675481815,
+            "is_best": false,
+            "difference": 0.052064617547027736,
+            "p_vs_best": 0.016317016317016316
+          }
+        ]
+      },
+      "class:Scratch": {
+        "best": "BatchNorm + mean-and-max",
+        "n_rivals_beaten_at_05": 1,
+        "n_rivals": 3,
+        "rows": [
+          {
+            "combination": "BatchNorm + mean-and-max",
+            "mean": 0.7472200720987604,
+            "seed_range": 0.11146576949717979,
+            "is_best": true,
+            "difference": 0.0,
+            "p_vs_best": null
+          },
+          {
+            "combination": "GroupNorm + mean",
+            "mean": 0.7087014998787161,
+            "seed_range": 0.1527533999710724,
+            "is_best": false,
+            "difference": 0.03851857222004429,
+            "p_vs_best": 0.07940947940947941
+          },
+          {
+            "combination": "BatchNorm + mean",
+            "mean": 0.7046769214562757,
+            "seed_range": 0.1704962048845975,
+            "is_best": false,
+            "difference": 0.042543150642484706,
+            "p_vs_best": 0.08096348096348097
+          },
+          {
+            "combination": "GroupNorm + mean-and-max",
+            "mean": 0.6660250275822648,
+            "seed_range": 0.2624299719887955,
+            "is_best": false,
+            "difference": 0.08119504451649562,
+            "p_vs_best": 0.009324009324009324
+          }
+        ]
+      }
+    }
+  }
+}
