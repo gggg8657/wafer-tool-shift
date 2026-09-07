@@ -335,7 +335,16 @@ That is the pattern the mechanism predicts and not an obvious consequence of any
 
 What this does **not** overturn is the measurement in the table above. The resize does make a defect's apparent width a function of its geometry; that was measured on the corpus with no model and survives its own control. What fails is the inference from a property of the input to a fix in the architecture — and the honest reading is that we identified a real confound and have not shown it is *removable*, which is a weaker and less satisfying claim than the one this section carried for a day.
 
-The claim, at the strength the data supports: **on a lot-disjoint split, replacing global average pooling with mean-and-max moves the hardest class by 0.057 while its capacity control moves it by −0.001. On the other three protocols it is not established, and on geometry holdout its mean effect is negative.** An architectural change that reads as a general improvement turns out to be protocol-specific — which is the thing this benchmark was built to detect, applied for once to our own result.
+**The same comparison on a second encoder.** Every pooling cell above is `cnn_gn`. `cnn_bn` differs in the normalisation layer alone — same three blocks, same width, same head, the same parameter count under `meanmax` — so repeating it there isolates the interaction between pooling and normalisation and nothing else. On `Scratch` F1, eight seeds per arm:
+
+| comparison on `cnn_bn` | difference | exact permutation p |
+|---|---|---|
+| `meanmax` vs `mean` (treatment) | +0.0322 | **0.01010** |
+| `meanmean` vs `mean` (capacity control) | +0.0130 | 0.25781 |
+
+**It replicates.** The gain is not a property of GroupNorm, and the capacity control stays null on the second encoder as it did on the first — which is what the mechanism requires, since what global average pooling discards about a thin connected line is a fact about the class and the operator rather than about the normalisation layer.
+
+The claim, at the strength the data supports: **on a lot-disjoint split, replacing global average pooling with mean-and-max moves the hardest class by 0.057 while its capacity control moves it by −0.001, and the same on `cnn_bn` at +0.0322 against +0.0130. On the other three protocols it is not established, and on geometry holdout its mean effect is negative.** An architectural change that reads as a general improvement turns out to be protocol-specific — which is the thing this benchmark was built to detect, applied for once to our own result.
 
 ## 5. Withdrawn: "active learning loses to random lot selection"
 
@@ -379,9 +388,9 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (BatchNorm) | `erm` | — | 3 | 0.8522 | ±0.0069 |
 | `lot` | CNN (BatchNorm) | `erm` | dtime | 8 | 0.8585 | ±0.0127 |
 | `lot` | CNN (BatchNorm) | `erm` | gnbn | 8 | 0.8596 | ±0.0143 |
-| `lot` | CNN (BatchNorm) | `erm` | poolmean | 4 | 0.8518 | ±0.0093 |
-| `lot` | CNN (BatchNorm) | `erm` | poolmeanmax | 4 | 0.8784 | ±0.0059 |
-| `lot` | CNN (BatchNorm) | `erm` | poolmeanmean | 4 | 0.8589 | ±0.0072 |
+| `lot` | CNN (BatchNorm) | `erm` | poolmean | 8 | 0.8576 | ±0.0127 |
+| `lot` | CNN (BatchNorm) | `erm` | poolmeanmax | 8 | 0.8832 | ±0.0114 |
+| `lot` | CNN (BatchNorm) | `erm` | poolmeanmean | 8 | 0.8599 | ±0.0093 |
 | `lot` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.8543 | ±0.0045 |
 | `lot` | CNN (BatchNorm) | `group_dro` | — | 3 | 0.8535 | ±0.0063 |
 | `lot` | CNN (BatchNorm) | `group_dro` | dtime | 8 | 0.8384 | ±0.0200 |
@@ -587,7 +596,7 @@ The capacity control is the counter-example that shows the distinction is not rh
 3. **One architecture family.** Every CNN cell is the same three-block encoder at width 32 and 12 epochs. Whether the protocol ordering survives at a modern backbone and a longer schedule is [not measured].
 4. **Most cells are three seeds, and three seeds are not enough.** The screen built on them has produced false positives *and* false negatives here: it called an `iid` pooling effect of +0.0113 absent where eight seeds give p = 0.0003, and called two domain-generalization objectives indistinguishable from ERM where eight seeds give p = 0.0017 and p = 0.0051. Every comparison this paper rests on has been taken to eight seeds per arm and read with an exact permutation test; the three-seed tables are a screen for where to spend that budget and are labelled as such. **A three-seed null in these tables is not evidence of absence.**
 
-5. **No cell records the code that produced it.** The runner changed 13 times over the weekend — new flags, an `invariance_domain` refactor, a geometry decomposition, a batch dict that gained a field. Two of those were asserted bit-identical on the default path and the rest were additive, which is the intent; but nothing in any run JSON says which version wrote it, so the assertion cannot be checked per cell. Dating the files against the runner's commit history, the 625 stored cells span **12 distinct states** of the runner, and **0** of them record their own. That is an upper bound on exposure rather than a claim any cell is wrong — a commit may change nothing a given cell uses — but it is the same class of provenance gap as the session and device offsets measured in section 1, and those turned out to be about twice the within-session seed spread. Recording the commit in each run costs nothing and is not yet done.
+5. **No cell records the code that produced it.** The runner changed 13 times over the weekend — new flags, an `invariance_domain` refactor, a geometry decomposition, a batch dict that gained a field. Two of those were asserted bit-identical on the default path and the rest were additive, which is the intent; but nothing in any run JSON says which version wrote it, so the assertion cannot be checked per cell. Dating the files against the runner's commit history, the 644 stored cells span **12 distinct states** of the runner, and **0** of them record their own. That is an upper bound on exposure rather than a claim any cell is wrong — a commit may change nothing a given cell uses — but it is the same class of provenance gap as the session and device offsets measured in section 1, and those turned out to be about twice the within-session seed spread. Recording the commit in each run costs nothing and is not yet done.
 
 ## 9. What is deliberately not claimed
 

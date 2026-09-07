@@ -616,6 +616,16 @@ def main():
         _sz = pall.get(("size", "Scratch"))
         _szp = (f"p = {_sz['permutation_test']['p_two_sided']:.5f}"
                 if _sz else "[not measured]")
+        _b2s = js("pooling_bn_perm_class_Scratch.json")
+        _b2cs = js("pooling_bn_control_perm_class_Scratch.json")
+        _enc2 = ("still one encoder." if not (_b2s and _b2cs) else
+                 "no longer one encoder: repeated on `cnn_bn`, which differs "
+                 "in the normalisation layer alone, `meanmax` beats `mean` on "
+                 f"`Scratch` by {_b2s['difference']:+.4f} "
+                 f"(p = {_b2s['permutation_test']['p_two_sided']:.5f}) while "
+                 "the capacity control stays null "
+                 f"(p = {_b2cs['permutation_test']['p_two_sided']:.5f}). The "
+                 "gain is not a property of GroupNorm.")
         W("*Caveat, resolved. This began as a single-protocol win on `lot` with "
           "the note that the other three were still running. They have since "
           "finished and are in the table above, and the caveat was half right: "
@@ -623,7 +633,7 @@ def main():
           f"`size` ({_szp}, and the point estimate is negative). The claim is "
           "therefore conditional on the geometry being represented in training, "
           "which is stated as the finding rather than as a limitation. It is "
-          "still one encoder.*")
+          f"{_enc2}*")
         W("")
 
     # ---------------------------------------------------------------- withdrawn

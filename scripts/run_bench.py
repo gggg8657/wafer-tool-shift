@@ -365,6 +365,10 @@ class Runner:
             "domain_def": a.domain_def, "n_invariance_domains": self.n_dom,
             "focal_gamma": a.focal_gamma, "class_weight": a.class_weight,
             "pool": a.pool,
+            # which code and when. 625 cells were written without this
+            # across twelve states of this file, and every table here
+            # compares cells to each other.
+            "git_sha": _git_sha(), "written_at": _now_iso(),
             "scale_aware": a.scale_aware, "dilate_fixed": a.dilate_fixed,
             "hide_raw_fail": a.hide_raw_fail,
             "ot_lambda": a.ot_lambda,
@@ -553,6 +557,26 @@ class Runner:
         return self.probs_for(model, self.loaders(self.va, False,
                                                    batch=max(self.a.batch, 512)))
 
+
+
+def _git_sha():
+    """Short commit of the working tree, with a marker if it is dirty."""
+    import subprocess
+    try:
+        sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"],
+                             capture_output=True, text=True,
+                             timeout=5).stdout.strip()
+        dirty = subprocess.run(["git", "status", "--porcelain"],
+                               capture_output=True, text=True,
+                               timeout=5).stdout.strip()
+        return (sha + ("+dirty" if dirty else "")) or None
+    except Exception:
+        return None
+
+
+def _now_iso():
+    import datetime
+    return datetime.datetime.now(datetime.timezone.utc).isoformat()
 
 def main():
     p = argparse.ArgumentParser()

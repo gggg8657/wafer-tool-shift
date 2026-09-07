@@ -128,7 +128,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | die-graph GNN (wafer-only subgraph) | erm | - | 0.7557 | - | 0.4898 | - | 0.1269 | 0.8889 |
 | CNN + RPCA lot-signature channel | erm | - | 0.8813 | - | 0.5000 | - | 0.7466 | 0.9315 |
 
-**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the 291 `lot` cells in `runs/` that carry the column, 140 report the identical 0.4898 and 117 more report exactly 0.5000 -- 88% of them on two values, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them. This applies to every protocol table in this section; it is stated once.
+**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the 301 `lot` cells in `runs/` that carry the column, 147 report the identical 0.4898 and 120 more report exactly 0.5000 -- 89% of them on two values, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them. This applies to every protocol table in this section; it is stated once.
 
 ## Borrowed objectives vs ERM -- protocol `lot_time`
 
@@ -510,9 +510,9 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot | CNN on resized 64x64 (BatchNorm) | erm | - | 3 | 0.8522 | +/-0.0069 | 0.8587, 0.8448, 0.8530 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm | dtime | 8 | 0.8585 | +/-0.0127 | 0.8583, 0.8438, 0.8521, 0.8629, 0.8664, 0.8505, 0.8644, 0.8692 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm | gnbn | 8 | 0.8596 | +/-0.0143 | 0.8569, 0.8532, 0.8563, 0.8599, 0.8689, 0.8455, 0.8621, 0.8740 |
-| lot | CNN on resized 64x64 (BatchNorm) | erm | poolmean | 5 | 0.8548 | +/-0.0116 | 0.8587, 0.8434, 0.8433, 0.8618, 0.8665 |
-| lot | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmax | 5 | 0.8820 | +/-0.0113 | 0.8798, 0.8746, 0.8737, 0.8856, 0.8963 |
-| lot | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmean | 4 | 0.8589 | +/-0.0072 | 0.8615, 0.8512, 0.8573, 0.8656 |
+| lot | CNN on resized 64x64 (BatchNorm) | erm | poolmean | 8 | 0.8576 | +/-0.0127 | 0.8587, 0.8434, 0.8433, 0.8618, 0.8665, 0.8498, 0.8687, 0.8683 |
+| lot | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmax | 8 | 0.8832 | +/-0.0114 | 0.8798, 0.8746, 0.8737, 0.8856, 0.8963, 0.8739, 0.8854, 0.8966 |
+| lot | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmean | 8 | 0.8599 | +/-0.0093 | 0.8615, 0.8512, 0.8573, 0.8656, 0.8610, 0.8489, 0.8663, 0.8675 |
 | lot | CNN on resized 64x64 (BatchNorm) | erm | sess2 | 3 | 0.8543 | +/-0.0045 | 0.8600, 0.8521, 0.8510 |
 | lot | CNN on resized 64x64 (BatchNorm) | group_dro | - | 3 | 0.8535 | +/-0.0063 | 0.8615, 0.8501, 0.8488 |
 | lot | CNN on resized 64x64 (BatchNorm) | group_dro | dtime | 8 | 0.8384 | +/-0.0200 | 0.8402, 0.8125, 0.8244, 0.8461, 0.8524, 0.8417, 0.8471, 0.8427 |
