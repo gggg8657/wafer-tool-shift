@@ -46,6 +46,8 @@ CHECKS = [
      [PY, "scripts/reading_budget.py", "--strict"], True),
     ("does the README still describe this benchmark?",
      [PY, "scripts/readme_sync.py", "--strict"], True),
+    ("is the critique log's index current?",
+     [PY, "scripts/critique_index.py", "--check"], True),
 ]
 
 

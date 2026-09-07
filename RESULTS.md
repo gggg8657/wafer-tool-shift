@@ -558,9 +558,9 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot_time | die-graph GNN (wafer-only subgraph) | erm | sess2 | 3 | 0.5566 | +/-0.0149 | 0.5501, 0.5450, 0.5747 |
 | lot_time | CNN + RPCA lot-signature channel | erm | - | 3 | 0.7088 | +/-0.0070 | 0.7020, 0.7159, 0.7084 |
 | lot_time | CNN + RPCA lot-signature channel | erm | 4th channel = raw failed-die mask (RPCA control) | 3 | 0.7004 | +/-0.0096 | 0.6905, 0.7008, 0.7098 |
-| lot_time | CNN + RPCA lot-signature channel | erm | rpca2_failmask | 4 | 0.7077 | +/-0.0179 | 0.6865, 0.7033, 0.7185, 0.7223 |
-| lot_time | CNN + RPCA lot-signature channel | erm | rpca2_residual | 4 | 0.7093 | +/-0.0090 | 0.7138, 0.7011, 0.7031, 0.7191 |
-| lot_time | CNN + RPCA lot-signature channel | erm | rpca2_zeros | 4 | 0.7032 | +/-0.0085 | 0.6958, 0.7012, 0.7030, 0.7128 |
+| lot_time | CNN + RPCA lot-signature channel | erm | rpca2_failmask | 8 | 0.7065 | +/-0.0179 | 0.6865, 0.7033, 0.7185, 0.7223, 0.7065, 0.6970, 0.7192, 0.6989 |
+| lot_time | CNN + RPCA lot-signature channel | erm | rpca2_residual | 8 | 0.7074 | +/-0.0126 | 0.7138, 0.7011, 0.7031, 0.7191, 0.7148, 0.6940, 0.7092, 0.7041 |
+| lot_time | CNN + RPCA lot-signature channel | erm | rpca2_zeros | 8 | 0.7045 | +/-0.0110 | 0.6958, 0.7012, 0.7030, 0.7128, 0.7011, 0.7043, 0.7179, 0.7001 |
 | lot_time | CNN + RPCA lot-signature channel | erm | sess2 | 3 | 0.7149 | +/-0.0030 | 0.7175, 0.7154, 0.7116 |
 | lot_time | CNN + RPCA lot-signature channel | erm | 4th channel = zeros (RPCA control) | 3 | 0.7018 | +/-0.0030 | 0.6991, 0.7011, 0.7051 |
 | lot_time | spectral operator, native resolution | erm | sess2 | 3 | 0.6530 | +/-0.0242 | 0.6759, 0.6276, 0.6556 |

@@ -823,6 +823,18 @@ def main():
                       "the range-overlap error again, made by us, one section "
                       "after diagnosing it.")
                     W("")
+                _rl = js("rpca_lot_time_macro_f1.json")
+                if _rl:
+                    W("*The RPCA channel was also re-tested on `lot_time`, "
+                      "the one protocol where a real tool signature should "
+                      "help, since lots there are ordered in production "
+                      "time. At eight seeds the residual leads a channel of "
+                      f"zeros by {_rl['difference']:+.5f} "
+                      f"(p = {_rl['permutation_test']['p_two_sided']:.4f}). "
+                      "The earlier three-seed observation that it led at "
+                      "every seed was three of three, which a coin gives a "
+                      "quarter of the time.*")
+                    W("")
                 W("**Rules out:** this family of invariance objectives on this "
                   "corpus, on both protocols — negatively established on "
                   "`lot` in aggregate and on `size` for two objectives "

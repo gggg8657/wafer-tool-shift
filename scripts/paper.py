@@ -881,11 +881,40 @@ def main():
       "other by less than the seed spread of any one of them. **A channel of "
       "zeros buys what the decomposition buys.** Whatever the fourth channel "
       "is worth there, it is worth as extra first-layer capacity, not as "
-      "information about the tool. On `lot_time` the residual is ahead of both "
-      "controls at every seed, which is the one place a genuine tool signature "
-      "should help; the separation is below the controls' half-range at n=3, "
-      "so we record it as a hypothesis and not a result.")
+      "information about the tool.")
     W("")
+    _rlt = js("rpca_lot_time_macro_f1.json")
+    _fll = floor_for(F, "lot_time")
+    if _rlt:
+        _pt = _rlt["permutation_test"]
+        _d = abs(_rlt["difference"])
+        W("**The one place a genuine tool signature should help is `lot_time`, "
+          "and it does not help there either.** An earlier version of this "
+          "section reported the residual ahead of both controls at every seed "
+          "and recorded that as a hypothesis rather than a result, because "
+          "three seeds cannot support one. Re-run as fresh arms at eight seeds "
+          "in a single session, the residual leads a channel of zeros by "
+          f"{_rlt['difference']:+.5f} "
+          f"(p = {_pt['p_two_sided']:.4f}, floor "
+          f"{_pt['smallest_attainable_p']:.5f}) — "
+          f"{_fll / _d:.0f} times below this protocol's own run-to-run floor.")
+        W("")
+        _ra = C.get(("lot_time", "rpca_cnn", "erm", "rpca2_residual"), {})
+        _rz = C.get(("lot_time", "rpca_cnn", "erm", "rpca2_zeros"), {})
+        _sh = sorted(set(_ra) & set(_rz))
+        _lead = sum(1 for sd in _sh
+                    if _ra[sd]["test"]["macro_f1"] > _rz[sd]["test"]["macro_f1"])
+        W("**And the pattern that made it worth testing was a coin.** "
+          "\"Ahead at every seed\" was three of three, which happens a "
+          "quarter of the time by chance. At eight seeds the residual leads on "
+          f"{_lead} of {len(_sh)}, which is what a coin does. The structural "
+          "argument now holds "
+          "on both protocols where it was tested: the encoder is handed an "
+          "intact copy of whatever the decomposition removed, so the fourth "
+          "channel cannot carry information the model did not already have, "
+          "and that is a property of the input pipeline rather than of any "
+          "protocol.")
+        W("")
     W("### 4.2 Lot-adversarial self-supervised pretraining is worse than "
       "random initialization")
     W("")

@@ -235,7 +235,11 @@ This was documented at the time and the documentation was measured on the wrong 
 
 The test can now resolve a difference 35 times smaller than `lot`'s run-to-run floor of 0.0054, and it finds none. The raw failed-die mask and a channel of **zeros** differ by 0.000046 — 118 times below that floor. This is no longer "we could not tell them apart"; it is "they are the same, measured with an instrument that would have said otherwise".
 
-So on `lot` the three fourth-channel variants are separated from each other by less than the seed spread of any one of them. **A channel of zeros buys what the decomposition buys.** Whatever the fourth channel is worth there, it is worth as extra first-layer capacity, not as information about the tool. On `lot_time` the residual is ahead of both controls at every seed, which is the one place a genuine tool signature should help; the separation is below the controls' half-range at n=3, so we record it as a hypothesis and not a result.
+So on `lot` the three fourth-channel variants are separated from each other by less than the seed spread of any one of them. **A channel of zeros buys what the decomposition buys.** Whatever the fourth channel is worth there, it is worth as extra first-layer capacity, not as information about the tool.
+
+**The one place a genuine tool signature should help is `lot_time`, and it does not help there either.** An earlier version of this section reported the residual ahead of both controls at every seed and recorded that as a hypothesis rather than a result, because three seeds cannot support one. Re-run as fresh arms at eight seeds in a single session, the residual leads a channel of zeros by +0.00288 (p = 0.4656, floor 0.00016) — 7 times below this protocol's own run-to-run floor.
+
+**And the pattern that made it worth testing was a coin.** "Ahead at every seed" was three of three, which happens a quarter of the time by chance. At eight seeds the residual leads on 5 of 8, which is what a coin does. The structural argument now holds on both protocols where it was tested: the encoder is handed an intact copy of whatever the decomposition removed, so the fourth channel cannot carry information the model did not already have, and that is a property of the input pipeline rather than of any protocol.
 
 ### 4.2 Lot-adversarial self-supervised pretraining is worse than random initialization
 
@@ -429,9 +433,9 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot_time` | die-graph GNN | `erm` | sess2 | 3 | 0.5566 | ±0.0149 |
 | `lot_time` | CNN + 4th channel | `erm` | — | 3 | 0.7088 | ±0.0070 |
 | `lot_time` | CNN + 4th channel | `erm` | failmask | 3 | 0.7004 | ±0.0096 |
-| `lot_time` | CNN + 4th channel | `erm` | rpca2_failmask | 4 | 0.7077 | ±0.0179 |
-| `lot_time` | CNN + 4th channel | `erm` | rpca2_residual | 4 | 0.7093 | ±0.0090 |
-| `lot_time` | CNN + 4th channel | `erm` | rpca2_zeros | 4 | 0.7032 | ±0.0085 |
+| `lot_time` | CNN + 4th channel | `erm` | rpca2_failmask | 8 | 0.7065 | ±0.0179 |
+| `lot_time` | CNN + 4th channel | `erm` | rpca2_residual | 8 | 0.7074 | ±0.0126 |
+| `lot_time` | CNN + 4th channel | `erm` | rpca2_zeros | 8 | 0.7045 | ±0.0110 |
 | `lot_time` | CNN + 4th channel | `erm` | sess2 | 3 | 0.7149 | ±0.0030 |
 | `lot_time` | CNN + 4th channel | `erm` | zerochan | 3 | 0.7018 | ±0.0030 |
 | `lot_time` | spectral operator | `erm` | sess2 | 3 | 0.6530 | ±0.0242 |
