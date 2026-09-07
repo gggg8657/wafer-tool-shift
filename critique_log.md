@@ -4301,3 +4301,58 @@ matches what was found. Re-reading the front matter against the run outputs
 found three such gaps in three sittings, which is a high enough hit rate that it
 should be a standing item rather than something I do when a turn is otherwise
 free.
+
+### 87. H70 confirmed, every null is powered, and success deleted the section that said so
+
+`focal_complete.sh` finished. All five gammas at eight seeds against the
+bit-exact γ = 0 control:
+
+| γ | vs γ = 0 | p | floor |
+|---|---|---|---|
+| 0.5 | +0.00298 | 0.4880 | 0.00016 |
+| 1.0 | +0.00248 | 0.5722 | 0.00016 |
+| 2.0 | -0.00032 | 0.9442 | 0.00016 |
+| 5.0 | -0.00288 | 0.5573 | 0.00016 |
+
+**H70 confirmed: none separates.** And with it, **7 of 7 comparisons across all
+three null families can now return p < 0.05**, against two of seven when the
+power audit was first written. Every null this project rests on is a null a test
+could have rejected — which is the difference between reporting that we found
+nothing and reporting that there is nothing to find. "Focal loss contributes
+nothing" is now a measurement rather than a shrug, which matters because the
+target that started this work named focal loss as though it were the mechanism.
+
+**Then the failure of the turn, and it is a good one.** Section 7.9 — the
+section documenting exactly this — was guarded by
+`if npa and npa.get("n_underpowered")`. The moment the last underpowered null
+was fixed, `n_underpowered` became 0 and **the entire section silently
+disappeared from the paper**, taking with it the evidence that the problem had
+been solved.
+
+A section conditioned on the presence of a defect deletes the record of the
+defect being fixed. That is a design error and not a typo, and it is the kind
+that only fires on success — which means it would never have appeared in any
+amount of testing against a broken repository.
+
+**No guard caught it, and I can say precisely why.** `section_census.py` asks
+whether every input a generator reads is present: `null_power_audit.json` was
+present. `coverage_check.py` asks whether every run family is referenced by some
+generator: it is, in the source. `prose_status_lint.py` asks about duplicated
+paragraphs and stale status words. All six checks passed on a paper that had
+just lost a section. Every guard here reasons about *inputs and source*; none
+compares the rendered document against what it contained last time.
+
+I noticed only because `_allp`, a variable I had just added inside that section,
+did not raise a `NameError` — code that should have crashed ran cleanly, which
+is only possible if it never executed. Being saved by an accident of my own
+half-finished patch is not a process.
+
+The obvious guard is a document-shape diff: warn when a regeneration removes a
+heading that the previous version had. That is a real gap and I am recording it
+as one rather than building it in the last minutes of the weekend, because a
+guard written in a hurry is how `number_provenance` ended up vacuous and how the
+first `section_census` passed its own broken repo. It belongs on the list for
+whoever picks this up, with the failure that motivates it written down.
+
+The guard is now `if npa and npa.get("families")` — conditioned on the data
+existing rather than on the problem existing.

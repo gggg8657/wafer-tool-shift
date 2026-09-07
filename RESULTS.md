@@ -128,7 +128,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | die-graph GNN (wafer-only subgraph) | erm | - | 0.7557 | - | 0.4898 | - | 0.1269 | 0.8889 |
 | CNN + RPCA lot-signature channel | erm | - | 0.8813 | - | 0.5000 | - | 0.7466 | 0.9315 |
 
-**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the 275 `lot` cells in `runs/` that carry the column, 129 report the identical 0.4898 and 112 more report exactly 0.5000 -- 88% of them on two values, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them. This applies to every protocol table in this section; it is stated once.
+**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the 277 `lot` cells in `runs/` that carry the column, 129 report the identical 0.4898 and 114 more report exactly 0.5000 -- 88% of them on two values, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them. This applies to every protocol table in this section; it is stated once.
 
 ## Borrowed objectives vs ERM -- protocol `lot_time`
 
@@ -526,9 +526,9 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot | CNN on resized 64x64 (GroupNorm) | erm | sslinit_lr5e-4 | 2 | 0.7427 | +/-0.0013 | 0.7414, 0.7440 |
 | lot | CNN on resized 64x64 (GroupNorm) | focal | focal0.0 | 8 | 0.8753 | +/-0.0137 | 0.8781, 0.8680, 0.8651, 0.8769, 0.8868, 0.8609, 0.8784, 0.8882 |
 | lot | CNN on resized 64x64 (GroupNorm) | focal | focal0.5 | 8 | 0.8783 | +/-0.0106 | 0.8760, 0.8758, 0.8704, 0.8801, 0.8916, 0.8742, 0.8747, 0.8835 |
-| lot | CNN on resized 64x64 (GroupNorm) | focal | focal1.0 | 7 | 0.8764 | +/-0.0079 | 0.8748, 0.8710, 0.8706, 0.8761, 0.8863, 0.8707, 0.8852 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal | focal1.0 | 8 | 0.8778 | +/-0.0085 | 0.8748, 0.8710, 0.8706, 0.8761, 0.8863, 0.8707, 0.8852, 0.8875 |
 | lot | CNN on resized 64x64 (GroupNorm) | focal | focal2.0 | 8 | 0.8750 | +/-0.0115 | 0.8654, 0.8749, 0.8628, 0.8755, 0.8858, 0.8718, 0.8812, 0.8824 |
-| lot | CNN on resized 64x64 (GroupNorm) | focal | focal5.0 | 7 | 0.8721 | +/-0.0150 | 0.8694, 0.8795, 0.8554, 0.8733, 0.8854, 0.8638, 0.8777 |
+| lot | CNN on resized 64x64 (GroupNorm) | focal | focal5.0 | 8 | 0.8724 | +/-0.0150 | 0.8694, 0.8795, 0.8554, 0.8733, 0.8854, 0.8638, 0.8777, 0.8747 |
 | lot | size-invariant descriptors + MLP | erm | sess2 | 3 | 0.8338 | +/-0.0067 | 0.8417, 0.8283, 0.8314 |
 | lot | die-graph GNN (wafer-only subgraph) | erm | sess2 | 3 | 0.7524 | +/-0.0036 | 0.7557, 0.7530, 0.7484 |
 | lot | CNN + RPCA lot-signature channel | erm | - | 3 | 0.8696 | +/-0.0096 | 0.8813, 0.8654, 0.8621 |

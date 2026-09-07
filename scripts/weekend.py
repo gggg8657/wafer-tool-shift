@@ -369,11 +369,10 @@ def main():
         ("`scale_aware_sweep.sh` (H66)", _done_sa),
         ("the two missing run-to-run floors (`lot_time`, `iid`)", _done_floors))
         if not done()]
-    _run += ([] if (Path(a.runs) / "null_power_audit.json").exists()
-             and all(len(list(Path(a.runs).glob(
-                 f"lot__rpca_cnn__erm__{t}__s*.json"))) >= 8
-                 for t in ("rpca2_residual", "rpca2_failmask", "rpca2_zeros"))
-             else ["`null_power_fix.sh` (H68)"])
+    _npq = js("null_power_audit.json") or {}
+    if not (_npq and _npq.get("n_comparisons_powered")
+            == _npq.get("n_comparisons_total")):
+        _run.append("`null_power_fix.sh` / `focal_complete.sh` (H68, H70)")
     W("**Still running.** " + (", ".join(_run) + " — section 5 says how to "
                                "check them and what each decides."
                                if _run else "Nothing; all stages complete."))
@@ -1327,6 +1326,16 @@ def main():
       "was red, a fix was applied, it stayed red, and the commit went in "
       "anyway because the line that was read came from the patch script "
       "rather than the guard. If you inherit this, run the one command.")
+    W("")
+    W("**A gap worth knowing about, since none of these covers it.** Every "
+      "check here reasons about inputs and generator source: whether a JSON is "
+      "present, whether it is read, whether a sentence is stale, whether a "
+      "paragraph repeats. None compares the rendered document against what it "
+      "contained last time. A section of `paper_draft.md` disappeared "
+      "silently this weekend because its guard was conditioned on a problem "
+      "existing and the problem was fixed, and all six checks passed on the "
+      "shorter paper. A regeneration that *removes* a heading should warn; it "
+      "does not yet.")
     W("")
     W("Run it before trusting anything below. One check is currently vacuous "
       "by construction and says so: `number_provenance.py`'s traceability "

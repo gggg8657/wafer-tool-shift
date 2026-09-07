@@ -1462,9 +1462,16 @@ def main():
           "split of a **synthetic dataset that is an upper bound on the real "
           "task**. The honest number is the lot-disjoint one.")
         W("")
-        W("Third, **focal loss contributes nothing at the seed budget we gave "
-          "it** — see section 7.9, which is honest about how little that "
-          "budget could have shown — which is worth stating "
+        _fq = next((e for e in (js("null_power_audit.json") or {}).get("families", [])
+                    if e["label"].startswith("focal")), None)
+        _fqs = ((f"all {_fq[chr(39)+chr(39)] if False else _fq['n_comparisons']} gammas at "
+                 f"{_fq['n_per_arm']} seeds per arm against a bit-exact "
+                 f"gamma = 0 control, worst p "
+                 f"{min(c['p_two_sided'] for c in _fq['comparisons']):.4f}, "
+                 f"floor {_fq['min_attainable_p']:.5f}")
+                if _fq and _fq.get("could_reach_05") else NM)
+        W(f"Third, **focal loss contributes nothing** — {_fqs} — "
+          "which is worth stating "
           "because it was named in the target as though it were the mechanism:")
         W("")
         cmp_rows = []
@@ -1544,7 +1551,14 @@ def main():
 
     # ---------------------------------------------------------------- threats
     npa = js("null_power_audit.json")
-    if npa and npa.get("n_underpowered"):
+    # Guarded on the JSON existing, not on a problem existing. This read
+    # `npa.get("n_underpowered")` until the last underpowered null was fixed,
+    # at which point the whole section -- the one documenting that every null
+    # is now testable -- silently disappeared from the paper. A section
+    # conditioned on the presence of a defect deletes the evidence that the
+    # defect was fixed, and no guard here noticed: the JSON was present and
+    # read, so section_census and coverage_check both passed.
+    if npa and npa.get("families"):
         W("## 7.9 How much each of our nulls could have shown")
         W("")
         _spz = js("size_power_check.json") or {}
@@ -1572,16 +1586,22 @@ def main():
                 ["null", "seeds/arm", "worst attainable p",
                  "comparisons that could reach 0.05"]))
         W("")
+        _allp = (npa["n_comparisons_powered"]
+                 == npa["n_comparisons_total"])
         W(f"**{npa['n_comparisons_powered']} of "
           f"{npa['n_comparisons_total']} individual comparisons can now return "
-          f"p < 0.05**, against two of seven when this section was written. "
+          f"p < 0.05**, against two of seven when this section was written."
+          + (" Every null this paper rests on is now a null a test could "
+             "have rejected, which is the difference between reporting "
+             "that we found nothing and reporting that there is nothing "
+             "to find." if _allp else "") + " "
           "The count is per comparison and not per family on purpose: "
           "summarising a family by its weakest member reported focal loss as "
           "unpowered at two seeds after gamma = 2.0 had been settled at eight, "
           "which is the same collapsing-to-one-number error the per-protocol "
-          "floor exists to prevent, one level down. What remains is focal at "
-          "gamma 0.5, 1.0 and 5.0; `scripts/focal_complete.sh` takes them to "
-          "eight seeds.")
+          "floor exists to prevent, one level down."
+          + ("" if _allp else " What remains is focal at gamma 0.5, 1.0 and "
+             "5.0; `scripts/focal_complete.sh` takes them to eight seeds."))
         W("")
         _mm = next((e for e in npa["families"]
                     if e["label"].startswith("meanmean")), None)

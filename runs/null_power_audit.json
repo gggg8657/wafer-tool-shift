@@ -41,21 +41,21 @@
       "comparisons": [
         {
           "treatment": "focal0.5",
-          "n_per_arm": 2,
-          "difference": 0.0028435144549159297,
-          "p_two_sided": 1.0,
-          "arrangements": 6,
-          "min_attainable_p": 0.3333333333333333,
-          "could_reach_05": false
+          "n_per_arm": 8,
+          "difference": 0.0029847866605547946,
+          "p_two_sided": 0.48795648795648794,
+          "arrangements": 12870,
+          "min_attainable_p": 0.0001554001554001554,
+          "could_reach_05": true
         },
         {
           "treatment": "focal1.0",
-          "n_per_arm": 2,
-          "difference": -9.402888292364686e-05,
-          "p_two_sided": 1.0,
-          "arrangements": 6,
-          "min_attainable_p": 0.3333333333333333,
-          "could_reach_05": false
+          "n_per_arm": 8,
+          "difference": 0.0024816953055868396,
+          "p_two_sided": 0.5721833721833722,
+          "arrangements": 12870,
+          "min_attainable_p": 0.0001554001554001554,
+          "could_reach_05": true
         },
         {
           "treatment": "focal2.0",
@@ -68,21 +68,21 @@
         },
         {
           "treatment": "focal5.0",
-          "n_per_arm": 2,
-          "difference": 0.001432672742008867,
-          "p_two_sided": 0.6666666666666666,
-          "arrangements": 6,
-          "min_attainable_p": 0.3333333333333333,
-          "could_reach_05": false
+          "n_per_arm": 8,
+          "difference": -0.0028848022420574493,
+          "p_two_sided": 0.5572649572649573,
+          "arrangements": 12870,
+          "min_attainable_p": 0.0001554001554001554,
+          "could_reach_05": true
         }
       ],
-      "n_per_arm": 2,
+      "n_per_arm": 8,
       "n_per_arm_max": 8,
-      "min_attainable_p": 0.3333333333333333,
+      "min_attainable_p": 0.0001554001554001554,
       "n_comparisons": 4,
-      "n_powered": 1,
-      "could_reach_05": false,
-      "partially_powered": true
+      "n_powered": 4,
+      "could_reach_05": true,
+      "partially_powered": false
     },
     {
       "label": "meanmean capacity control vs mean",
@@ -109,7 +109,7 @@
     }
   ],
   "n_families": 3,
-  "n_underpowered": 1,
+  "n_underpowered": 0,
   "n_comparisons_total": 7,
-  "n_comparisons_powered": 4
+  "n_comparisons_powered": 7
 }

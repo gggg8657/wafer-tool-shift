@@ -402,10 +402,10 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (GroupNorm) | `erm` | sslinit_lr2e-4 | 2 | 0.6529 | ±0.0087 |
 | `lot` | CNN (GroupNorm) | `erm` | sslinit_lr5e-4 | 2 | 0.7427 | ±0.0013 |
 | `lot` | CNN (GroupNorm) | `focal` | focal0.0 | 8 | 0.8753 | ±0.0137 |
-| `lot` | CNN (GroupNorm) | `focal` | focal0.5 | 7 | 0.8775 | ±0.0106 |
-| `lot` | CNN (GroupNorm) | `focal` | focal1.0 | 7 | 0.8764 | ±0.0079 |
+| `lot` | CNN (GroupNorm) | `focal` | focal0.5 | 8 | 0.8783 | ±0.0106 |
+| `lot` | CNN (GroupNorm) | `focal` | focal1.0 | 8 | 0.8778 | ±0.0085 |
 | `lot` | CNN (GroupNorm) | `focal` | focal2.0 | 8 | 0.8750 | ±0.0115 |
-| `lot` | CNN (GroupNorm) | `focal` | focal5.0 | 6 | 0.8711 | ±0.0150 |
+| `lot` | CNN (GroupNorm) | `focal` | focal5.0 | 8 | 0.8724 | ±0.0150 |
 | `lot` | descriptors + MLP | `erm` | sess2 | 3 | 0.8338 | ±0.0067 |
 | `lot` | die-graph GNN | `erm` | sess2 | 3 | 0.7524 | ±0.0036 |
 | `lot` | CNN + 4th channel | `erm` | — | 3 | 0.8696 | ±0.0096 |
@@ -508,7 +508,7 @@ Second, **the most favourable honest reading still misses.** Taking the optimist
 
 Every reading falls short, and the closest one is on the optimistic split of a **synthetic dataset that is an upper bound on the real task**. The honest number is the lot-disjoint one.
 
-Third, **focal loss contributes nothing at the seed budget we gave it** — see section 7.9, which is honest about how little that budget could have shown — which is worth stating because it was named in the target as though it were the mechanism:
+Third, **focal loss contributes nothing** — all 4 gammas at 8 seeds per arm against a bit-exact gamma = 0 control, worst p 0.4880, floor 0.00016 — which is worth stating because it was named in the target as though it were the mechanism:
 
 | protocol | comparison | loss | `bce` | verdict |
 |---|---|---|---|---|
@@ -561,10 +561,10 @@ Twice this project reported a null that turned out to be a property of the seed 
 | null | seeds/arm | worst attainable p | comparisons that could reach 0.05 |
 |---|---|---|---|
 | RPCA fourth channel vs a channel of zeros | 8 | 0.0002 | 2/2 |
-| focal loss vs its bit-exact gamma = 0 control | 2–8 | 0.3333 | 1/4 |
+| focal loss vs its bit-exact gamma = 0 control | 8 | 0.0002 | 4/4 |
 | meanmean capacity control vs mean | 8 | 0.0002 | 1/1 |
 
-**4 of 7 individual comparisons can now return p < 0.05**, against two of seven when this section was written. The count is per comparison and not per family on purpose: summarising a family by its weakest member reported focal loss as unpowered at two seeds after gamma = 2.0 had been settled at eight, which is the same collapsing-to-one-number error the per-protocol floor exists to prevent, one level down. What remains is focal at gamma 0.5, 1.0 and 5.0; `scripts/focal_complete.sh` takes them to eight seeds.
+**7 of 7 individual comparisons can now return p < 0.05**, against two of seven when this section was written. Every null this paper rests on is now a null a test could have rejected, which is the difference between reporting that we found nothing and reporting that there is nothing to find. The count is per comparison and not per family on purpose: summarising a family by its weakest member reported focal loss as unpowered at two seeds after gamma = 2.0 had been settled at eight, which is the same collapsing-to-one-number error the per-protocol floor exists to prevent, one level down.
 
 **H68 predicted neither null would reverse at eight seeds. It has been scored and neither did** — the RPCA arms tie a channel of zeros to within 0.00005, and focal at gamma = 2.0 is null at p = 0.9442. The reason to have expected that matters more than the prediction. The RPCA withdrawal does not rest on its ablation at all: the low-rank part is rank 0 for 94.83% of decomposed wafers, the residual is bit-identical to the raw failed-die mask for 95.27% of all of them, and `stack_channels` concatenates the fourth channel to an *intact* one-hot, so the encoder reads an untouched copy of whatever the decomposition removed. The control could not have failed to tie. The ablation corroborates a mechanism; it was never the evidence, and the sentence that presented it as such was overstating a weak test while a strong argument sat beside it.
 
