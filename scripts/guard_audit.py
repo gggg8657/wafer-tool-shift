@@ -259,7 +259,28 @@ def audit_readme_sync():
         "a README stating a count the code no longer has"
 
 
+def audit_generators_run():
+    """A generator that cannot write must be reported, a working one must not."""
+    m = load("gr", "scripts/generators_run.py")
+    with tempfile.TemporaryDirectory() as d:
+        good = Path(d, "good.py")
+        good.write_text("import sys\n"
+                        "o = sys.argv[sys.argv.index('--out') + 1]\n"
+                        "open(o, 'w').write('content')\n")
+        bad = Path(d, "bad.py")
+        bad.write_text("raise SystemExit(1)\n")
+        import subprocess
+        okr = subprocess.run([PY, str(good), "--out", str(Path(d, "x.md"))],
+                             capture_output=True)
+        badr = subprocess.run([PY, str(bad), "--out", str(Path(d, "y.md"))],
+                              capture_output=True)
+        return (okr.returncode == 0 and Path(d, "x.md").exists()
+                and badr.returncode != 0 and not Path(d, "y.md").exists()), \
+            "a generator that raises before writing its document"
+
+
 AUDITS = [
+    ("generators_run.py", audit_generators_run),
     ("verify_stage.py", audit_verify_stage),
     ("prose_status_lint.py duplicated_blocks", audit_duplicated_blocks),
     ("section_census.py", audit_section_census),

@@ -1292,6 +1292,49 @@ def main():
                       "a weaker and less satisfying claim than the one this "
                       "section carried for a day.")
                     W("")
+        _b2 = js("pooling_bn_perm_class_Scratch.json")
+        _b2c = js("pooling_bn_control_perm_class_Scratch.json")
+        if _b2 and _b2c:
+            _bp = _b2["permutation_test"]["p_two_sided"]
+            _bcp = _b2c["permutation_test"]["p_two_sided"]
+            _holds = _bp < 0.05 and _bcp >= 0.05
+            W("**The same comparison on a second encoder.** Every pooling cell "
+              "above is `cnn_gn`. `cnn_bn` differs in the normalisation layer "
+              "alone — same three blocks, same width, same head, the same "
+              "parameter count under `meanmax` — so repeating it there "
+              "isolates the interaction between pooling and normalisation and "
+              "nothing else. On `Scratch` F1, eight seeds per arm:")
+            W("")
+            W(table([["`meanmax` vs `mean` (treatment)",
+                      f"{_b2['difference']:+.4f}",
+                      (f"**{_bp:.5f}**" if _bp < 0.05 else f"{_bp:.5f}")],
+                     ["`meanmean` vs `mean` (capacity control)",
+                      f"{_b2c['difference']:+.4f}",
+                      (f"**{_bcp:.5f}**" if _bcp < 0.05 else f"{_bcp:.5f}")]],
+                    ["comparison on `cnn_bn`", "difference",
+                     "exact permutation p"]))
+            W("")
+            if _holds:
+                W("**It replicates.** The gain is not a property of GroupNorm, "
+                  "and the capacity control stays null on the second encoder "
+                  "as it did on the first — which is what the mechanism "
+                  "requires, since what global average pooling discards about "
+                  "a thin connected line is a fact about the class and the "
+                  "operator rather than about the normalisation layer.")
+            else:
+                W("**It does not replicate**, and the honest reading is that "
+                  "this is a GroupNorm result rather than an architectural "
+                  "one. There is a specific reason it could fail here and it "
+                  "was written down before the run: BatchNorm mixes statistics "
+                  "across whatever is in the batch, max pooling passes through "
+                  "extreme activations, and under BN one wafer's extreme "
+                  "shifts the normalisation of the others — so the statistic "
+                  "`meanmax` adds is exactly the kind BN is least able to keep "
+                  "separate. That is a mechanism, not a rescue: it predicts "
+                  "the failure but was not tested against an alternative, so "
+                  "it stays a hypothesis.")
+            W("")
+
         W("The claim, at the strength the data supports: **on a lot-disjoint "
           "split, replacing global average pooling with mean-and-max moves the "
           "hardest class by 0.057 while its capacity control moves it by "

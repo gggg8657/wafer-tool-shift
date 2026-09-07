@@ -28,6 +28,12 @@ PY = sys.executable
 
 # (question the check answers, argv, treat nonzero as failure)
 CHECKS = [
+    # first, because every other check reads a file on disk -- which is the
+    # last *successful* output. When paper.py crashed on an indentation error
+    # the previous paper_draft.md stayed put and all nine other checks passed
+    # on a document its generator could no longer produce.
+    ("do the generators still run and write their documents?",
+     [PY, "scripts/generators_run.py", "--strict"], True),
     ("do the unit tests pass?",
      [PY, "tests/run_tests.py"], True),
     ("do the guards themselves catch a defect they claim to catch?",
