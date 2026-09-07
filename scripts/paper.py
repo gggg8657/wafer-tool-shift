@@ -1518,15 +1518,37 @@ def main():
         W("")
         _lm = npi["protocols"]["lot"]["macro_f1"]
         _sm = npi["protocols"]["size"]["macro_f1"]
-        W("**On macro-F1 the GroupNorm advantage is established under `mean` "
-          "on both protocols and established under `meanmax` on neither.** The "
+        _np = npi["protocols"]
+        _nall = len(_np)
+        _nsurv = sum(1 for e in _np.values()
+                     if e["macro_f1"]["established_under_meanmax"])
+        _nmean = sum(1 for e in _np.values()
+                     if e["macro_f1"]["established_under_mean"])
+        W(f"**On macro-F1 the GroupNorm advantage is established under `mean` "
+          f"on all {_nmean} protocols and shrinks under `meanmax` on all "
+          f"{_nall} — surviving on {_nsurv}.** The "
           f"gap falls from {_lm['gap_under_mean']:+.4f} to "
           f"{_lm['gap_under_meanmax']:+.4f} on `lot` and from "
           f"{_sm['gap_under_mean']:+.4f} to {_sm['gap_under_meanmax']:+.4f} on "
-          "`size`, shrinking on every one of the eight seeds in both cases "
-          f"(p = {_lm['p_change']:.5f} and {_sm['p_change']:.5f}). Adding a "
-          "max to the pooled representation buys BatchNorm most of what "
-          "GroupNorm was providing.")
+          "`size`, shrinking on seven or eight of eight seeds on every "
+          "protocol. Adding a max to the pooled representation buys BatchNorm "
+          "most of what GroupNorm was providing.")
+        W("")
+        _lt = _np.get("lot_time", {}).get("macro_f1")
+        if _lt and _lt["established_under_meanmax"]:
+            W("**The one exception is worth naming rather than averaging "
+              "away.** On `lot_time` the gap shrinks like everywhere else "
+              f"({_lt['change_in_gap']:+.4f}, "
+              f"{_lt['n_seeds_gap_shrinks']}/{_lt['n_pairs']} seeds, "
+              f"p = {_lt['p_change']:.5f}) and the GroupNorm advantage "
+              f"*survives* it: {_lt['gap_under_meanmax']:+.4f} at "
+              f"p = {_lt['p_gn_beats_bn_under_meanmax']:.4f}. It starts from "
+              f"the largest gap of the four ({_lt['gap_under_mean']:+.4f}) and "
+              "there is more of it left. So the honest form of this finding is "
+              "not that the normalisation choice stops mattering, but that "
+              "**most of what it was worth is available from the pooling "
+              "instead** — and on the protocol with the largest normalisation "
+              "effect, not all of it.")
         W("")
         _ss = npi["protocols"]["size"].get("class:Scratch")
         if _ss and _ss["established_under_meanmax"]:

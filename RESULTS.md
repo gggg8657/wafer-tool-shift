@@ -514,9 +514,9 @@ Each seed reshuffles the model init *and* which training domains become the inne
 
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range | per seed |
 |---|---|---|---|---|---|---|---|
-| iid | CNN on resized 64x64 (BatchNorm) | erm | poolmean | 6 | 0.8636 | +/-0.0074 | 0.8640, 0.8708, 0.8559, 0.8655, 0.8673, 0.8581 |
-| iid | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmax | 6 | 0.8893 | +/-0.0089 | 0.8790, 0.8945, 0.8804, 0.8931, 0.8968, 0.8918 |
-| iid | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmean | 6 | 0.8630 | +/-0.0081 | 0.8618, 0.8641, 0.8587, 0.8669, 0.8713, 0.8552 |
+| iid | CNN on resized 64x64 (BatchNorm) | erm | poolmean | 8 | 0.8650 | +/-0.0074 | 0.8640, 0.8708, 0.8559, 0.8655, 0.8673, 0.8581, 0.8697, 0.8685 |
+| iid | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmax | 8 | 0.8884 | +/-0.0089 | 0.8790, 0.8945, 0.8804, 0.8931, 0.8968, 0.8918, 0.8916, 0.8797 |
+| iid | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmean | 8 | 0.8647 | +/-0.0081 | 0.8618, 0.8641, 0.8587, 0.8669, 0.8713, 0.8552, 0.8696, 0.8701 |
 | iid | CNN on resized 64x64 (BatchNorm) | erm | sess2 | 3 | 0.8625 | +/-0.0042 | 0.8623, 0.8668, 0.8584 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 8 | 0.8833 | +/-0.0057 | 0.8855, 0.8795, 0.8858, 0.8865, 0.8798, 0.8772, 0.8885, 0.8839 |
 | iid | CNN on resized 64x64 (GroupNorm) | erm | poolmeanmax | 8 | 0.8946 | +/-0.0063 | 0.8933, 0.8946, 0.8899, 0.8865, 0.8961, 0.8989, 0.8991, 0.8983 |
@@ -577,9 +577,9 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot | CNN + RPCA lot-signature channel | erm | sess2 | 3 | 0.8717 | +/-0.0079 | 0.8819, 0.8662, 0.8669 |
 | lot | CNN + RPCA lot-signature channel | erm | 4th channel = zeros (RPCA control) | 3 | 0.8689 | +/-0.0075 | 0.8772, 0.8673, 0.8622 |
 | lot | spectral operator, native resolution | erm | sess2 | 3 | 0.8405 | +/-0.0216 | 0.8551, 0.8118, 0.8547 |
-| lot_time | CNN on resized 64x64 (BatchNorm) | erm | poolmean | 6 | 0.6540 | +/-0.0167 | 0.6692, 0.6501, 0.6626, 0.6440, 0.6622, 0.6358 |
-| lot_time | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmax | 6 | 0.6871 | +/-0.0367 | 0.6956, 0.6338, 0.7032, 0.7072, 0.6907, 0.6924 |
-| lot_time | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmean | 6 | 0.6487 | +/-0.0172 | 0.6392, 0.6479, 0.6384, 0.6728, 0.6544, 0.6392 |
+| lot_time | CNN on resized 64x64 (BatchNorm) | erm | poolmean | 8 | 0.6519 | +/-0.0167 | 0.6692, 0.6501, 0.6626, 0.6440, 0.6622, 0.6358, 0.6487, 0.6420 |
+| lot_time | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmax | 8 | 0.6885 | +/-0.0386 | 0.6956, 0.6338, 0.7032, 0.7072, 0.6907, 0.6924, 0.6742, 0.7110 |
+| lot_time | CNN on resized 64x64 (BatchNorm) | erm | poolmeanmean | 8 | 0.6507 | +/-0.0172 | 0.6392, 0.6479, 0.6384, 0.6728, 0.6544, 0.6392, 0.6714, 0.6422 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | erm | sess2 | 3 | 0.6438 | +/-0.0017 | 0.6458, 0.6423, 0.6434 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | - | 3 | 0.6985 | +/-0.0045 | 0.6935, 0.6993, 0.7026 |
 | lot_time | CNN on resized 64x64 (GroupNorm) | erm | poolmean | 8 | 0.7081 | +/-0.0117 | 0.6958, 0.7191, 0.6990, 0.7159, 0.6976, 0.7092, 0.7154, 0.7125 |

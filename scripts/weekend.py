@@ -1324,6 +1324,31 @@ def main():
         rows.append([name, st, f"`{log}`", what])
     W(table(rows, ["stage", "status", "log", "what it decides"]))
     W("")
+    _ho = Path("state/hypothesis_outcomes.json")
+    if _ho.exists():
+        import collections as _cc
+        _oc = json.loads(_ho.read_text())["outcomes"]
+        _tt = _cc.Counter(v["verdict"] for v in _oc.values())
+        _dn = sum(n for k, n in _tt.items() if k != "in_flight")
+        W("### Our own track record on our own predictions")
+        W("")
+        W("Every sweep here states a prediction in its header before it "
+          "launches, and each is scored afterwards with an explicit verdict in "
+          "`state/hypothesis_outcomes.json`. Of "
+          f"{_dn} scored: **{_tt['confirmed']} held as stated**, "
+          f"{_tt['partly']} were partly right — usually direction correct, "
+          f"threshold wrong — and {_tt['falsified']} failed outright"
+          + (f", with {_tt['in_flight']} still running" if _tt.get("in_flight")
+             else "") + ".")
+        W("")
+        W("That is a little over half, and it is the number to weigh anything "
+          "here by. A record showing near-perfect foresight would mean the "
+          "predictions were written to be safe or written after the fact. "
+          "`python scripts/hypothesis_ledger.py` fails if a sweep has finished "
+          "and its prediction was never given a verdict, which is the one way "
+          "a record like this quietly becomes a list of successes.")
+        W("")
+
     W("### Which of these checks are evidence, and which are not")
     W("")
     W("Every guard in `scripts/` is fed a defect it claims to catch, by "

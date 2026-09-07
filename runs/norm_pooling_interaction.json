@@ -58,6 +58,62 @@
         "established_under_mean": false,
         "established_under_meanmax": true
       }
+    },
+    "iid": {
+      "macro_f1": {
+        "gap_under_mean": 0.018353804003811813,
+        "gap_under_meanmax": 0.006233450645563812,
+        "p_gn_beats_bn_under_mean": 0.0001554001554001554,
+        "p_gn_beats_bn_under_meanmax": 0.06511266511266511,
+        "change_in_gap": -0.012120353358248001,
+        "n_seeds_gap_shrinks": 7,
+        "n_pairs": 8,
+        "p_change": 0.015625,
+        "arrangements": 256,
+        "established_under_mean": true,
+        "established_under_meanmax": false
+      },
+      "class:Scratch": {
+        "gap_under_mean": -0.016790650610417512,
+        "gap_under_meanmax": -0.0063627560615529405,
+        "p_gn_beats_bn_under_mean": 0.11825951825951826,
+        "p_gn_beats_bn_under_meanmax": 0.4233100233100233,
+        "change_in_gap": 0.010427894548864572,
+        "n_seeds_gap_shrinks": 3,
+        "n_pairs": 8,
+        "p_change": 0.234375,
+        "arrangements": 256,
+        "established_under_mean": false,
+        "established_under_meanmax": false
+      }
+    },
+    "lot_time": {
+      "macro_f1": {
+        "gap_under_mean": 0.05620909830810496,
+        "gap_under_meanmax": 0.023340458602281247,
+        "p_gn_beats_bn_under_mean": 0.0001554001554001554,
+        "p_gn_beats_bn_under_meanmax": 0.006216006216006216,
+        "change_in_gap": -0.03286863970582371,
+        "n_seeds_gap_shrinks": 7,
+        "n_pairs": 8,
+        "p_change": 0.015625,
+        "arrangements": 256,
+        "established_under_mean": true,
+        "established_under_meanmax": true
+      },
+      "class:Scratch": {
+        "gap_under_mean": 0.025452634350008635,
+        "gap_under_meanmax": -0.012510278446919015,
+        "p_gn_beats_bn_under_mean": 0.020202020202020204,
+        "p_gn_beats_bn_under_meanmax": 0.1452991452991453,
+        "change_in_gap": -0.03796291279692765,
+        "n_seeds_gap_shrinks": 7,
+        "n_pairs": 8,
+        "p_change": 0.0234375,
+        "arrangements": 256,
+        "established_under_mean": true,
+        "established_under_meanmax": false
+      }
     }
   }
 }

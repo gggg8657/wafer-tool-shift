@@ -401,8 +401,14 @@ This paper's two positive findings were measured separately and never against ea
 | `lot` / Scratch | -0.0107 | 0.2929 | +0.0044 | 0.6319 | 2/8 | 0.17969 |
 | `size` / macro_f1 | +0.0521 | **0.0163** | -0.0063 | 0.7613 | 8/8 | **0.00781** |
 | `size` / Scratch | +0.0040 | 0.8791 | -0.0812 | **0.0093** | 7/8 | **0.02344** |
+| `iid` / macro_f1 | +0.0184 | **0.0002** | +0.0062 | 0.0651 | 7/8 | **0.01562** |
+| `iid` / Scratch | -0.0168 | 0.1183 | -0.0064 | 0.4233 | 3/8 | 0.23438 |
+| `lot_time` / macro_f1 | +0.0562 | **0.0002** | +0.0233 | **0.0062** | 7/8 | **0.01562** |
+| `lot_time` / Scratch | +0.0255 | **0.0202** | -0.0125 | 0.1453 | 7/8 | **0.02344** |
 
-**On macro-F1 the GroupNorm advantage is established under `mean` on both protocols and established under `meanmax` on neither.** The gap falls from +0.0162 to +0.0055 on `lot` and from +0.0521 to -0.0063 on `size`, shrinking on every one of the eight seeds in both cases (p = 0.00781 and 0.00781). Adding a max to the pooled representation buys BatchNorm most of what GroupNorm was providing.
+**On macro-F1 the GroupNorm advantage is established under `mean` on all 4 protocols and shrinks under `meanmax` on all 4 — surviving on 1.** The gap falls from +0.0162 to +0.0055 on `lot` and from +0.0521 to -0.0063 on `size`, shrinking on seven or eight of eight seeds on every protocol. Adding a max to the pooled representation buys BatchNorm most of what GroupNorm was providing.
+
+**The one exception is worth naming rather than averaging away.** On `lot_time` the gap shrinks like everywhere else (-0.0329, 7/8 seeds, p = 0.01562) and the GroupNorm advantage *survives* it: +0.0233 at p = 0.0062. It starts from the largest gap of the four (+0.0562) and there is more of it left. So the honest form of this finding is not that the normalisation choice stops mattering, but that **most of what it was worth is available from the pooling instead** — and on the protocol with the largest normalisation effect, not all of it.
 
 On `size`, `Scratch` F1, it goes further: under `meanmax` BatchNorm *beats* GroupNorm by 0.0812 (p = 0.0093), where under `mean` the two are indistinguishable (p = 0.8791).
 
@@ -454,9 +460,9 @@ A reader deploying this would want the honest version: if the wafers you will se
 
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range |
 |---|---|---|---|---|---|---|
-| `iid` | CNN (BatchNorm) | `erm` | poolmean | 6 | 0.8636 | ±0.0074 |
-| `iid` | CNN (BatchNorm) | `erm` | poolmeanmax | 6 | 0.8893 | ±0.0089 |
-| `iid` | CNN (BatchNorm) | `erm` | poolmeanmean | 6 | 0.8630 | ±0.0081 |
+| `iid` | CNN (BatchNorm) | `erm` | poolmean | 8 | 0.8650 | ±0.0074 |
+| `iid` | CNN (BatchNorm) | `erm` | poolmeanmax | 8 | 0.8884 | ±0.0089 |
+| `iid` | CNN (BatchNorm) | `erm` | poolmeanmean | 8 | 0.8647 | ±0.0081 |
 | `iid` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.8625 | ±0.0042 |
 | `iid` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8833 | ±0.0057 |
 | `iid` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.8946 | ±0.0063 |
@@ -517,9 +523,9 @@ A reader deploying this would want the honest version: if the wafers you will se
 | `lot` | CNN + 4th channel | `erm` | sess2 | 3 | 0.8717 | ±0.0079 |
 | `lot` | CNN + 4th channel | `erm` | zerochan | 3 | 0.8689 | ±0.0075 |
 | `lot` | spectral operator | `erm` | sess2 | 3 | 0.8405 | ±0.0216 |
-| `lot_time` | CNN (BatchNorm) | `erm` | poolmean | 6 | 0.6540 | ±0.0167 |
-| `lot_time` | CNN (BatchNorm) | `erm` | poolmeanmax | 6 | 0.6871 | ±0.0367 |
-| `lot_time` | CNN (BatchNorm) | `erm` | poolmeanmean | 6 | 0.6487 | ±0.0172 |
+| `lot_time` | CNN (BatchNorm) | `erm` | poolmean | 8 | 0.6519 | ±0.0167 |
+| `lot_time` | CNN (BatchNorm) | `erm` | poolmeanmax | 8 | 0.6885 | ±0.0386 |
+| `lot_time` | CNN (BatchNorm) | `erm` | poolmeanmean | 8 | 0.6507 | ±0.0172 |
 | `lot_time` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.6438 | ±0.0017 |
 | `lot_time` | CNN (GroupNorm) | `erm` | — | 3 | 0.6985 | ±0.0045 |
 | `lot_time` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.7081 | ±0.0117 |

@@ -9,23 +9,95 @@
     "in_flight": "the sweep has not finished"
   },
   "outcomes": {
-    "H33": {"verdict": "falsified", "entry": 33, "note": "the first hide-raw attempt was void: the one-hot planes sum to 1, so the hidden plane was recoverable"},
-    "H47": {"verdict": "falsified", "entry": 48, "note": "the size effect was not established at eight seeds"},
-    "H50": {"verdict": "confirmed", "entry": 51, "note": "the lot pooling effect survived with p below 0.05 on both metrics"},
-    "H54": {"verdict": "partly", "entry": 55, "note": "iid reached significance, which the prediction said it would not; lot_time was not a null on Scratch"},
-    "H56": {"verdict": "confirmed", "entry": 57, "note": "the capacity control stayed null at eight seeds"},
-    "H60": {"verdict": "partly", "entry": 61, "note": "group_dro separated as predicted; mixup_domain also separated, which the prediction denied"},
-    "H63": {"verdict": "partly", "entry": 67, "note": "two of four: coral and dann did not separate, irm and hsic correctly did not"},
-    "H64": {"verdict": "confirmed", "entry": 75, "note": "six of six on the size objectives"},
-    "H65": {"verdict": "confirmed", "entry": 68, "note": "geometry explains far more of the max-pooled variance, and the native-resolution control held"},
-    "H66": {"verdict": "falsified", "entry": 77, "note": "the scale-aware encoder was dramatically worse on both protocols"},
-    "H67": {"verdict": "partly", "entry": 71, "note": "the material loss held; the per-class ordering did not, and the mean was fully explained by wafer size"},
-    "H68": {"verdict": "confirmed", "entry": 81, "note": "neither the RPCA nor the focal null reversed at eight seeds"},
-    "H69": {"verdict": "confirmed", "entry": 83, "note": "fixed dilation is also worse, exonerating adaptivity, and it produced an unpredicted class-specific difference"},
-    "H70": {"verdict": "confirmed", "entry": 87, "note": "no gamma separated from the bit-exact control"},
-    "H72": {"verdict": "confirmed", "entry": 91, "note": "the residual did not separate on lot_time either; the three-of-three streak was a coin"},
-    "H73": {"verdict": "confirmed", "entry": 94, "note": "the pooling gain replicated on cnn_bn and the capacity control stayed null"},
-    "H74": {"verdict": "falsified", "entry": 98, "note": "satisfied on a literal reading of a disjunction I should not have written; the size failure did not replicate and the sign flipped"},
-    "H76": {"verdict": "in_flight", "entry": null, "note": "48 cells running: cnn_bn pooling arms on iid and lot_time"}
+    "H33": {
+      "verdict": "falsified",
+      "entry": 33,
+      "note": "the first hide-raw attempt was void: the one-hot planes sum to 1, so the hidden plane was recoverable"
+    },
+    "H47": {
+      "verdict": "falsified",
+      "entry": 48,
+      "note": "the size effect was not established at eight seeds"
+    },
+    "H50": {
+      "verdict": "confirmed",
+      "entry": 51,
+      "note": "the lot pooling effect survived with p below 0.05 on both metrics"
+    },
+    "H54": {
+      "verdict": "partly",
+      "entry": 55,
+      "note": "iid reached significance, which the prediction said it would not; lot_time was not a null on Scratch"
+    },
+    "H56": {
+      "verdict": "confirmed",
+      "entry": 57,
+      "note": "the capacity control stayed null at eight seeds"
+    },
+    "H60": {
+      "verdict": "partly",
+      "entry": 61,
+      "note": "group_dro separated as predicted; mixup_domain also separated, which the prediction denied"
+    },
+    "H63": {
+      "verdict": "partly",
+      "entry": 67,
+      "note": "two of four: coral and dann did not separate, irm and hsic correctly did not"
+    },
+    "H64": {
+      "verdict": "confirmed",
+      "entry": 75,
+      "note": "six of six on the size objectives"
+    },
+    "H65": {
+      "verdict": "confirmed",
+      "entry": 68,
+      "note": "geometry explains far more of the max-pooled variance, and the native-resolution control held"
+    },
+    "H66": {
+      "verdict": "falsified",
+      "entry": 77,
+      "note": "the scale-aware encoder was dramatically worse on both protocols"
+    },
+    "H67": {
+      "verdict": "partly",
+      "entry": 71,
+      "note": "the material loss held; the per-class ordering did not, and the mean was fully explained by wafer size"
+    },
+    "H68": {
+      "verdict": "confirmed",
+      "entry": 81,
+      "note": "neither the RPCA nor the focal null reversed at eight seeds"
+    },
+    "H69": {
+      "verdict": "confirmed",
+      "entry": 83,
+      "note": "fixed dilation is also worse, exonerating adaptivity, and it produced an unpredicted class-specific difference"
+    },
+    "H70": {
+      "verdict": "confirmed",
+      "entry": 87,
+      "note": "no gamma separated from the bit-exact control"
+    },
+    "H72": {
+      "verdict": "confirmed",
+      "entry": 91,
+      "note": "the residual did not separate on lot_time either; the three-of-three streak was a coin"
+    },
+    "H73": {
+      "verdict": "confirmed",
+      "entry": 94,
+      "note": "the pooling gain replicated on cnn_bn and the capacity control stayed null"
+    },
+    "H74": {
+      "verdict": "falsified",
+      "entry": 98,
+      "note": "satisfied on a literal reading of a disjunction I should not have written; the size failure did not replicate and the sign flipped"
+    },
+    "H76": {
+      "verdict": "confirmed",
+      "entry": 104,
+      "note": "the interaction replicates on iid and lot_time, 7/8 seeds each, p = 0.01562 both; the stated failure mode -- vanishing on iid, which would have made it about generalisation -- did not occur"
+    }
   }
 }

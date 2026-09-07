@@ -5,7 +5,7 @@
   "n_stated": 18,
   "n_scored": 18,
   "n_stated_never_scored": 0,
-  "n_in_flight": 1,
+  "n_in_flight": 0,
   "hypotheses": [
     {
       "hypothesis": "H33",
@@ -202,11 +202,11 @@
       "stated_in": [
         "pooling_all_protocols_bn.sh"
       ],
-      "verdict": "in_flight",
-      "entry": null,
+      "verdict": "confirmed",
+      "entry": 104,
       "stated": true,
       "scored": true,
-      "sweep_finished": false
+      "sweep_finished": true
     }
   ]
 }
