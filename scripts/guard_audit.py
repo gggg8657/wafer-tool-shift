@@ -308,6 +308,25 @@ def audit_hypothesis_sharpness():
         "a prediction covering both directions, so it cannot be wrong"
 
 
+def audit_heading_numbers():
+    """A duplicate number must be caught; a lettered sibling must not."""
+    import tempfile as _tf
+    m = load("hn", "scripts/heading_numbers.py")
+    d = _tf.mkdtemp()
+
+    def hs(*lines):
+        f = Path(d, "x.md")
+        f.write_text("\n".join(lines) + "\n")
+        return m.headings(f)
+
+    dup = m.problems(hs("## 7. Seven", "### 7.1 A", "### 7.1 B"))
+    par = m.problems(hs("## 2. What actually shifts", "### 2.1 Sub"))
+    sib = m.problems(hs("## 3. Three", "### 3.1 One", "### 3.1a Aside"))
+    return (any("used twice" in x for x in dup) and par == []
+            and sib == []), \
+        "two sections sharing a number, which section_diff cannot see"
+
+
 AUDITS = [
     ("generators_run.py", audit_generators_run),
     ("hypothesis_ledger.py", audit_hypothesis_ledger),
@@ -321,6 +340,7 @@ AUDITS = [
     ("dg_family_test.py sign_flip_p", audit_sign_flip_test),
     ("coverage_check.py", audit_coverage_check),
     ("section_diff.py", audit_section_diff),
+    ("heading_numbers.py", audit_heading_numbers),
     ("reading_budget.py", audit_reading_budget),
     ("readme_sync.py", audit_readme_sync),
     ("number_provenance.py traceability", audit_number_provenance_traceability),

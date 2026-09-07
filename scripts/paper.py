@@ -232,7 +232,8 @@ def main():
             "concentrated in the hardest class exactly as the mechanism "
             "predicted before the run — and it is protocol-dependent, holding "
             "on both splits where test wafers share their geometry with "
-            "training and turning negative where geometry is held out")
+            "training and unresolved where geometry is held out, where the "
+            "two encoders disagree in sign")
     if gb:
         bits.append(
             f"GroupNorm beats BatchNorm by {gb['difference']:+.4f} "
@@ -999,7 +1000,7 @@ def main():
                 f"{mean(v['sc']) - mean(base['sc']):+.4f}",
                 vsep(v["sc"], base["sc"], fl)])
     if rows:
-        W("## 4.3 And one intervention that does work: what the encoder pools")
+        W("### 4.3 And one intervention that does work: what the encoder pools")
         W("")
         W("Three explanations for the long tail were measured and discarded "
           "first. Class imbalance: focal loss over five values of gamma "
@@ -1098,8 +1099,8 @@ def main():
               "we had. Max pooling helps on both protocols where the test "
               "wafers share their geometry with training — `iid` at 99.95% "
               "shared and `lot` at 99.7% — and on the protocol that holds "
-              "geometry out entirely its mean effect is negative and "
-              "unestablished. A max over a resampled feature map depends on "
+              "geometry out entirely it is unresolved on both encoders, "
+              "with opposite signs."
               "the die density of the wafer it came from, and a geometry the "
               "model has never seen resamples differently. **The statistic "
               "that recovers a thin structure is the one that does not "
@@ -1488,7 +1489,7 @@ def main():
     # ---------------------------------------------------------------- seeds
     npi = js("norm_pooling_interaction.json")
     if npi and npi.get("protocols"):
-        W("## 5.5 The two surviving results are not independent")
+        W("### 5.1 The two surviving results are not independent")
         W("")
         W("This paper's two positive findings were measured separately and "
           "never against each other. `meanmax` pooling was compared under a "
@@ -1600,7 +1601,7 @@ def main():
 
     ct = js("combination_table.json")
     if ct and ct.get("protocols"):
-        W("## 5.6 So which combination should anyone use?")
+        W("### 5.2 So which combination should anyone use?")
         W("")
         W("Neither headline result answers that. `meanmax` over `mean` was "
           "measured at a fixed normalisation; GroupNorm over BatchNorm at a "
@@ -1921,7 +1922,14 @@ def main():
     # defect was fixed, and no guard here noticed: the JSON was present and
     # read, so section_census and coverage_check both passed.
     if npa and npa.get("families"):
-        W("## 7.1 How much each of our nulls could have shown")
+        W("## 8. How much of this is measurement, and how much is us")
+        W("")
+        W("The rest of the paper measures methods. This section measures "
+          "the instrument and the people operating it: what our tests "
+          "could have detected, what a smaller seed budget would have "
+          "concluded, and how often our own predictions held.")
+        W("")
+        W("### 8.1 How much each of our nulls could have shown")
         W("")
         _spz = js("size_power_check.json") or {}
         _szsig = sorted((v for k, v in _spz.items()
@@ -2002,7 +2010,7 @@ def main():
         W("")
     tsc = js("three_seed_cost.json")
     if tsc and tsc.get("n_comparisons"):
-        W("## 7.2 What three seeds would have concluded, counted")
+        W("### 8.2 What three seeds would have concluded, counted")
         W("")
         W("This paper's thesis has been argued case by case: results that "
           "shrank at eight seeds, a null that turned into two significant "
@@ -2106,7 +2114,7 @@ def main():
     _cm = _rfa.get("CNN + mean-and-max (resized to 64x64)", {})
     _cp = _rfa.get("CNN + mean (resized to 64x64)", {})
     if _cm.get("usable") and _cp.get("usable"):
-        W("## 7.3 The encoder that never resizes")
+        W("### 8.3 The encoder that never resizes")
         W("")
         W("Every attempt to act on the resize measurement has failed: dilating "
           "the first conv block is catastrophic whatever the dilation, and the "
@@ -2168,7 +2176,7 @@ def main():
         _u = gi["halves"].get("test_unseen_geometry") or {}
         _hd = gi.get("halves_differ") or {}
         if _s.get("n_usable_seeds") and _u.get("n_usable_seeds"):
-            W("## 7.4 The obvious explanation for the class-specific "
+            W("### 8.4 The obvious explanation for the class-specific "
               "interaction, tested and dropped")
             W("")
             W("The `Scratch` interaction fires on `size` and `lot_time` and "
@@ -2214,7 +2222,7 @@ def main():
               "install its opposite.")
             W("")
 
-        W("## 7.5 How often were we right, before the run?")
+        W("### 8.5 How often were we right, before the run?")
         W("")
         W("Every sweep in this project states a prediction in its header "
           "before it launches, and the critique log scores it afterwards. That "
@@ -2247,7 +2255,7 @@ def main():
           "if a hypothesis whose sweep has finished has no verdict recorded.")
         W("")
 
-    W("## 8. Threats to validity")
+    W("## 9. Threats to validity")
     W("")
     W("1. **Time is a proxy, and the forward-only split is not purely "
       "temporal.** WM-811K carries no timestamps; `lot_time` orders lots by "
@@ -2311,7 +2319,7 @@ def main():
           "recorded commit.")
         W("")
 
-    W("## 9. What is deliberately not claimed")
+    W("## 10. What is deliberately not claimed")
     W("")
     W("We do not claim a state-of-the-art WM-811K number. The best cell here "
       f"under a lot-disjoint split is {fmt(stat(C, ('lot', 'cnn_gn', 'erm', '')))} "

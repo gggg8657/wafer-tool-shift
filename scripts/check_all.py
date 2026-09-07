@@ -56,6 +56,8 @@ CHECKS = [
      [PY, "scripts/critique_index.py", "--check"], True),
     ("was every finished hypothesis actually scored?",
      [PY, "scripts/hypothesis_ledger.py", "--strict"], True),
+    ("are the section numbers unique, ordered and at the right level?",
+     [PY, "scripts/heading_numbers.py", "--strict"], True),
 ]
 
 

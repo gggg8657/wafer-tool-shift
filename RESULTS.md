@@ -128,7 +128,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | die-graph GNN (wafer-only subgraph) | erm | - | 0.7557 | - | 0.4898 | - | 0.1269 | 0.8889 |
 | CNN + RPCA lot-signature channel | erm | - | 0.8813 | - | 0.5000 | - | 0.7466 | 0.9315 |
 
-**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the 301 `lot` cells in `runs/` that carry the column, 147 report the identical 0.4898 and 120 more report exactly 0.5000 -- 89% of them on two values, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them. This applies to every protocol table in this section; it is stated once.
+**Do not rank models by the `p10 domain F1` column.** A lot holds at most 25 wafers, so a per-lot macro-F1 takes very few distinct values -- a 25-wafer lot whose one defect is missed scores exactly (48/49 + 0)/2 = 0.4898 whichever model missed it. Across the 302 `lot` cells in `runs/` that carry the column, 148 report the identical 0.4898 and 120 more report exactly 0.5000 -- 89% of them on two values, so the column is a discretization artefact of lot size rather than a measure of domain robustness. `wts.metrics.summarize` now also emits `mean_domain_macro_f1` and `frac_domains_below_half`, which average over ~1,700 lots and therefore do separate models; cells measured before that change do not carry them. This applies to every protocol table in this section; it is stated once.
 
 ## Borrowed objectives vs ERM -- protocol `lot_time`
 
@@ -289,6 +289,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN + RPCA lot-signature channel | erm/zerochan | ema | 0.8772 | 0.8766 | -0.0007 |
 | lot | spectral operator, native resolution | erm | ema | 0.8538 | 0.8565 | +0.0026 |
 | lot | spectral operator, native resolution | erm/sess2 | ema | 0.8551 | 0.8575 | +0.0024 |
+| lot | spectral operator, native resolution | erm/spec8 | ema | 0.8540 | 0.8570 | +0.0030 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | anchor | adabn | 0.6449 | 0.5703 | -0.0746 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | anchor | tent | 0.6449 | 0.6291 | -0.0158 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | anchor | ema | 0.6449 | 0.6417 | -0.0032 |
@@ -457,6 +458,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | lot | CNN + RPCA lot-signature channel | sess2 | 0.8819 | +0.0006 | 0.5000 | +0.0000 |
 | lot | CNN + RPCA lot-signature channel | 4th channel = zeros (RPCA control) | 0.8772 | -0.0041 | 0.5000 | +0.0000 |
 | lot | spectral operator, native resolution | sess2 | 0.8551 | +0.0012 | 0.4898 | +0.0000 |
+| lot | spectral operator, native resolution | spec8 | 0.8540 | +0.0001 | 0.4898 | +0.0000 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | poolmean | 0.6692 | +0.0253 | 0.4898 | +0.0000 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | poolmeanmax | 0.6956 | +0.0517 | 0.4898 | +0.0000 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | poolmeanmean | 0.6392 | -0.0048 | 0.4898 | +0.0000 |
@@ -803,6 +805,7 @@ Both macro-F1 columns are averaged over **only the classes present in both halve
 | lot | CNN + RPCA lot-signature channel | erm/rpca2_zeros | 0.8720 | 0.8639 | 0.8523 | +0.0116 | 8 | 43,121 | 131 |
 | lot | CNN + RPCA lot-signature channel | erm/sess2 | 0.8819 | 0.8685 | 0.9230 | -0.0545 | 8 | 43,121 | 131 |
 | lot | spectral operator, native resolution | erm/sess2 | 0.8551 | 0.8437 | 0.8246 | +0.0191 | 8 | 43,121 | 131 |
+| lot | spectral operator, native resolution | erm/spec8 | 0.8540 | 0.8425 | 0.8246 | +0.0179 | 8 | 43,121 | 131 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | erm/poolmean | 0.6692 | 0.6742 | 0.6996 | -0.0254 | 8 | 35,607 | 7,630 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | erm/poolmeanmax | 0.6956 | 0.7166 | 0.6926 | +0.0240 | 8 | 35,607 | 7,630 |
 | lot_time | CNN on resized 64x64 (BatchNorm) | erm/poolmeanmean | 0.6392 | 0.6641 | 0.6649 | -0.0008 | 8 | 35,607 | 7,630 |
@@ -1036,7 +1039,7 @@ The nuisance CE rising toward chance is the signal that the embedding is losing 
 
 ## Per-class F1, best `lot` cell (CNN on resized 64x64 (BatchNorm), erm)
 
-Selected on validation macro-F1 (0.9017); its test macro-F1 is 0.8798. Selecting on *test* instead would have picked CNN on resized 64x64 (GroupNorm) / erm/poolmeanmax at 0.8862; that is selection on the test set across 77 cells and the number would be an artefact of it.
+Selected on validation macro-F1 (0.9017); its test macro-F1 is 0.8798. Selecting on *test* instead would have picked CNN on resized 64x64 (GroupNorm) / erm/poolmeanmax at 0.8862; that is selection on the test set across 78 cells and the number would be an artefact of it.
 
 | class | F1 |
 |---|---|

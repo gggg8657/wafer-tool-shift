@@ -8,7 +8,7 @@ Wafer-map defect classification is usually reported on a random split of WM-811K
 
 The rest of the paper is a sequence of our own claims failing their own controls, and we think that is the contribution. Six borrowed invariance objectives fail to beat ERM — a finding the first version of the experiment could not have produced otherwise, since it handed every objective a domain vocabulary of 32 buckets whose class distributions differ by a total variation of 0.02. Re-run against production-order deciles carrying nine times that shift and taken to eight seeds per arm, **all six sit below ERM and the family is significantly worse than it in aggregate** — an exact sign-flip test on the per-seed paired differences gives p = 0.00781, with every seed negative. Two objectives are individually worse after Holm correction over the six tests (`group_dro` at 0.0103, `mixup_domain` at 0.0256), and the aggregate is not those two carrying the rest: dropping both and repeating the test on the 4 that individually fail to separate still gives 8 of 8 seeds negative at p = 0.00781. The same test on `size` — a different protocol, holding geometry out, under a domain vocabulary that was never degenerate — gives 8/8 seeds negative at p = 0.00781, and 7/8 at p = 0.02344 once its one individually significant member is dropped, at an aggregate effect 3.5 times larger. Our own three-seed screen had called them all unestablished; it was under-powered, and a null asserted from an under-powered test is the failure mode this paper spends most of its length on. Two methods we built for this corpus do not survive either. An RPCA lot-signature channel is matched by a fourth channel of zeros — and could not have been otherwise, because the encoder is handed an untouched copy of what the decomposition removes; the knob has no setting that yields a non-trivial decomposition on a representative sample, and the sweep that said it did was run on forty lots taken as a slice. Lot-adversarial self-supervised pretraining is worse than random initialization at every learning rate. Our active-learning result compared heuristics that had bought a fifth of the labels random had.
 
-Two things survive. First, replacing the encoder's global average pooling with a mean-and-max moves macro-F1 by +0.0150 (n=8 vs 8) on the lot-disjoint split while a capacity control with identical parameter count moves it by +0.0055 (n=8), with the gain concentrated in the hardest class exactly as the mechanism predicted before the run — and it is protocol-dependent, holding on both splits where test wafers share their geometry with training and turning negative where geometry is held out. Second, GroupNorm beats BatchNorm by +0.0130 (permutation p = 0.011 at 8 seeds per arm), which the seed-range criterion used elsewhere in this paper cannot resolve and never could — **though that result turns out to be conditional on the first, in a way we did not notice until we measured them against each other**.
+Two things survive. First, replacing the encoder's global average pooling with a mean-and-max moves macro-F1 by +0.0150 (n=8 vs 8) on the lot-disjoint split while a capacity control with identical parameter count moves it by +0.0055 (n=8), with the gain concentrated in the hardest class exactly as the mechanism predicted before the run — and it is protocol-dependent, holding on both splits where test wafers share their geometry with training and unresolved where geometry is held out, where the two encoders disagree in sign. Second, GroupNorm beats BatchNorm by +0.0130 (permutation p = 0.011 at 8 seeds per arm), which the seed-range criterion used elsewhere in this paper cannot resolve and never could — **though that result turns out to be conditional on the first, in a way we did not notice until we measured them against each other**.
 
 Underneath all of it is a measurement problem we did not know we had. Two identical invocations of one cell differ by more than most of the effects the first version of these tables reported, that spread is not one number but a property of each protocol, and three seeds — the budget behind essentially every published wafer-map comparison we are aware of, including our own first draft — are enough to get the sign of an effect right — across the 12 arms measured at both 3 and 8 seeds, 0 changed sign, while the three-seed estimate of the magnitude ranged from 0.62 to 2.15 times the eight-seed one — and nowhere near enough to get its size right. Four separate three-seed results in this paper shrank or vanished when taken to eight.
 
@@ -253,7 +253,7 @@ Masked-die modelling on 638,506 unlabelled wafers with a gradient-reversed nuisa
 
 The obvious alternative explanation is that the fine-tuning recipe is tuned for a random initialization: the pretrained weights are not at random-init scale (mean |w| of the deepest conv is 0.0852 in the checkpoint against 0.0147 for a fresh encoder, a factor of 5.8), and every cell above uses one LR on a OneCycle schedule. `scripts/ssl_lr_sweep.sh` runs both arms at four learning rates so the comparison is made LR by LR rather than best-of-treatment against one-shot-control.
 
-## 4.3 And one intervention that does work: what the encoder pools
+### 4.3 And one intervention that does work: what the encoder pools
 
 Three explanations for the long tail were measured and discarded first. Class imbalance: focal loss over five values of gamma against its own bit-exact `gamma = 0` control, class-balanced weighting, and positive weighting on the multi-label task — nothing, nothing, and worse. Input resolution: refuted outright, since 97.7% of wafers are *upsampled* to reach 64x64 and a finer grid has nothing to recover.
 
@@ -291,7 +291,7 @@ On `lot` the treatment clears the floor on both macro-F1 and `Scratch`, and the 
 
 At three seeds the screen called `iid` *below the floor* and `lot` *separated*. At eight, `iid` is the **more** significant of the two — a smaller effect measured against smaller variance — and the screen calls both *overlapping*, because its threshold grows with the sample. The three-seed reading was a false negative on one protocol and a lucky true positive on the other.
 
-The picture that survives is simpler and stronger than the one we had. Max pooling helps on both protocols where the test wafers share their geometry with training — `iid` at 99.95% shared and `lot` at 99.7% — and on the protocol that holds geometry out entirely its mean effect is negative and unestablished. A max over a resampled feature map depends on the die density of the wafer it came from, and a geometry the model has never seen resamples differently. **The statistic that recovers a thin structure is the one that does not transfer across geometry.**
+The picture that survives is simpler and stronger than the one we had. Max pooling helps on both protocols where the test wafers share their geometry with training — `iid` at 99.95% shared and `lot` at 99.7% — and on the protocol that holds geometry out entirely it is unresolved on both encoders, with opposite signs.the die density of the wafer it came from, and a geometry the model has never seen resamples differently. **The statistic that recovers a thin structure is the one that does not transfer across geometry.**
 
 Two readings were proposed in advance and both are wrong. The first, that a richer statistic should help most where train and test match, predicts the largest effect on `iid`; it is smaller there than on `lot`. The second, formed after seeing `iid` — that max pooling buys generalization, so the benefit should grow with shift — predicts the largest effect on `size` and `lot_time`; `size` is the one place it is negative.
 
@@ -391,7 +391,7 @@ The mechanism is the scoring rule. A lot's score is the *mean* of its wafers' sc
 
 The data-volume confound is arithmetic and certain. The reversal is not: three seeds, interpolation between six measured points, per-point standard deviations up to 0.035. The grid is being re-run with the budget counted in wafers. **Both cost models are defensible and they disagree** — if a metrology slot costs one lot regardless of how many wafers it holds, then the lot axis is right and these heuristics genuinely waste slots on near-empty lots; if the cost is per wafer measured, the wafer axis is right and the heuristics are ahead. The paper should carry both curves with the cost model named, rather than one of them as a result.
 
-## 5.5 The two surviving results are not independent
+### 5.1 The two surviving results are not independent
 
 This paper's two positive findings were measured separately and never against each other. `meanmax` pooling was compared under a fixed encoder; GroupNorm was compared under `pool=mean`, which is what the `gnbn` arms carry. Measuring them together, on `lot` and `size`, eight seeds per arm:
 
@@ -418,7 +418,7 @@ Both p-values above were produced twice, by `norm_pooling_interaction.py` and in
 
 The question was raised post hoc, by an encoder-by-pooling interaction noticed while checking whether the `size` failure replicated. What makes it more than an artefact of looking is that it replicates: the same direction, the same 8-of-8 seeds, and p = 0.00781 on both protocols independently.
 
-## 5.6 So which combination should anyone use?
+### 5.2 So which combination should anyone use?
 
 Neither headline result answers that. `meanmax` over `mean` was measured at a fixed normalisation; GroupNorm over BatchNorm at a fixed pooling; and section 5.5 shows they do not compose. All four combinations are at eight seeds on `lot` and `size`, so each protocol's best can be tested against the other three directly.
 
@@ -668,7 +668,11 @@ The obvious account is resolution: the CNN path resamples every wafer to a fixed
 
 A scratch is thin in units of *dies*, not pixels, and no resampling changes that. Whatever makes it hard, it is not the input grid — which rules out the cheapest remaining lever and leaves the backbone, the pooling, and real mixed-type data.
 
-## 7.1 How much each of our nulls could have shown
+## 8. How much of this is measurement, and how much is us
+
+The rest of the paper measures methods. This section measures the instrument and the people operating it: what our tests could have detected, what a smaller seed budget would have concluded, and how often our own predictions held.
+
+### 8.1 How much each of our nulls could have shown
 
 Twice this project reported a null that turned out to be a property of the seed budget. "Nothing separates from ERM on `size`" came from three seeds per arm, where an exact permutation test cannot return below 0.10; at eight, 2 objectives separate at p = 0.0019 and p = 0.0050. A null stated with a difference and no statement of what the instrument could resolve is not a finding, so every null this paper rests on is listed here with its power.
 
@@ -684,7 +688,7 @@ Twice this project reported a null that turned out to be a property of the seed 
 
 The capacity control is the counter-example that shows the distinction is not rhetorical: `meanmean` versus `mean` is also a null, and it is at eight seeds with a floor of 0.0002, so it can carry the weight the pooling result puts on it. **H70, on record for the three gammas still at two seeds: none separates from the bit-exact gamma = 0 control at eight.** If one does, the focal withdrawal here is wrong and comes back out.
 
-## 7.2 What three seeds would have concluded, counted
+### 8.2 What three seeds would have concluded, counted
 
 This paper's thesis has been argued case by case: results that shrank at eight seeds, a null that turned into two significant effects, a streak of three-of-three that was a coin. It has not been counted. Every comparison here that reached eight seeds per arm can be re-scored on its first three, which is exactly what an experimenter who stopped early would have had.
 
@@ -710,7 +714,7 @@ So the screen at three seeds is not the trap that anecdote made it look. It find
 
 **What survives is the count, and it survives because it is arithmetic rather than an example.** The permutation test at three per arm has a floor of 0.10 on *every* triple, so none of the 17 established effects is reachable on any of the 56 — not on average, not at best. And the screen's roughly even odds of finding a real effect are their own argument: half the established results here would have been missed by a three-seed protocol, which is a weaker and more defensible statement than the one this section made first.
 
-## 7.3 The encoder that never resizes
+### 8.3 The encoder that never resizes
 
 Every attempt to act on the resize measurement has failed: dilating the first conv block is catastrophic whatever the dilation, and the `size` behaviour it was meant to explain did not replicate across encoders. One encoder here avoids the problem instead of patching it — `spectral` multiplies a fixed number of low-frequency coefficients, so the same weights apply to a 25x27 and a 53x58 wafer with no resampling at all.
 
@@ -725,7 +729,7 @@ The comparison has to be a *drop*, not a level: `spectral` is worse on `Scratch`
 
 The `spectral` arm at eight seeds is **[not measured]** as this is written; `scripts/spectral_geometry.sh` runs it.
 
-## 7.4 The obvious explanation for the class-specific interaction, tested and dropped
+### 8.4 The obvious explanation for the class-specific interaction, tested and dropped
 
 The `Scratch` interaction fires on `size` and `lot_time` and not on `lot` or `iid`, and the two where it fires are the two that hold geometry out or test on a narrow geometry slice. Geometry exposure is the obvious candidate, and four protocols differ in too many ways at once to test it.
 
@@ -740,7 +744,7 @@ The `Scratch` interaction fires on `size` and `lot_time` and not on `lot` or `ii
 
 We are not claiming the reverse either. The two halves are not shown to differ (-0.0561, 5/8 seeds, p = 0.17188), and the unseen half is 7,630 of 43,237 test wafers with a visibly wider per-seed spread — so its null is partly a power statement. What the test establishes is that our prediction was wrong, which is enough to drop the explanation and not enough to install its opposite.
 
-## 7.5 How often were we right, before the run?
+### 8.5 How often were we right, before the run?
 
 Every sweep in this project states a prediction in its header before it launches, and the critique log scores it afterwards. That record is the only thing distinguishing an effect we specified in advance from one we noticed — a post-hoc correction cannot tell them apart — so it is worth reporting what it says about us rather than only about the methods.
 
@@ -755,7 +759,7 @@ Every sweep in this project states a prediction in its header before it launches
 
 A little over half is not a flattering number and it is the point. A record showing near-perfect foresight would mean the predictions were being written to be safe, or written after the fact, and either way it could not do the job this one is for. The verdicts are in `state/hypothesis_outcomes.json`, one per hypothesis with the entry that argues it, and `scripts/hypothesis_ledger.py` fails if a hypothesis whose sweep has finished has no verdict recorded.
 
-## 8. Threats to validity
+## 9. Threats to validity
 
 1. **Time is a proxy, and the forward-only split is not purely temporal.** WM-811K carries no timestamps; `lot_time` orders lots by the integer in the lot name. Section 2.1 shows the numbering is not arbitrary but cannot distinguish production order from product blocking. It also decomposes the drop: a third to nearly half is present on a *random* split restricted to the same geometry slice, with no time involved. Meeting geometries never trained on — which we assumed was the expensive part — costs approximately nothing: the unseen half of that test set is no harder than the seen half, and on both CNNs it is easier.
 2. **The test split is label-aware, and it makes no difference.** `_stratified_group_split` skips a candidate held-out group when moving it would leave a class with no training examples, so which domains land in test is not independent of the labels. Two reviewers flagged it. Dropping the guard entirely and comparing the partitions: it fires in 0 of 10 seeds on both group protocols and the splits are identical wafer for wafer — structurally so, since the guard rejects a group only if it holds *all* remaining training examples of a class and no lot holds more than 4.14% of any class. The code path is label-aware; the split is not.
@@ -764,7 +768,7 @@ A little over half is not a flattering number and it is the point. A record show
 
 5. **No cell records the code that produced it.** The runner changed 14 times over the weekend — new flags, an `invariance_domain` refactor, a geometry decomposition, a batch dict that gained a field. Two of those were asserted bit-identical on the default path and the rest were additive, which is the intent; but nothing in any run JSON says which version wrote it, so the assertion cannot be checked per cell. Dating the files against the runner's commit history, the 666 stored cells span **13 distinct states** of the runner, and **20** of them record their own — every cell written since the gap was found does, and none written before it can. That is an upper bound on exposure rather than a claim any cell is wrong — a commit may change nothing a given cell uses — but it is the same class of provenance gap as the session and device offsets measured in section 1, and those turned out to be about twice the within-session seed spread. The runner now records `git_sha` and `written_at`; the cells that predate that change cannot be repaired retroactively, and this entry stays until every comparison the paper rests on has been re-measured under a recorded commit.
 
-## 9. What is deliberately not claimed
+## 10. What is deliberately not claimed
 
 We do not claim a state-of-the-art WM-811K number. The best cell here under a lot-disjoint split is 0.8647 ±0.0044 (n=3) macro-F1 for a small CNN; published figures near 0.95 are typically 9-class iid splits on the labelled subset with heavy augmentation, which is our `iid` column and a different quantity. The contribution is the ordering of the protocols and the failure of the methods, not the leaderboard position.
 

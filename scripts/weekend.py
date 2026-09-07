@@ -162,7 +162,7 @@ def main():
       "a better question.")
     W("")
     W("**Two things did come out positive, and both were controlled.** Changing "
-      "what the encoder pools moved the long tail (section 2.0), and it is the "
+      "what the encoder pools moved the long tail (section 2), and it is the "
       "one actionable result here. GroupNorm over BatchNorm survived being "
       "re-measured with a test capable of resolving it (section 3).")
     W("")
@@ -196,12 +196,12 @@ def main():
         f"{min(abs(c['difference']) for c in _rpf['comparisons']):.6f} apart, "
         f"{_flot / min(abs(c['difference']) for c in _rpf['comparisons']):.0f} "
         "times below the floor, with a test that could have said otherwise. "
-        "Closes off lot-signature channels for this architecture (§2.3)"
+        "Closes off lot-signature channels for this architecture (§3.4)"
         if _rpf and _rpf.get("could_reach_05") else
         "a fourth channel of *zeros* buys the same, and could not have failed "
         "to, because `stack_channels` hands the encoder an intact copy of what "
         "the decomposition removed. Closes off lot-signature channels for this "
-        "architecture (§2.3)")
+        "architecture (§3.4)")
     _sv = js("sinkhorn_verdict.json") or {}
     if _sv and _sv.get("collapsed_lambdas"):
         _z = _sv["lambda_zero_control"]
@@ -212,7 +212,7 @@ def main():
             "class; with the penalty off it lands "
             f"{_z['distance_to_nearest_erm_seed']:.4f} from the nearest ERM "
             "seed, inside the floor, so the code is sound. No lambda beats "
-            "zero, so there is no operating point (§2.3a)")
+            "zero, so there is no operating point (§3.3)")
     else:
         _sink_line = NM
     _iidd = js("pooling_iid_perm_macro_f1.json") or {}
@@ -296,30 +296,30 @@ def main():
         ("The RPCA fourth channel helps", _rpca_line),
         ("Lot-adversarial SSL pretraining helps",
          "worse than random initialisation at every learning rate. Closes off "
-         "this pretraining objective (§2.3)"),
+         "this pretraining objective (§3.4)"),
         ("Active learning loses to random",
          "it lost while training on a fifth of the labels. At matched *wafer* "
          "budget entropy wins at every budget, so the answer depends on "
          "whether metrology is priced per lot or per wafer — decision 4 "
-         "(§2.2)"),
+         "(§3.2)"),
         ("No DG objective is distinguishable from ERM",
          "replaced by something stronger: the family is significantly *worse* "
-         "(§2.1)"),
+         "(§3.1)"),
         ("`lot_time` measures temporal drift",
          "about a quarter of the drop is that its test slice is narrow, and "
          "meeting an unseen geometry costs approximately nothing. It measures "
-         "forward-only deployment (§2.4)"),
+         "forward-only deployment (§3.5)"),
         ("Nothing separates from ERM on `size`",
          f"false. At eight seeds {_size_sig} worse than ERM; at three "
          "the exact test could not return below 0.10 at any effect size. The "
-         "null was a property of the seed budget (§2.1)"),
+         "null was a property of the seed budget (§3.1)"),
         ("The sinkhorn cell's 0.10 macro-F1 is a finding about the method",
          _sink_line),
         ("An arm scattering wider than its effect is unstable, not worse",
          "our own criterion, and wrong. At eight seeds all six `size` arms "
          "still scatter wider than their effect and `group_dro` separates "
          "anyway — a difference of means is estimated far more precisely "
-         "than a single draw (§2.1)"),
+         "than a single draw (§3.1)"),
     ):
         W(f"- **{_c}** — {_r}")
     W("")
@@ -421,7 +421,7 @@ def main():
                       for t in ("poolmean", "poolmeanmax", "poolmeanmean"))
          if v}
     if len(P) == 3:
-        W("## 2.0 The one thing that worked: what the encoder pools")
+        W("## 2. The one thing that worked: what the encoder pools")
         W("")
         # collect the eight-seed permutation summaries once, before the body.
         # An earlier edit left this loop open around the whole section, so 2.0
@@ -637,10 +637,10 @@ def main():
         W("")
 
     # ---------------------------------------------------------------- withdrawn
-    W("## 2. What was withdrawn, and what each withdrawal rules out")
+    W("## 3. What was withdrawn, and what each withdrawal rules out")
     W("")
 
-    W("### 2.1 \"No borrowed DG objective beats ERM\" — the experiment could "
+    W("### 3.1 \"No borrowed DG objective beats ERM\" — the experiment could "
       "not have shown otherwise, and the conclusion survives anyway")
     W("")
     tv = (js("corpus_stats.json") or {}).get("domain_label_tv", {})
@@ -855,7 +855,7 @@ def main():
     if alb:
         B = alb["curves"]["random"]["lots"]
         i4 = B.index(400) if 400 in B else len(B) // 2
-        W("### 2.2 \"Active learning lost to random\" — it lost while training "
+        W("### 3.2 \"Active learning lost to random\" — it lost while training "
           "on a fifth of the data")
         W("")
         W(table([[s_, f"{alb['curves'][s_]['wafers'][i4]:,.0f}",
@@ -898,7 +898,7 @@ def main():
         W("")
 
     if _sv and _sv.get("points"):
-        W("### 2.3a The sinkhorn cell — one of the four questions handed over")
+        W("### 3.3 The sinkhorn cell — one of the four questions handed over")
         W("")
         _col = min(_sv["points"], key=lambda q: q["macro_f1"])
         W(f"Friday reported a sinkhorn cell at macro-F1 {_col['macro_f1']:.4f} "
@@ -940,7 +940,7 @@ def main():
           f"{(_e['max'] - _col['macro_f1']) / _e['seed_range']:.0f} times "
           "ERM's own seed range on this cell.*")
         W("")
-    W("### 2.3 Our own two contributions, and one of our own metrics")
+    W("### 3.4 Our own two contributions, and one of our own metrics")
     W("")
     cs = js("corpus_stats.json") or {}
     rp = cs.get("rpca")
@@ -1012,7 +1012,7 @@ def main():
           "statistics on domains this small.")
         W("")
 
-    W("### 2.4 The forward-only result is a compound, and a quarter of it is "
+    W("### 3.5 The forward-only result is a compound, and a quarter of it is "
       "not time")
     W("")
     tp = js("time_proxy.json")
@@ -1059,7 +1059,7 @@ def main():
     if lb:
         mx_ = max(v["max_share_in_one_lot"]
                   for v in lb["class_concentration"].values())
-        W("### 2.5 One thing checked and *not* withdrawn")
+        W("### 3.6 One thing checked and *not* withdrawn")
         W("")
         W("Both external reviewers flagged that the group splits read candidate "
           "groups' labels. Dropping the guard entirely and comparing the "
@@ -1075,7 +1075,7 @@ def main():
         W("")
 
     # ---------------------------------------------------------------- survives
-    W("## 3. What survives the floor")
+    W("## 4. What survives the floor")
     W("")
     surv = []
     if len(P) == 3:
@@ -1174,7 +1174,7 @@ def main():
       "seed spread, or has no error bar at all.")
     W("")
     # ---------------------------------------------------------------- decisions
-    W("## 4. Four things that need a human decision")
+    W("## 5. Four things that need a human decision")
     W("")
     W("**Decision 1 — MixedWM38, or drop the multi-label target.** WM-811K is "
       "single-label, so \"multi-label F1\" is not defined on it. MixedWM38 "
@@ -1256,7 +1256,7 @@ def main():
     W("")
 
     # ---------------------------------------------------------------- running
-    W("## 5. What is running, and how to check it")
+    W("## 6. What is running, and how to check it")
     W("")
     W("```")
     W("tail -f logs/chain_s1.log            # stage transitions")
@@ -1276,7 +1276,7 @@ def main():
          "seeds 1-2 folds a session offset into what is presented as seed "
          "variance. Reported beside the original table, not replacing it"),
         ("`pooling_sweep.sh`", "logs/pooling.log",
-         "**answered** (section 2.0): max pooling beats global average pooling "
+         "**answered** (section 2): max pooling beats global average pooling "
          "on `lot` and the capacity control does not"),
         ("`size_objectives_seeds.sh`", "logs/size_objectives.log",
          "**superseded** — it reported that nothing separates from ERM on "
@@ -1292,7 +1292,7 @@ def main():
          "**answered on the second attempt**; the first was void because the "
          "one-hot planes sum to 1 and the 'hidden' plane was recoverable"),
         ("`pooling_protocols.sh`", "logs/pooling_protocols.log",
-         "**answered** (section 2.0): the win holds on `iid`, `lot` and "
+         "**answered** (section 2): the win holds on `iid`, `lot` and "
          "`lot_time` at p <= 0.001 on `Scratch` and reverses on `size`. The "
          "prediction on record was half right — it holds on `iid` and does "
          "*not* shrink on `lot_time`; what breaks it is geometry holdout, not "

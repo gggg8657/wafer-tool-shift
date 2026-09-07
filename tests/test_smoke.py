@@ -842,3 +842,60 @@ def test_hypothesis_sharpness_flags_a_disjunction_and_not_a_falsification_clause
     bs = m.blocks()
     hits = [b["hypothesis"] for b in bs if m.flagged(b)]
     assert hits == ["H74"], hits
+
+
+def test_heading_numbers_catches_duplicates_and_tolerates_lettered_siblings():
+    """The guard for critique entry 107, tested against what it missed.
+
+    Renumbering five subsections into document order produced **two sections
+    numbered 7.1** in `paper_draft.md`, and every one of the twelve checks
+    passed: `section_diff.py` tracks headings by text, so it cannot see a
+    number collision.
+
+    Its own first version was worse than the defect. The regex required
+    whitespace immediately after the digits, so it matched none of the
+    `## 2. Title` headings and then reported every subsection as parentless --
+    fourteen problems in a document whose numbering was correct. Two further
+    attempts put the letter suffix in the same tuple as the integers, which
+    compared an int against a str.
+
+    So the test pins all three: a real duplicate is caught, a `## 2. Title`
+    parent is *found*, and a lettered sibling `2.3a` is neither a duplicate of
+    `2.3` nor out of order after it.
+    """
+    import importlib.util
+    from pathlib import Path as _Path
+
+    spec = importlib.util.spec_from_file_location(
+        "hn", _Path(__file__).resolve().parents[1] / "scripts"
+        / "heading_numbers.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+
+    import tempfile
+    _tmp = tempfile.mkdtemp()
+
+    def hs(*lines):
+        # write and close before reading: the first version returned from
+        # inside the `with`, so the guard read an unflushed file and found no
+        # headings at all -- the test failed and the guard was fine
+        f = _Path(_tmp, "d.md")
+        f.write_text("\n".join(lines) + "\n")
+        return m.headings(f)
+
+    # the defect: two sections sharing a number
+    bad = hs("## 7. Seven", "### 7.1 First", "### 7.1 Second")
+    probs = m.problems(bad)
+    assert any("used twice" in x for x in probs), probs
+
+    # a "## 2. Title" parent must be found, not reported missing
+    ok = hs("## 2. What actually shifts", "### 2.1 A subsection")
+    assert m.problems(ok) == [], m.problems(ok)
+
+    # a lettered sibling is not a duplicate and is in order after its base
+    sib = hs("## 3. Three", "### 3.1 One", "### 3.1a Aside", "### 3.2 Two")
+    assert m.problems(sib) == [], m.problems(sib)
+
+    # and the wrong heading level for a depth must be caught
+    lvl = hs("## 4. Four", "## 4.1 Wrongly top level")
+    assert any("level" in x for x in m.problems(lvl)), m.problems(lvl)
