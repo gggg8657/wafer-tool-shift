@@ -21,19 +21,21 @@ flowchart LR
   L --> P1["iid split<br/>random wafers"]
   L --> P2["lot split<br/>unseen lots"]
   L --> P3["size split<br/>unseen geometry"]
-  P1 & P2 & P3 --> R["4 representations"]
-  R --> O["7 objectives"]
+  L --> P4["lot_time split<br/>future lots, purged"]
+  P1 & P2 & P3 & P4 --> R["6 representations"]
+  R --> O["11 objectives"]
   O --> T["test-time adaptation"]
   T --> M["macro-F1 · worst-domain F1<br/>calibration under shift"]
 ```
 
-## The three protocols
+## The four protocols
 
 | protocol | held out | what it measures |
 |---|---|---|
 | `iid` | nothing (random wafers) | the optimistic number papers report |
 | `lot` | whole `lotName` groups | generalization to an unseen tool / time window |
 | `size` | whole wafer geometries | generalization to an unseen product |
+| `lot_time` | *future* lots, purged and embargoed | forward-only deployment — the largest drop here, and section 2.4 of `WEEKEND.md` decomposes it: about a quarter is that its test slice is a narrow geometry range, and meeting an unseen geometry costs approximately nothing |
 
 Holding out groups cannot hold the label marginal fixed, so `wts.data.label_shift`
 reports the total-variation distance that each protocol induces. It is near zero
@@ -54,7 +56,7 @@ Two details keep the protocols honest:
   shift and started measuring label shift. Geometries are held out at random
   instead.
 
-## Four representations, three different answers to geometry
+## Six representations, three different answers to geometry
 
 The corpus has 344 distinct map sizes. The standard pipeline resizes everything
 to a fixed grid, which makes the model's features a function of the resampling
@@ -65,6 +67,8 @@ and makes the "unseen geometry" question unanswerable.
 | `cnn_bn` / `cnn_gn` | resample to 64x64 and run a small CNN — the conventional baseline, with BatchNorm and GroupNorm as separate cells because BN mixes statistics across whatever is in the batch, which is a domain leak when batches span lots |
 | `spectral` | a Fourier neural-operator encoder: learned weights multiply a fixed number of low-frequency coefficients, so the same weights apply to a 25x27 and a 53x58 wafer with **no resizing at all** — discretization invariance by construction, carried over from the sibling repo [`pde-neural-operator`](https://github.com/gggg8657/pde-neural-operator) |
 | `feat` | an MLP over hand-built descriptors that are size-invariant because each one is a rate, a moment or a spectrum rather than a pixel |
+| `graph` | a die-graph GNN: each die is a node, adjacency is the wafer's own lattice, so geometry enters as connectivity rather than as a grid |
+| `rpca_cnn` | the CNN plus a fourth channel carrying the per-lot Robust-PCA residual. **This was our own contribution and it is withdrawn** — see below |
 
 ### The descriptors, and where they were borrowed from
 
@@ -84,7 +88,7 @@ same geometric problem:
 124 dimensions total, 0.12 ms per wafer, and the whole labelled corpus is
 described in 21 seconds on 24 cores.
 
-## Seven objectives, and the honest prior
+## Eleven objectives, and the honest prior
 
 The starting position is that domain-generalization methods **often fail to beat
 plain ERM** once evaluation is fair — the WILDS line of work and the "has any
@@ -176,7 +180,18 @@ python scripts/prepare.py            # cache the labelled subset + protocols
 python scripts/extract.py --workers 16   # the size-invariant descriptors
 bash scripts/sweep.sh                # the benchmark matrix, 2 GPUs
 python scripts/report.py             # -> RESULTS.md
+python scripts/paper.py              # -> paper_draft.md
+python scripts/weekend.py            # -> WEEKEND.md
+python scripts/check_all.py          # every check, one verdict, one exit code
 ```
+
+`check_all.py` is the one to run before trusting anything regenerated. It covers
+the unit tests, whether each guard still catches a defect it claims to catch,
+whether any generator input has gone missing, whether any run family is reported
+nowhere, whether a document duplicates or silently *loses* a section, whether a
+number was typed into prose rather than computed, and whether the five-minute
+hand-off is still five minutes. Several of those exist because the corresponding
+failure happened here first; `critique_log.md` says which.
 
 `LSWMD.pkl` is a Python-2-era pandas pickle and does not load on a modern
 pandas. Two things are needed, and `wts.data` does both: shim the pre-0.20
@@ -222,10 +237,15 @@ dependency; the env this runs in is shared).
   measured instead of ignored, worst-group before average, calibration under
   shift, and a rejected split design documented rather than hidden.
 - **Ablating its own best idea until it fails.** The RPCA lot-signature channel
-  was this repo's own contribution and the best `lot` cell. Running it against a
-  fourth channel of *zeros* showed the two are indistinguishable at three seeds.
-  The withdrawal, the evidence and the reasoning are in
-  [`critique_log.md`](critique_log.md); `RESULTS.md` carries the table.
+  was this repo's own contribution and the best `lot` cell. Run against a fourth
+  channel of *zeros* at eight seeds per arm, the two are 0.000046 apart — 118
+  times below the protocol's measured run-to-run floor, with a test that could
+  have resolved a difference 35 times smaller than that floor. The first version
+  of this ablation used three seeds, where an exact permutation test cannot
+  return below 0.10 at any effect size, so it could not have contradicted the
+  withdrawal whatever the truth was; that is why it was re-run. The withdrawal,
+  the evidence and the reasoning are in [`critique_log.md`](critique_log.md);
+  `RESULTS.md` carries the table.
 
 ### Two things that are not WM-811K, and are labelled so everywhere
 

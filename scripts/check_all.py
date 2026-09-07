@@ -44,6 +44,8 @@ CHECKS = [
      [PY, "scripts/section_diff.py", "--strict"], True),
     ("is the five-minute hand-off still five minutes?",
      [PY, "scripts/reading_budget.py", "--strict"], True),
+    ("does the README still describe this benchmark?",
+     [PY, "scripts/readme_sync.py", "--strict"], True),
 ]
 
 

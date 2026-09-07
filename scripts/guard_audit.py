@@ -238,6 +238,27 @@ def audit_reading_budget():
         "a core that has drifted past the brief's five minutes"
 
 
+def audit_readme_sync():
+    """A README count that no longer matches the code must be reported.
+
+    Also checks the parser against the authority: `OBJECTIVES` is built from a
+    dict literal plus a later `.update()`, and the first version of the parser
+    read only the literal -- reporting 7 against a correct README's 11.
+    """
+    m = load("rs", "scripts/readme_sync.py")
+    code, doc = m.code_counts(), m.readme_counts()
+    agrees = all(code.get(k) == doc.get(k)
+                 for k in ("protocols", "encoders", "objectives"))
+    import importlib
+    sys.path.insert(0, str(ROOT))
+    truth = len(importlib.import_module("wts.methods").OBJECTIVES)
+    parser_right = code.get("objectives") == truth
+    # and a deliberately wrong count must be caught
+    caught = m.WORDS["three"] != code.get("protocols")
+    return (agrees and parser_right and caught), \
+        "a README stating a count the code no longer has"
+
+
 AUDITS = [
     ("verify_stage.py", audit_verify_stage),
     ("prose_status_lint.py duplicated_blocks", audit_duplicated_blocks),
@@ -249,6 +270,7 @@ AUDITS = [
     ("coverage_check.py", audit_coverage_check),
     ("section_diff.py", audit_section_diff),
     ("reading_budget.py", audit_reading_budget),
+    ("readme_sync.py", audit_readme_sync),
     ("number_provenance.py traceability", audit_number_provenance_traceability),
     ("number_provenance.py ratchet", audit_number_provenance_ratchet),
 ]

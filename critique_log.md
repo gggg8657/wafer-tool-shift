@@ -4467,3 +4467,54 @@ message, which is the only defence available. It enforces a budget, not quality,
 and the distinction matters because the previous entry's guard has the same
 shape: `section_diff.py` notices a heading vanishing and cannot notice a section
 becoming wrong.
+
+### 90. The README described a benchmark this repository does not contain
+
+Nine documents' worth of checks, and none of them looks at `README.md` — it is
+the only document here that is not generated, so nothing regenerates it when the
+code grows and no guard notices when it stops being true. It is also the first
+thing anyone picking this up reads.
+
+Reading it against `run_bench.py` and `wts/methods.py`:
+
+| the README said | the code has |
+|---|---|
+| "The three protocols", three-row table | **four** — `lot_time` missing entirely |
+| "Four representations", three-row table | **six** — `graph` and `rpca_cnn` missing |
+| "Seven objectives" | **eleven** |
+
+None of these is a typo. Each is a place where the code grew and the prose
+introducing it did not, and the omissions are not random: the missing protocol
+is `lot_time`, which carries the largest drop in the project, and one of the
+missing representations is `rpca_cnn` — this repository's own contribution, the
+one whose withdrawal the README's closing section is *about*. A reader would
+have formed a wrong picture of the benchmark's scope before reaching a number.
+
+The same section also still said the RPCA channel and a channel of zeros "are
+indistinguishable at three seeds", which was the honest statement when written
+and has been superseded twice over: at eight seeds they are 0.000046 apart, 118
+times below the floor, with a test that could have resolved a difference 35
+times smaller than the floor. Three seeds could not have contradicted the
+withdrawal whatever the truth was, which is why it was re-run, and the README now
+says both things.
+
+**`readme_sync.py` checks the counts the README states against the ones the code
+defines.** It cannot check that the *descriptions* are right — that still needs
+reading — but a count is exactly the part that drifts silently while every
+sentence around it stays plausible.
+
+**Its first run reported a mismatch that was the checker's fault.** It said the
+README claimed eleven objectives and the code had seven. `OBJECTIVES` is built
+from a dict literal and then extended by an `.update()` three hundred lines
+later; my parser read the literal and stopped. Had I trusted it I would have
+"corrected" a right README to a wrong number, which is a worse outcome than the
+drift it was built to catch. The audit now cross-checks the parser against
+`len(methods.OBJECTIVES)` by importing, so the two disagreeing is itself a
+failure.
+
+That makes twice in this session that a summary missed a member added elsewhere
+— the power audit collapsing a family to its weakest comparison, and this parser
+reading the first of two definitions. Both were caught by comparing against an
+independent count rather than by reading the code more carefully.
+
+`check_all.py` is now nine checks; `guard_audit.py` twelve of thirteen.
