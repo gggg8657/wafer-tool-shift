@@ -1804,36 +1804,52 @@ def main():
               "why this paper treats the screen as a floor rather than a "
               "verdict.")
             W("")
-        _t = next((r for r in tsc["comparisons"]
-                   if r["encoder"] == "cnn_bn" and r["arm"] == "erm/poolmeanmax"
-                   and r["metric"] == "class:Scratch"), None)
-        _c = next((r for r in tsc["comparisons"]
-                   if r["encoder"] == "cnn_bn"
-                   and "poolmeanmean" in r["arm"]
-                   and r["metric"] == "class:Scratch"), None)
-        if _t and _c:
-            W("**The sharpest case is this paper's own best result.** On "
-              "`lot`/`cnn_bn`, `Scratch` F1, at three seeds the range screen "
-              "calls the treatment separated and it calls the **capacity "
-              "control separated too**:")
+        toc = js("triple_operating_curve.json")
+        if toc:
+            _e, _n = toc["established_at_8"], toc["null_at_8"]
+            W("**A first version of this section drew its sharpest claim from "
+              "one triple, and the claim did not survive checking.** Seeds 0-2 "
+              "are one of "
+              f"C(8,3) = {toc['n_triples_each']} ways to pick three, and on "
+              "that particular draw the range screen calls both the pooling "
+              "treatment *and* its capacity control separated — which would "
+              "mean a three-seed experiment could not tell \"max pooling "
+              "helps\" from \"a wider head helps\". Enumerating every "
+              "triple instead:")
             W("")
             W(table([
-                ["`meanmax` (treatment)", _t["range_verdict_3"],
-                 f"{_t['p_8_seeds']:.4f}"],
-                ["`meanmean` (capacity control)", _c["range_verdict_3"],
-                 f"{_c['p_8_seeds']:.4f}"]],
-                ["arm", "three-seed range verdict", "eight-seed permutation p"]))
+                ["effects established at eight seeds", str(_e["n"]),
+                 f"{100 * _e['mean_frac_screen_separates']:.0f}%",
+                 str(_e["n_never_separated_on_any_triple"])],
+                ["comparisons null at eight seeds", str(_n["n"]),
+                 f"{100 * _n['mean_frac_screen_separates']:.0f}%",
+                 f"worst {100 * _n['worst_frac']:.0f}%"]],
+                ["", "n", "mean % of triples the screen calls separated",
+                 "never / worst"]))
             W("")
-            W("At eight seeds the treatment is real and the control is not. At "
-              "three, both look separated — so the experiment cannot "
-              "distinguish *max pooling helps* from *a wider head helps*, "
-              "which is the entire question the control exists to answer. The "
-              "control would not have failed; it would have appeared to "
-              "succeed, which is worse, because a control that fires alongside "
-              "its treatment reads as confirmation that something real is "
-              "happening.")
+            W("So the screen at three seeds is not the trap that anecdote made "
+              "it look. It finds a real effect on "
+              f"{100 * _e['mean_frac_screen_separates']:.0f}% of triples on "
+              "average and calls a null comparison separated on "
+              f"{100 * _n['mean_frac_screen_separates']:.0f}% — a sensitivity "
+              "of about a half at a false-positive rate of about one in a "
+              "hundred. **That is a defensible screen, which is what we have "
+              "always claimed it is.** The capacity control fires on 2 of "
+              f"{toc['n_triples_each']} triples, and seeds 0-2 are one of the "
+              "two. Reporting that draw as what a three-seed experiment would "
+              "conclude was picking the tail and calling it the distribution.")
             W("")
-
+            W("**What survives is the count, and it survives because it is "
+              "arithmetic rather than an example.** The permutation test at "
+              "three per arm has a floor of 0.10 on *every* triple, so none of "
+              f"the {tsc['n_established_at_8']} established effects is "
+              "reachable on any of the "
+              f"{toc['n_triples_each']} — not on average, not at best. And the "
+              "screen's roughly even odds of finding a real effect are their "
+              "own argument: half the established results here would have been "
+              "missed by a three-seed protocol, which is a weaker and more "
+              "defensible statement than the one this section made first.")
+            W("")
     W("## 8. Threats to validity")
     W("")
     W("1. **Time is a proxy, and the forward-only split is not purely "
@@ -1885,12 +1901,17 @@ def main():
           f"{_rp['n_run_files']} stored cells span "
           f"**{_rp['n_distinct_code_states_spanned']} distinct states** of the "
           f"runner, and **{_rp['n_cells_recording_their_commit']}** of them "
-          "record their own. That is an upper bound on exposure rather than a "
+          "record their own — every cell written since the gap was found does, "
+          "and none written before it can. That is an upper bound on exposure "
+          "rather than a "
           "claim any cell is wrong — a commit may change nothing a given cell "
           "uses — but it is the same class of provenance gap as the session "
           "and device offsets measured in section 1, and those turned out to "
-          "be about twice the within-session seed spread. Recording the commit "
-          "in each run costs nothing and is not yet done.")
+          "be about twice the within-session seed spread. The runner now "
+          "records `git_sha` and `written_at`; the cells that predate that "
+          "change cannot be repaired retroactively, and this entry stays until "
+          "every comparison the paper rests on has been re-measured under a "
+          "recorded commit.")
         W("")
 
     W("## 9. What is deliberately not claimed")

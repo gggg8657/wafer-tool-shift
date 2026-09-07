@@ -1,10 +1,10 @@
 {
   "what": "how many distinct states of the runner the stored cells span, and how many cells record the version that produced them",
   "runner": "scripts/run_bench.py",
-  "n_runner_commits": 13,
-  "n_run_files": 644,
-  "n_cells_recording_their_commit": 0,
-  "n_distinct_code_states_spanned": 12,
+  "n_runner_commits": 14,
+  "n_run_files": 666,
+  "n_cells_recording_their_commit": 20,
+  "n_distinct_code_states_spanned": 13,
   "method": "file mtime against commit time -- an upper bound on exposure, not a claim that any cell is wrong. A commit may change nothing a given cell uses.",
   "states": [
     {
@@ -78,6 +78,12 @@
       "commit": "e06d01f575d5464db1818fe3dbad5c61b921e2be",
       "committed_at": "2026-09-06T23:17:46",
       "n_cells": 118
+    },
+    {
+      "n_preceding_commits": 14,
+      "commit": "162b64100bd1dd433131e5ffa346aa721619bff6",
+      "committed_at": "2026-09-07T04:25:24",
+      "n_cells": 22
     }
   ]
 }

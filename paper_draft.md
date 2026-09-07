@@ -270,7 +270,7 @@ What was left is that `CnnResized.embed` is a global average over the final feat
 | `iid` | `meanmax` (treatment) | +0.0113 | overlaps | +0.0389 | overlaps |
 | `iid` | `meanmean` (**control**) | +0.0006 | overlaps | +0.0094 | overlaps |
 | `size` | `meanmax` (treatment) | -0.0281 | overlaps | -0.0427 | overlaps |
-| `size` | `meanmean` (**control**) | -0.0036 | overlaps | +0.0129 | overlaps |
+| `size` | `meanmean` (**control**) | -0.0040 | overlaps | +0.0071 | overlaps |
 | `lot_time` | `meanmax` (treatment) | +0.0038 | overlaps | +0.0391 | overlaps |
 | `lot_time` | `meanmean` (**control**) | +0.0135 | overlaps | +0.0045 | overlaps |
 
@@ -453,9 +453,9 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot_time` | spectral operator | `erm` | sess2 | 3 | 0.6530 | ±0.0242 |
 | `size` | CNN (BatchNorm) | `coral` | sizeseed | 8 | 0.7838 | ±0.0422 |
 | `size` | CNN (BatchNorm) | `dann` | sizeseed | 8 | 0.7707 | ±0.0628 |
-| `size` | CNN (BatchNorm) | `erm` | poolmean | 4 | 0.7757 | ±0.0475 |
-| `size` | CNN (BatchNorm) | `erm` | poolmeanmax | 4 | 0.7989 | ±0.0444 |
-| `size` | CNN (BatchNorm) | `erm` | poolmeanmean | 4 | 0.7814 | ±0.0347 |
+| `size` | CNN (BatchNorm) | `erm` | poolmean | 6 | 0.7834 | ±0.0486 |
+| `size` | CNN (BatchNorm) | `erm` | poolmeanmax | 6 | 0.8146 | ±0.0540 |
+| `size` | CNN (BatchNorm) | `erm` | poolmeanmean | 6 | 0.7906 | ±0.0463 |
 | `size` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.7843 | ±0.0312 |
 | `size` | CNN (BatchNorm) | `erm` | sizeseed | 8 | 0.7931 | ±0.0606 |
 | `size` | CNN (BatchNorm) | `group_dro` | sizeseed | 8 | 0.6640 | ±0.1110 |
@@ -466,7 +466,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `size` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8462 | ±0.0391 |
 | `size` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.8181 | ±0.0700 |
 | `size` | CNN (GroupNorm) | `erm` | poolmeanmaxSA | 8 | 0.7458 | ±0.0740 |
-| `size` | CNN (GroupNorm) | `erm` | poolmeanmean | 3 | 0.8426 | ±0.0290 |
+| `size` | CNN (GroupNorm) | `erm` | poolmeanmean | 5 | 0.8422 | ±0.0346 |
 | `size` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.8413 | ±0.0369 |
 | `size` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.7711 | ±0.0265 |
 | `size` | descriptors + MLP | `coral` | sizeseed | 3 | 0.8036 | ±0.0284 |
@@ -607,14 +607,16 @@ This paper's thesis has been argued case by case: results that shrank at eight s
 
 **The range screen fails differently, and in one direction only.** All 8 of the verdicts that change call an effect separated at three seeds and overlapping at eight, every one of them in that direction — because a sample's range grows with the sample, so the screen gets *stricter* as evidence accumulates. That is the opposite of how a reader expects a test to behave, and it is why this paper treats the screen as a floor rather than a verdict.
 
-**The sharpest case is this paper's own best result.** On `lot`/`cnn_bn`, `Scratch` F1, at three seeds the range screen calls the treatment separated and it calls the **capacity control separated too**:
+**A first version of this section drew its sharpest claim from one triple, and the claim did not survive checking.** Seeds 0-2 are one of C(8,3) = 56 ways to pick three, and on that particular draw the range screen calls both the pooling treatment *and* its capacity control separated — which would mean a three-seed experiment could not tell "max pooling helps" from "a wider head helps". Enumerating every triple instead:
 
-| arm | three-seed range verdict | eight-seed permutation p |
-|---|---|---|
-| `meanmax` (treatment) | **separated** (margin 0.0189 > floor 0.0054) | 0.0101 |
-| `meanmean` (capacity control) | **separated** (margin 0.0171 > floor 0.0054) | 0.2578 |
+|  | n | mean % of triples the screen calls separated | never / worst |
+|---|---|---|---|
+| effects established at eight seeds | 17 | 55% | 0 |
+| comparisons null at eight seeds | 31 | 1% | worst 14% |
 
-At eight seeds the treatment is real and the control is not. At three, both look separated — so the experiment cannot distinguish *max pooling helps* from *a wider head helps*, which is the entire question the control exists to answer. The control would not have failed; it would have appeared to succeed, which is worse, because a control that fires alongside its treatment reads as confirmation that something real is happening.
+So the screen at three seeds is not the trap that anecdote made it look. It finds a real effect on 55% of triples on average and calls a null comparison separated on 1% — a sensitivity of about a half at a false-positive rate of about one in a hundred. **That is a defensible screen, which is what we have always claimed it is.** The capacity control fires on 2 of 56 triples, and seeds 0-2 are one of the two. Reporting that draw as what a three-seed experiment would conclude was picking the tail and calling it the distribution.
+
+**What survives is the count, and it survives because it is arithmetic rather than an example.** The permutation test at three per arm has a floor of 0.10 on *every* triple, so none of the 17 established effects is reachable on any of the 56 — not on average, not at best. And the screen's roughly even odds of finding a real effect are their own argument: half the established results here would have been missed by a three-seed protocol, which is a weaker and more defensible statement than the one this section made first.
 
 ## 8. Threats to validity
 
@@ -623,7 +625,7 @@ At eight seeds the treatment is real and the control is not. At three, both look
 3. **One architecture family.** Every CNN cell is the same three-block encoder at width 32 and 12 epochs. Whether the protocol ordering survives at a modern backbone and a longer schedule is [not measured].
 4. **Most cells are three seeds, and three seeds are not enough.** The screen built on them has produced false positives *and* false negatives here: it called an `iid` pooling effect of +0.0113 absent where eight seeds give p = 0.0003, and called two domain-generalization objectives indistinguishable from ERM where eight seeds give p = 0.0017 and p = 0.0051. Every comparison this paper rests on has been taken to eight seeds per arm and read with an exact permutation test; the three-seed tables are a screen for where to spend that budget and are labelled as such. **A three-seed null in these tables is not evidence of absence.**
 
-5. **No cell records the code that produced it.** The runner changed 13 times over the weekend — new flags, an `invariance_domain` refactor, a geometry decomposition, a batch dict that gained a field. Two of those were asserted bit-identical on the default path and the rest were additive, which is the intent; but nothing in any run JSON says which version wrote it, so the assertion cannot be checked per cell. Dating the files against the runner's commit history, the 644 stored cells span **12 distinct states** of the runner, and **0** of them record their own. That is an upper bound on exposure rather than a claim any cell is wrong — a commit may change nothing a given cell uses — but it is the same class of provenance gap as the session and device offsets measured in section 1, and those turned out to be about twice the within-session seed spread. Recording the commit in each run costs nothing and is not yet done.
+5. **No cell records the code that produced it.** The runner changed 14 times over the weekend — new flags, an `invariance_domain` refactor, a geometry decomposition, a batch dict that gained a field. Two of those were asserted bit-identical on the default path and the rest were additive, which is the intent; but nothing in any run JSON says which version wrote it, so the assertion cannot be checked per cell. Dating the files against the runner's commit history, the 666 stored cells span **13 distinct states** of the runner, and **20** of them record their own — every cell written since the gap was found does, and none written before it can. That is an upper bound on exposure rather than a claim any cell is wrong — a commit may change nothing a given cell uses — but it is the same class of provenance gap as the session and device offsets measured in section 1, and those turned out to be about twice the within-session seed spread. The runner now records `git_sha` and `written_at`; the cells that predate that change cannot be repaired retroactively, and this entry stays until every comparison the paper rests on has been re-measured under a recorded commit.
 
 ## 9. What is deliberately not claimed
 
