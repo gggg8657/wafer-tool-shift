@@ -30,7 +30,7 @@
       "2:Active learning with the budget counted in wafers",
       "2:Which lots to pay to measure",
       "2:Lot-adversarial self-supervised pretraining",
-      "2:Per-class F1, best `lot` cell (CNN + RPCA lot-signature channel, erm)"
+      "2:Per-class F1, best `lot` cell (CNN on resized 64x64 (BatchNorm), erm)"
     ],
     "paper_draft.md": [
       "1:What actually shifts in wafer-map data, and why the domain-generalization toolbox makes it worse",

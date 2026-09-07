@@ -379,6 +379,9 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot` | CNN (BatchNorm) | `erm` | — | 3 | 0.8522 | ±0.0069 |
 | `lot` | CNN (BatchNorm) | `erm` | dtime | 8 | 0.8585 | ±0.0127 |
 | `lot` | CNN (BatchNorm) | `erm` | gnbn | 8 | 0.8596 | ±0.0143 |
+| `lot` | CNN (BatchNorm) | `erm` | poolmean | 4 | 0.8518 | ±0.0093 |
+| `lot` | CNN (BatchNorm) | `erm` | poolmeanmax | 4 | 0.8784 | ±0.0059 |
+| `lot` | CNN (BatchNorm) | `erm` | poolmeanmean | 4 | 0.8589 | ±0.0072 |
 | `lot` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.8543 | ±0.0045 |
 | `lot` | CNN (BatchNorm) | `group_dro` | — | 3 | 0.8535 | ±0.0063 |
 | `lot` | CNN (BatchNorm) | `group_dro` | dtime | 8 | 0.8384 | ±0.0200 |
@@ -583,6 +586,8 @@ The capacity control is the counter-example that shows the distinction is not rh
 2. **The test split is label-aware, and it makes no difference.** `_stratified_group_split` skips a candidate held-out group when moving it would leave a class with no training examples, so which domains land in test is not independent of the labels. Two reviewers flagged it. Dropping the guard entirely and comparing the partitions: it fires in 0 of 10 seeds on both group protocols and the splits are identical wafer for wafer — structurally so, since the guard rejects a group only if it holds *all* remaining training examples of a class and no lot holds more than 4.14% of any class. The code path is label-aware; the split is not.
 3. **One architecture family.** Every CNN cell is the same three-block encoder at width 32 and 12 epochs. Whether the protocol ordering survives at a modern backbone and a longer schedule is [not measured].
 4. **Most cells are three seeds, and three seeds are not enough.** The screen built on them has produced false positives *and* false negatives here: it called an `iid` pooling effect of +0.0113 absent where eight seeds give p = 0.0003, and called two domain-generalization objectives indistinguishable from ERM where eight seeds give p = 0.0017 and p = 0.0051. Every comparison this paper rests on has been taken to eight seeds per arm and read with an exact permutation test; the three-seed tables are a screen for where to spend that budget and are labelled as such. **A three-seed null in these tables is not evidence of absence.**
+
+5. **No cell records the code that produced it.** The runner changed 13 times over the weekend — new flags, an `invariance_domain` refactor, a geometry decomposition, a batch dict that gained a field. Two of those were asserted bit-identical on the default path and the rest were additive, which is the intent; but nothing in any run JSON says which version wrote it, so the assertion cannot be checked per cell. Dating the files against the runner's commit history, the 625 stored cells span **12 distinct states** of the runner, and **0** of them record their own. That is an upper bound on exposure rather than a claim any cell is wrong — a commit may change nothing a given cell uses — but it is the same class of provenance gap as the session and device offsets measured in section 1, and those turned out to be about twice the within-session seed spread. Recording the commit in each run costs nothing and is not yet done.
 
 ## 9. What is deliberately not claimed
 

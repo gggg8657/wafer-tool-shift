@@ -59,7 +59,13 @@ def main():
     print(f"{DOC}: core {n_core:,} words = {m_core:.1f} min "
           f"(budget {BUDGET_MIN:.0f}); body {n_rest:,} words = {m_rest:.1f} min")
     if over:
-        excess = int((m_core - BUDGET_MIN) * WPM)
+        # ceil, not int: at 1,151 words the core is 5.0043 minutes, and
+        # int((5.0043 - 5) * 230) rounds the overage to zero -- so the check
+        # failed while reporting "OVER by 0 words", which reads like a bug in
+        # the check rather than a fact about the document. An off-by-one in a
+        # guard's *message* costs the guard its authority.
+        import math
+        excess = max(1, math.ceil((m_core - BUDGET_MIN) * WPM))
         print(f"  OVER by {excess} words. The brief asks for a hand-off "
               f"readable in five minutes. This drifts a clause at a time, "
               "each one locally reasonable; the fix is to move detail below "

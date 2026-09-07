@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -62,9 +63,39 @@ def headings(path: Path):
 
 
 def compare(prev, cur):
+    """Removed, added, and renamed — with renames not counted as removals.
+
+    Some headings embed a data-derived label: "Per-class F1, best `lot` cell
+    (CNN + RPCA lot-signature channel, erm)" names whichever cell is currently
+    best, so it changes whenever the ranking does. Reporting that as a section
+    disappearing plus another appearing is technically true and practically
+    noise, and a guard that cries wolf on ordinary regeneration teaches its
+    reader to pass `--accept` without looking — which is how a check stops
+    being a check.
+
+    A removed and an added heading at the same level sharing a long prefix are
+    treated as one heading renamed. Still reported, never a failure.
+    """
     removed = [h for h in prev if h not in cur]
     added = [h for h in cur if h not in prev]
-    return removed, added
+    renamed, still_removed = [], []
+    for h in removed:
+        lvl, _, text = h.partition(":")
+        match = None
+        for g in added:
+            glvl, _, gtext = g.partition(":")
+            if glvl != lvl:
+                continue
+            common = len(os.path.commonprefix([text, gtext]))
+            if common >= 20 and common >= 0.5 * min(len(text), len(gtext)):
+                match = g
+                break
+        if match:
+            renamed.append((h, match))
+            added.remove(match)
+        else:
+            still_removed.append(h)
+    return still_removed, added, renamed
 
 
 def main():
@@ -88,11 +119,14 @@ def main():
     prev = json.loads(SNAPSHOT.read_text()).get("docs", {})
     n_removed = 0
     for doc in DOCS:
-        removed, added = compare(prev.get(doc, []), cur.get(doc, []))
-        if removed or added:
+        removed, added, renamed = compare(prev.get(doc, []), cur.get(doc, []))
+        if removed or added or renamed:
             print(f"\n{doc}:")
         for h in removed:
             print(f"  REMOVED  {h.split(':', 1)[1]}")
+        for a_, b_ in renamed:
+            print(f"  renamed  {a_.split(':', 1)[1]}")
+            print(f"        -> {b_.split(':', 1)[1]}")
         for h in added:
             print(f"  added    {h.split(':', 1)[1]}")
         n_removed += len(removed)

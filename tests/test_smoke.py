@@ -749,15 +749,15 @@ def test_section_diff_catches_a_vanished_section_and_tolerates_growth():
 
         # the real failure: a section stops rendering
         p.write_text("# Title\n\n## 8. Threats\n\ntext\n")
-        removed, added = m.compare(before, m.headings(p))
+        removed, added, renamed = m.compare(before, m.headings(p))
         assert len(removed) == 1 and "7.9" in removed[0], removed
-        assert added == []
+        assert added == [] and renamed == []
 
         # growth must not be an error
         p.write_text("# Title\n\n## 7.9 How much each null could have shown\n\n"
                      "t\n\n## 8. Threats\n\nt\n\n## 9. New section\n\nt\n")
-        removed, added = m.compare(before, m.headings(p))
-        assert removed == [] and len(added) == 1
+        removed, added, renamed = m.compare(before, m.headings(p))
+        assert removed == [] and len(added) == 1 and renamed == []
 
         # a *measured* value in a heading must not look like a removal when
         # it moves, but a section number must still be part of its identity --
@@ -767,11 +767,27 @@ def test_section_diff_catches_a_vanished_section_and_tolerates_growth():
         q.write_text("## Result at p = 0.00781\n")
         b2 = m.headings(q)
         q.write_text("## Result at p = 0.02344\n")
-        removed, added = m.compare(b2, m.headings(q))
+        removed, added, renamed = m.compare(b2, m.headings(q))
         assert removed == [] and added == [], (removed, added)
 
         q.write_text("## 7.9 Power\n")
         b3 = m.headings(q)
         q.write_text("## 8.1 Power\n")
-        removed, added = m.compare(b3, m.headings(q))
-        assert len(removed) == 1 and len(added) == 1, "renumbering must show"
+        removed, added, renamed = m.compare(b3, m.headings(q))
+        # renumbering must stay a *removal*, not a benign rename: the number is
+        # at the front, so the two headings share no prefix, and a section
+        # changing number is a structural change that deserves a human look.
+        # Only a change at the tail -- a data-derived label -- is benign.
+        assert len(removed) == 1 and len(added) == 1 and renamed == [], \
+            "renumbering must show as a removal, not be absorbed as a rename"
+
+        # a heading whose data-derived label changes is a rename, not a
+        # section disappearing -- "best `lot` cell (X)" becomes "(Y)" whenever
+        # the ranking moves, and calling that a removal trains the reader to
+        # pass --accept without looking
+        r = _Path(d, "rank.md")
+        r.write_text("## Per-class F1, best `lot` cell (CNN + RPCA, erm)\n")
+        b4 = m.headings(r)
+        r.write_text("## Per-class F1, best `lot` cell (CNN BatchNorm, erm)\n")
+        removed, added, renamed = m.compare(b4, m.headings(r))
+        assert renamed and removed == [] and added == [], (removed, added)

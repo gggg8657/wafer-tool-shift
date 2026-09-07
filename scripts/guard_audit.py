@@ -215,10 +215,10 @@ def audit_section_diff():
         p.write_text("# T\n\n## 7.9 Power\n\nx\n\n## 8. Threats\n\nx\n")
         before = m.headings(p)
         p.write_text("# T\n\n## 8. Threats\n\nx\n")
-        gone, _ = m.compare(before, m.headings(p))
+        gone, _, _ = m.compare(before, m.headings(p))
         p.write_text("# T\n\n## 7.9 Power\n\nx\n\n## 8. Threats\n\nx\n"
                      "\n## 9. New\n\nx\n")
-        grew_removed, grew_added = m.compare(before, m.headings(p))
+        grew_removed, grew_added, _ = m.compare(before, m.headings(p))
         return (len(gone) == 1 and grew_removed == []
                 and len(grew_added) == 1), \
             "a section whose guard was conditioned on a problem that got fixed"

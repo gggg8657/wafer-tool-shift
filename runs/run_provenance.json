@@ -1,0 +1,83 @@
+{
+  "what": "how many distinct states of the runner the stored cells span, and how many cells record the version that produced them",
+  "runner": "scripts/run_bench.py",
+  "n_runner_commits": 13,
+  "n_run_files": 625,
+  "n_cells_recording_their_commit": 0,
+  "n_distinct_code_states_spanned": 12,
+  "method": "file mtime against commit time -- an upper bound on exposure, not a claim that any cell is wrong. A commit may change nothing a given cell uses.",
+  "states": [
+    {
+      "n_preceding_commits": 2,
+      "commit": "bb2b6dc7e3e03be414795875a63ba81d7d4cb933",
+      "committed_at": "2026-09-04T07:35:43",
+      "n_cells": 62
+    },
+    {
+      "n_preceding_commits": 3,
+      "commit": "db46053b03ebe46f04229c8d69c45c44ccad9538",
+      "committed_at": "2026-09-04T10:44:23",
+      "n_cells": 6
+    },
+    {
+      "n_preceding_commits": 4,
+      "commit": "fa8c6b0780522a9ab2406cd0e0524a7226703aa7",
+      "committed_at": "2026-09-04T11:03:42",
+      "n_cells": 12
+    },
+    {
+      "n_preceding_commits": 5,
+      "commit": "9d00664a4325edcfa7172c5ca72dd3cc010e05f4",
+      "committed_at": "2026-09-04T11:11:14",
+      "n_cells": 24
+    },
+    {
+      "n_preceding_commits": 6,
+      "commit": "c4d328e54b4d3dd992522240ed6f80da11f1b2a5",
+      "committed_at": "2026-09-04T11:33:01",
+      "n_cells": 3
+    },
+    {
+      "n_preceding_commits": 7,
+      "commit": "9d951c2bdb378bd81747abe5dea8f3e897270c63",
+      "committed_at": "2026-09-04T11:43:29",
+      "n_cells": 6
+    },
+    {
+      "n_preceding_commits": 8,
+      "commit": "b57454c8de1eee605c1d550b506ffb6391a95912",
+      "committed_at": "2026-09-04T12:03:53",
+      "n_cells": 83
+    },
+    {
+      "n_preceding_commits": 9,
+      "commit": "c8e8667ff3578d1f295c853683fe76c1f8a98947",
+      "committed_at": "2026-09-04T16:30:37",
+      "n_cells": 31
+    },
+    {
+      "n_preceding_commits": 10,
+      "commit": "7e44023928d7b87faf0560f9220eff6562293da5",
+      "committed_at": "2026-09-04T16:56:59",
+      "n_cells": 110
+    },
+    {
+      "n_preceding_commits": 11,
+      "commit": "5a533de523f9a3d08d8ebb839ed490af9c28ffa3",
+      "committed_at": "2026-09-04T21:46:03",
+      "n_cells": 138
+    },
+    {
+      "n_preceding_commits": 12,
+      "commit": "fedc7e9ba4fb5c5fc86199035ee46d7dd1daa6d9",
+      "committed_at": "2026-09-06T22:38:43",
+      "n_cells": 51
+    },
+    {
+      "n_preceding_commits": 13,
+      "commit": "e06d01f575d5464db1818fe3dbad5c61b921e2be",
+      "committed_at": "2026-09-06T23:17:46",
+      "n_cells": 99
+    }
+  ]
+}

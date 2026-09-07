@@ -1747,6 +1747,28 @@ def main():
       "these tables is not evidence of absence.**")
     W("")
 
+    _rp = js("run_provenance.json")
+    if _rp:
+        W("5. **No cell records the code that produced it.** The runner "
+          "changed "
+          f"{_rp['n_runner_commits']} times over the weekend — new flags, an "
+          "`invariance_domain` refactor, a geometry decomposition, a batch "
+          "dict that gained a field. Two of those were asserted bit-identical "
+          "on the default path and the rest were additive, which is the "
+          "intent; but nothing in any run JSON says which version wrote it, so "
+          "the assertion cannot be checked per cell. Dating the files against "
+          "the runner's commit history, the "
+          f"{_rp['n_run_files']} stored cells span "
+          f"**{_rp['n_distinct_code_states_spanned']} distinct states** of the "
+          f"runner, and **{_rp['n_cells_recording_their_commit']}** of them "
+          "record their own. That is an upper bound on exposure rather than a "
+          "claim any cell is wrong — a commit may change nothing a given cell "
+          "uses — but it is the same class of provenance gap as the session "
+          "and device offsets measured in section 1, and those turned out to "
+          "be about twice the within-session seed spread. Recording the commit "
+          "in each run costs nothing and is not yet done.")
+        W("")
+
     W("## 9. What is deliberately not claimed")
     W("")
     W("We do not claim a state-of-the-art WM-811K number. The best cell here "

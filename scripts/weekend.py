@@ -288,7 +288,7 @@ def main():
     if not surv_lines:
         W(f"- {NM}")
     W("")
-    W("**What was withdrawn, and what each withdrawal closes off.** Six "
+    W("**What was withdrawn, and what it closes off.** Six "
       "Friday claims do not survive; none fell because a new idea beat an old "
       "one.")
     W("")
