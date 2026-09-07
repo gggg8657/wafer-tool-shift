@@ -329,6 +329,9 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | size | CNN on resized 64x64 (BatchNorm) | erm/fda | adabn | 0.7572 | 0.6005 | -0.1568 |
 | size | CNN on resized 64x64 (BatchNorm) | erm/fda | tent | 0.7572 | 0.6073 | -0.1500 |
 | size | CNN on resized 64x64 (BatchNorm) | erm/fda | ema | 0.7572 | 0.7675 | +0.0103 |
+| size | CNN on resized 64x64 (BatchNorm) | erm/poolmean | ema | 0.7670 | 0.7720 | +0.0050 |
+| size | CNN on resized 64x64 (BatchNorm) | erm/poolmeanmax | ema | 0.8013 | 0.8060 | +0.0047 |
+| size | CNN on resized 64x64 (BatchNorm) | erm/poolmeanmean | ema | 0.7731 | 0.7796 | +0.0065 |
 | size | CNN on resized 64x64 (BatchNorm) | erm/sess2 | ema | 0.7724 | 0.7779 | +0.0054 |
 | size | CNN on resized 64x64 (BatchNorm) | erm/sizeseed | ema | 0.7612 | 0.7709 | +0.0097 |
 | size | CNN on resized 64x64 (BatchNorm) | group_dro | adabn | 0.5927 | 0.4937 | -0.0991 |
@@ -463,6 +466,9 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | size | CNN on resized 64x64 (BatchNorm) | sizeseed | 0.7614 | -0.0058 | 0.5262 | -0.0050 |
 | size | CNN on resized 64x64 (BatchNorm) | sizeseed | 0.7426 | +0.0128 | 0.5035 | +0.0214 |
 | size | CNN on resized 64x64 (BatchNorm) | + Fourier amplitude swap augmentation | 0.7572 | -0.0110 | 0.5605 | +0.0006 |
+| size | CNN on resized 64x64 (BatchNorm) | poolmean | 0.7670 | -0.0012 | 0.5552 | -0.0047 |
+| size | CNN on resized 64x64 (BatchNorm) | poolmeanmax | 0.8013 | +0.0331 | 0.6399 | +0.0800 |
+| size | CNN on resized 64x64 (BatchNorm) | poolmeanmean | 0.7731 | +0.0049 | 0.5685 | +0.0086 |
 | size | CNN on resized 64x64 (BatchNorm) | sess2 | 0.7724 | +0.0042 | 0.5425 | -0.0174 |
 | size | CNN on resized 64x64 (BatchNorm) | sizeseed | 0.7612 | -0.0070 | 0.5531 | -0.0068 |
 | size | CNN on resized 64x64 (BatchNorm) | sizeseed | 0.5760 | -0.0167 | 0.3296 | -0.0187 |
@@ -575,6 +581,7 @@ Each seed reshuffles the model init *and* which training domains become the inne
 | lot_time | spectral operator, native resolution | erm | sess2 | 3 | 0.6530 | +/-0.0242 | 0.6759, 0.6276, 0.6556 |
 | size | CNN on resized 64x64 (BatchNorm) | coral | sizeseed | 8 | 0.7838 | +/-0.0422 | 0.7614, 0.7642, 0.7888, 0.7483, 0.8327, 0.7571, 0.8206, 0.7977 |
 | size | CNN on resized 64x64 (BatchNorm) | dann | sizeseed | 8 | 0.7707 | +/-0.0628 | 0.7426, 0.7618, 0.8189, 0.7046, 0.7956, 0.7425, 0.8302, 0.7690 |
+| size | CNN on resized 64x64 (BatchNorm) | erm | poolmean | 2 | 0.7635 | +/-0.0035 | 0.7670, 0.7601 |
 | size | CNN on resized 64x64 (BatchNorm) | erm | sess2 | 3 | 0.7843 | +/-0.0312 | 0.7724, 0.7590, 0.8214 |
 | size | CNN on resized 64x64 (BatchNorm) | erm | sizeseed | 8 | 0.7931 | +/-0.0606 | 0.7612, 0.7786, 0.8347, 0.7150, 0.8348, 0.7724, 0.8362, 0.8122 |
 | size | CNN on resized 64x64 (BatchNorm) | group_dro | sizeseed | 8 | 0.6640 | +/-0.1110 | 0.5760, 0.5778, 0.7604, 0.6611, 0.6975, 0.7143, 0.7736, 0.5516 |
@@ -785,6 +792,9 @@ Both macro-F1 columns are averaged over **only the classes present in both halve
 | lot_time | spectral operator, native resolution | erm/sess2 | 0.6759 | 0.6564 | 0.7281 | -0.0718 | 8 | 35,607 | 7,630 |
 | size | CNN on resized 64x64 (BatchNorm) | coral/sizeseed | 0.7614 | - | - | - | - | 0 | 44,908 |
 | size | CNN on resized 64x64 (BatchNorm) | dann/sizeseed | 0.7426 | - | - | - | - | 0 | 44,908 |
+| size | CNN on resized 64x64 (BatchNorm) | erm/poolmean | 0.7670 | - | - | - | - | 0 | 44,908 |
+| size | CNN on resized 64x64 (BatchNorm) | erm/poolmeanmax | 0.8013 | - | - | - | - | 0 | 44,908 |
+| size | CNN on resized 64x64 (BatchNorm) | erm/poolmeanmean | 0.7731 | - | - | - | - | 0 | 44,908 |
 | size | CNN on resized 64x64 (BatchNorm) | erm/sess2 | 0.7724 | - | - | - | - | 0 | 44,908 |
 | size | CNN on resized 64x64 (BatchNorm) | erm/sizeseed | 0.7612 | - | - | - | - | 0 | 44,908 |
 | size | CNN on resized 64x64 (BatchNorm) | group_dro/sizeseed | 0.5760 | - | - | - | - | 0 | 44,908 |

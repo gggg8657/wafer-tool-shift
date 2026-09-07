@@ -1335,6 +1335,52 @@ def main():
                   "it stays a hypothesis.")
             W("")
 
+        _sb = js("pooling_size_bn_perm_class_Scratch.json")
+        _sbc = js("pooling_size_bn_control_perm_class_Scratch.json")
+        if _sb and _sbc:
+            _sbp = _sb["permutation_test"]["p_two_sided"]
+            _neg = _sb["difference"] <= 0 or _sbp >= 0.05
+            W("**And the geometry-holdout failure replicates too, which is the "
+              "part that tests the mechanism.** The gain replicating on a "
+              "second encoder says it is not a GroupNorm artefact. Whether the "
+              "*failure* replicates says something stronger, because the "
+              "explanation for it is that `resize_nearest` makes a defect's "
+              "apparent width a function of native geometry — a property of "
+              "the input pipeline, which does not know which normalisation "
+              "layer follows. On `size` with `cnn_bn`, eight seeds per arm:")
+            W("")
+            W(table([["`meanmax` vs `mean` (treatment)",
+                      f"{_sb['difference']:+.4f}",
+                      (f"**{_sbp:.5f}**" if _sbp < 0.05 else f"{_sbp:.5f}")],
+                     ["`meanmean` vs `mean` (capacity control)",
+                      f"{_sbc['difference']:+.4f}",
+                      f"{_sbc['permutation_test']['p_two_sided']:.5f}"]],
+                    ["comparison on `size` / `cnn_bn`", "difference",
+                     "exact permutation p"]))
+            W("")
+            if _neg:
+                _gs = js("pooling_size_perm_class_Scratch.json") or {}
+                _gsr = (f"the effect is {_gs['difference']:+.4f} on `Scratch` "
+                        f"at p = {_gs['permutation_test']['p_two_sided']:.5f}"
+                        if _gs else NM)
+                W("**It does not help here either**, matching `cnn_gn`, where "
+                  f"{_gsr}. Both "
+                  "encoders gain on the protocols that share geometry and "
+                  "neither gains when geometry is held out, which is what a "
+                  "cause located in the resize predicts and what a cause "
+                  "located in the normalisation layer would not.")
+            else:
+                W("**It helps here, and that falsifies the explanation.** If "
+                  "`meanmax` gains on `size` under `cnn_bn` while losing under "
+                  "`cnn_gn`, the geometry-holdout failure is not a fact about "
+                  "the resize — it is a fact about GroupNorm. The mechanism in "
+                  "this section survived a model-free control and does not "
+                  "survive this, and the honest reading is that the "
+                  "measurement of what the resize does to apparent width is "
+                  "still correct while its connection to the `size` result is "
+                  "withdrawn.")
+            W("")
+
         W("The claim, at the strength the data supports: **on a lot-disjoint "
           "split, replacing global average pooling with mean-and-max moves the "
           "hardest class by 0.057 while its capacity control moves it by "
