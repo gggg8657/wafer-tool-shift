@@ -454,9 +454,9 @@ A reader deploying this would want the honest version: if the wafers you will se
 
 | protocol | representation | objective | variant | seeds | mean macro-F1 | half-range |
 |---|---|---|---|---|---|---|
-| `iid` | CNN (BatchNorm) | `erm` | poolmean | 2 | 0.8674 | ±0.0034 |
-| `iid` | CNN (BatchNorm) | `erm` | poolmeanmax | 2 | 0.8868 | ±0.0078 |
-| `iid` | CNN (BatchNorm) | `erm` | poolmeanmean | 2 | 0.8630 | ±0.0011 |
+| `iid` | CNN (BatchNorm) | `erm` | poolmean | 4 | 0.8641 | ±0.0074 |
+| `iid` | CNN (BatchNorm) | `erm` | poolmeanmax | 4 | 0.8867 | ±0.0078 |
+| `iid` | CNN (BatchNorm) | `erm` | poolmeanmean | 4 | 0.8629 | ±0.0041 |
 | `iid` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.8625 | ±0.0042 |
 | `iid` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8833 | ±0.0057 |
 | `iid` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.8946 | ±0.0063 |
@@ -517,7 +517,9 @@ A reader deploying this would want the honest version: if the wafers you will se
 | `lot` | CNN + 4th channel | `erm` | sess2 | 3 | 0.8717 | ±0.0079 |
 | `lot` | CNN + 4th channel | `erm` | zerochan | 3 | 0.8689 | ±0.0075 |
 | `lot` | spectral operator | `erm` | sess2 | 3 | 0.8405 | ±0.0216 |
-| `lot_time` | CNN (BatchNorm) | `erm` | poolmean | 2 | 0.6597 | ±0.0096 |
+| `lot_time` | CNN (BatchNorm) | `erm` | poolmean | 4 | 0.6565 | ±0.0126 |
+| `lot_time` | CNN (BatchNorm) | `erm` | poolmeanmax | 3 | 0.6775 | ±0.0347 |
+| `lot_time` | CNN (BatchNorm) | `erm` | poolmeanmean | 3 | 0.6418 | ±0.0047 |
 | `lot_time` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.6438 | ±0.0017 |
 | `lot_time` | CNN (GroupNorm) | `erm` | — | 3 | 0.6985 | ±0.0045 |
 | `lot_time` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.7081 | ±0.0117 |

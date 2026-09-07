@@ -279,8 +279,25 @@ def audit_generators_run():
             "a generator that raises before writing its document"
 
 
+def audit_hypothesis_ledger():
+    """A finished-but-unscored hypothesis must be caught; a running one not."""
+    m = load("hl", "scripts/hypothesis_ledger.py")
+    st, sc = m.stated(), m.scored()
+    # the discriminator that took two attempts: a prediction's own text
+    # contains outcome words, so "H76, on record: the interaction replicates"
+    # must not read as a scoring
+    assert m.STATEMENT.match(", on record: the interaction replicates")
+    assert not m.STATEMENT.match(" was falsified by the eight-seed run")
+    # and the real ledger must have found at least one of each kind
+    return (bool(st) and bool(sc)
+            and any(n not in sc for n in st)          # something unscored
+            and any(n in sc for n in st)), \
+        "a hypothesis stated before a run and never given an outcome"
+
+
 AUDITS = [
     ("generators_run.py", audit_generators_run),
+    ("hypothesis_ledger.py", audit_hypothesis_ledger),
     ("verify_stage.py", audit_verify_stage),
     ("prose_status_lint.py duplicated_blocks", audit_duplicated_blocks),
     ("section_census.py", audit_section_census),

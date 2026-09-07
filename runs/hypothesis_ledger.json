@@ -1,0 +1,340 @@
+{
+  "what": "every hypothesis stated before a run, and whether the critique log ever reports its outcome",
+  "why": "a prediction that went badly and was never mentioned again leaves a record of predictions that came true",
+  "limit": "this checks that a hypothesis was scored, not that it was scored correctly -- that still needs reading",
+  "n_stated": 18,
+  "n_scored": 26,
+  "n_stated_never_scored": 0,
+  "n_in_flight": 0,
+  "hypotheses": [
+    {
+      "hypothesis": "H12",
+      "stated_in": [],
+      "scored_in_entries": [
+        12,
+        23
+      ],
+      "stated": false,
+      "scored": true,
+      "sweep_finished": false
+    },
+    {
+      "hypothesis": "H24",
+      "stated_in": [],
+      "scored_in_entries": [
+        36
+      ],
+      "stated": false,
+      "scored": true,
+      "sweep_finished": false
+    },
+    {
+      "hypothesis": "H26",
+      "stated_in": [],
+      "scored_in_entries": [
+        26,
+        37
+      ],
+      "stated": false,
+      "scored": true,
+      "sweep_finished": false
+    },
+    {
+      "hypothesis": "H30",
+      "stated_in": [],
+      "scored_in_entries": [
+        38
+      ],
+      "stated": false,
+      "scored": true,
+      "sweep_finished": false
+    },
+    {
+      "hypothesis": "H31",
+      "stated_in": [],
+      "scored_in_entries": [
+        39
+      ],
+      "stated": false,
+      "scored": true,
+      "sweep_finished": false
+    },
+    {
+      "hypothesis": "H32",
+      "stated_in": [],
+      "scored_in_entries": [
+        32,
+        33
+      ],
+      "stated": false,
+      "scored": true,
+      "sweep_finished": false
+    },
+    {
+      "hypothesis": "H33",
+      "stated_in": [
+        "rpca_hide_raw.sh"
+      ],
+      "scored_in_entries": [
+        40,
+        43
+      ],
+      "stated": true,
+      "scored": true,
+      "sweep_finished": true
+    },
+    {
+      "hypothesis": "H42",
+      "stated_in": [],
+      "scored_in_entries": [
+        44,
+        47
+      ],
+      "stated": false,
+      "scored": true,
+      "sweep_finished": false
+    },
+    {
+      "hypothesis": "H47",
+      "stated_in": [
+        "pooling_size_seeds.sh"
+      ],
+      "scored_in_entries": [
+        50
+      ],
+      "stated": true,
+      "scored": true,
+      "sweep_finished": true
+    },
+    {
+      "hypothesis": "H50",
+      "stated_in": [
+        "pooling_lot_seeds.sh"
+      ],
+      "scored_in_entries": [
+        51,
+        52,
+        53,
+        54
+      ],
+      "stated": true,
+      "scored": true,
+      "sweep_finished": true
+    },
+    {
+      "hypothesis": "H54",
+      "stated_in": [
+        "pooling_protocols_seeds.sh"
+      ],
+      "scored_in_entries": [
+        59,
+        61
+      ],
+      "stated": true,
+      "scored": true,
+      "sweep_finished": true
+    },
+    {
+      "hypothesis": "H56",
+      "stated_in": [
+        "pooling_control_seeds.sh"
+      ],
+      "scored_in_entries": [
+        61
+      ],
+      "stated": true,
+      "scored": true,
+      "sweep_finished": true
+    },
+    {
+      "hypothesis": "H60",
+      "stated_in": [
+        "dg_power_check.sh"
+      ],
+      "scored_in_entries": [
+        61
+      ],
+      "stated": true,
+      "scored": true,
+      "sweep_finished": false
+    },
+    {
+      "hypothesis": "H63",
+      "stated_in": [
+        "dg_complete.sh"
+      ],
+      "scored_in_entries": [
+        67,
+        69,
+        75,
+        82,
+        85,
+        102
+      ],
+      "stated": true,
+      "scored": true,
+      "sweep_finished": true
+    },
+    {
+      "hypothesis": "H64",
+      "stated_in": [
+        "size_complete.sh",
+        "weekend.py"
+      ],
+      "scored_in_entries": [
+        75,
+        82,
+        85
+      ],
+      "stated": true,
+      "scored": true,
+      "sweep_finished": true
+    },
+    {
+      "hypothesis": "H65",
+      "stated_in": [
+        "pooling_mechanism.py"
+      ],
+      "scored_in_entries": [
+        71,
+        77
+      ],
+      "stated": true,
+      "scored": true,
+      "sweep_finished": false
+    },
+    {
+      "hypothesis": "H66",
+      "stated_in": [
+        "scale_aware_sweep.sh",
+        "weekend.py"
+      ],
+      "scored_in_entries": [
+        69,
+        77,
+        82,
+        83,
+        85
+      ],
+      "stated": true,
+      "scored": true,
+      "sweep_finished": false
+    },
+    {
+      "hypothesis": "H67",
+      "stated_in": [
+        "resize_fidelity.py"
+      ],
+      "scored_in_entries": [
+        71
+      ],
+      "stated": true,
+      "scored": true,
+      "sweep_finished": false
+    },
+    {
+      "hypothesis": "H68",
+      "stated_in": [
+        "null_power_fix.sh"
+      ],
+      "scored_in_entries": [
+        81,
+        82,
+        85
+      ],
+      "stated": true,
+      "scored": true,
+      "sweep_finished": true
+    },
+    {
+      "hypothesis": "H69",
+      "stated_in": [
+        "dilation_control.sh"
+      ],
+      "scored_in_entries": [
+        83,
+        85
+      ],
+      "stated": true,
+      "scored": true,
+      "sweep_finished": true
+    },
+    {
+      "hypothesis": "H70",
+      "stated_in": [
+        "focal_complete.sh",
+        "paper.py"
+      ],
+      "scored_in_entries": [
+        87,
+        102
+      ],
+      "stated": true,
+      "scored": true,
+      "sweep_finished": true
+    },
+    {
+      "hypothesis": "H71",
+      "stated_in": [],
+      "scored_in_entries": [
+        85
+      ],
+      "stated": false,
+      "scored": true,
+      "sweep_finished": false
+    },
+    {
+      "hypothesis": "H72",
+      "stated_in": [
+        "rpca_lot_time.sh"
+      ],
+      "scored_in_entries": [
+        91
+      ],
+      "stated": true,
+      "scored": true,
+      "sweep_finished": true
+    },
+    {
+      "hypothesis": "H73",
+      "stated_in": [
+        "pooling_second_encoder.sh"
+      ],
+      "scored_in_entries": [
+        94,
+        95,
+        100
+      ],
+      "stated": true,
+      "scored": true,
+      "sweep_finished": true
+    },
+    {
+      "hypothesis": "H74",
+      "stated_in": [
+        "pooling_size_second_encoder.sh"
+      ],
+      "scored_in_entries": [
+        95,
+        98,
+        102
+      ],
+      "stated": true,
+      "scored": true,
+      "sweep_finished": true
+    },
+    {
+      "hypothesis": "H76",
+      "stated_in": [
+        "guard_audit.py",
+        "pooling_all_protocols_bn.sh"
+      ],
+      "scored_in_entries": [
+        102
+      ],
+      "stated": true,
+      "scored": true,
+      "sweep_finished": false
+    }
+  ]
+}

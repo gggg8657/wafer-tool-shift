@@ -54,6 +54,8 @@ CHECKS = [
      [PY, "scripts/readme_sync.py", "--strict"], True),
     ("is the critique log's index current?",
      [PY, "scripts/critique_index.py", "--check"], True),
+    ("was every finished hypothesis actually scored?",
+     [PY, "scripts/hypothesis_ledger.py", "--strict"], True),
 ]
 
 
