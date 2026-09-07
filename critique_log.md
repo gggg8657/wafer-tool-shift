@@ -5031,3 +5031,25 @@ the runner, so 20 of 666 cells now record `git_sha` and `written_at` — every
 cell written since the gap was found, and none written before it. The threat now
 says that and states what would retire it: every comparison the paper rests on
 re-measured under a recorded commit.
+
+**Postscript to 97: the commit that recorded this correction was itself pushed
+with a check failing.** I have been running
+
+    python scripts/check_all.py --quiet 2>&1 | tail -3 && git commit ...
+
+all session. The pipe means `&&` sees `tail`'s exit code, not `check_all`'s, so
+the gate has never actually gated anything — every commit this session went
+through regardless of what the checks said. It happened to matter only now,
+because `WEEKEND.md` was one word over budget when entry 97 was committed.
+
+`check_all.py` was built in entry 79 precisely because reading six separate
+outputs is how a failing check got past me, and its whole point is one exit
+code. I then piped that exit code into `tail` and read the text instead — the
+same failure the tool exists to prevent, reintroduced by how I invoked it. One
+word over is a trivial instance; the mechanism is not, and it has been live for
+about twenty commits.
+
+The fix is to run the check as its own command and read the verdict line, or
+`set -o pipefail`. Recorded here rather than solved by resolution, because a
+habit is not a guard: what would actually fix it is a pre-commit hook, and this
+repository does not install one because it is a shared environment.

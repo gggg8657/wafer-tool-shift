@@ -310,7 +310,7 @@ def main():
          "meeting an unseen geometry costs approximately nothing. It measures "
          "forward-only deployment (§2.4)"),
         ("Nothing separates from ERM on `size`",
-         f"false. At eight seeds {_size_sig} clearly worse than ERM; at three "
+         f"false. At eight seeds {_size_sig} worse than ERM; at three "
          "the exact test could not return below 0.10 at any effect size. The "
          "null was a property of the seed budget (§2.1)"),
         ("The sinkhorn cell's 0.10 macro-F1 is a finding about the method",

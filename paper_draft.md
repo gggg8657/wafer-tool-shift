@@ -270,7 +270,7 @@ What was left is that `CnnResized.embed` is a global average over the final feat
 | `iid` | `meanmax` (treatment) | +0.0113 | overlaps | +0.0389 | overlaps |
 | `iid` | `meanmean` (**control**) | +0.0006 | overlaps | +0.0094 | overlaps |
 | `size` | `meanmax` (treatment) | -0.0281 | overlaps | -0.0427 | overlaps |
-| `size` | `meanmean` (**control**) | -0.0040 | overlaps | +0.0071 | overlaps |
+| `size` | `meanmean` (**control**) | -0.0011 | overlaps | +0.0068 | overlaps |
 | `lot_time` | `meanmax` (treatment) | +0.0038 | overlaps | +0.0391 | overlaps |
 | `lot_time` | `meanmean` (**control**) | +0.0135 | overlaps | +0.0045 | overlaps |
 
@@ -453,9 +453,9 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `lot_time` | spectral operator | `erm` | sess2 | 3 | 0.6530 | ±0.0242 |
 | `size` | CNN (BatchNorm) | `coral` | sizeseed | 8 | 0.7838 | ±0.0422 |
 | `size` | CNN (BatchNorm) | `dann` | sizeseed | 8 | 0.7707 | ±0.0628 |
-| `size` | CNN (BatchNorm) | `erm` | poolmean | 6 | 0.7834 | ±0.0486 |
-| `size` | CNN (BatchNorm) | `erm` | poolmeanmax | 6 | 0.8146 | ±0.0540 |
-| `size` | CNN (BatchNorm) | `erm` | poolmeanmean | 6 | 0.7906 | ±0.0463 |
+| `size` | CNN (BatchNorm) | `erm` | poolmean | 8 | 0.7942 | ±0.0486 |
+| `size` | CNN (BatchNorm) | `erm` | poolmeanmax | 7 | 0.8213 | ±0.0540 |
+| `size` | CNN (BatchNorm) | `erm` | poolmeanmean | 7 | 0.7971 | ±0.0463 |
 | `size` | CNN (BatchNorm) | `erm` | sess2 | 3 | 0.7843 | ±0.0312 |
 | `size` | CNN (BatchNorm) | `erm` | sizeseed | 8 | 0.7931 | ±0.0606 |
 | `size` | CNN (BatchNorm) | `group_dro` | sizeseed | 8 | 0.6640 | ±0.1110 |
@@ -466,7 +466,7 @@ The data-volume confound is arithmetic and certain. The reversal is not: three s
 | `size` | CNN (GroupNorm) | `erm` | poolmean | 8 | 0.8462 | ±0.0391 |
 | `size` | CNN (GroupNorm) | `erm` | poolmeanmax | 8 | 0.8181 | ±0.0700 |
 | `size` | CNN (GroupNorm) | `erm` | poolmeanmaxSA | 8 | 0.7458 | ±0.0740 |
-| `size` | CNN (GroupNorm) | `erm` | poolmeanmean | 5 | 0.8422 | ±0.0346 |
+| `size` | CNN (GroupNorm) | `erm` | poolmeanmean | 7 | 0.8451 | ±0.0392 |
 | `size` | CNN (GroupNorm) | `erm` | sess2 | 3 | 0.8413 | ±0.0369 |
 | `size` | CNN (GroupNorm) | `erm` | sslinit | 3 | 0.7711 | ±0.0265 |
 | `size` | descriptors + MLP | `coral` | sizeseed | 3 | 0.8036 | ±0.0284 |
