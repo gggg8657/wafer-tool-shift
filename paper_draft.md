@@ -668,7 +668,7 @@ The obvious account is resolution: the CNN path resamples every wafer to a fixed
 
 A scratch is thin in units of *dies*, not pixels, and no resampling changes that. Whatever makes it hard, it is not the input grid — which rules out the cheapest remaining lever and leaves the backbone, the pooling, and real mixed-type data.
 
-## 7.9 How much each of our nulls could have shown
+## 7.1 How much each of our nulls could have shown
 
 Twice this project reported a null that turned out to be a property of the seed budget. "Nothing separates from ERM on `size`" came from three seeds per arm, where an exact permutation test cannot return below 0.10; at eight, 2 objectives separate at p = 0.0019 and p = 0.0050. A null stated with a difference and no statement of what the instrument could resolve is not a finding, so every null this paper rests on is listed here with its power.
 
@@ -684,7 +684,7 @@ Twice this project reported a null that turned out to be a property of the seed 
 
 The capacity control is the counter-example that shows the distinction is not rhetorical: `meanmean` versus `mean` is also a null, and it is at eight seeds with a floor of 0.0002, so it can carry the weight the pooling result puts on it. **H70, on record for the three gammas still at two seeds: none separates from the bit-exact gamma = 0 control at eight.** If one does, the focal withdrawal here is wrong and comes back out.
 
-## 7.95 What three seeds would have concluded, counted
+## 7.2 What three seeds would have concluded, counted
 
 This paper's thesis has been argued case by case: results that shrank at eight seeds, a null that turned into two significant effects, a streak of three-of-three that was a coin. It has not been counted. Every comparison here that reached eight seeds per arm can be re-scored on its first three, which is exactly what an experimenter who stopped early would have had.
 
@@ -710,7 +710,22 @@ So the screen at three seeds is not the trap that anecdote made it look. It find
 
 **What survives is the count, and it survives because it is arithmetic rather than an example.** The permutation test at three per arm has a floor of 0.10 on *every* triple, so none of the 17 established effects is reachable on any of the 56 — not on average, not at best. And the screen's roughly even odds of finding a real effect are their own argument: half the established results here would have been missed by a three-seed protocol, which is a weaker and more defensible statement than the one this section made first.
 
-## 7.96 The obvious explanation for the class-specific interaction, tested and dropped
+## 7.3 The encoder that never resizes
+
+Every attempt to act on the resize measurement has failed: dilating the first conv block is catastrophic whatever the dilation, and the `size` behaviour it was meant to explain did not replicate across encoders. One encoder here avoids the problem instead of patching it — `spectral` multiplies a fixed number of low-frequency coefficients, so the same weights apply to a 25x27 and a 53x58 wafer with no resampling at all.
+
+The comparison has to be a *drop*, not a level: `spectral` is worse on `Scratch` everywhere in absolute terms, which is capacity and inductive bias rather than resampling. `Scratch` F1 from `lot` to `size`, eight seeds per arm:
+
+| arm | `lot` | `size` | drop | seeds worse |
+|---|---|---|---|---|
+| CNN + mean-and-max (resized to 64x64) | 0.7764 | 0.6660 | -0.1104 | 7/8 |
+| CNN + mean (resized to 64x64) | 0.7292 | 0.7087 | -0.0205 | 6/8 |
+
+**Within the CNN this is already the mechanism's signature**: the arm carrying the max statistic loses 5 times as much as the arm without it when geometry is held out.
+
+The `spectral` arm at eight seeds is **[not measured]** as this is written; `scripts/spectral_geometry.sh` runs it.
+
+## 7.4 The obvious explanation for the class-specific interaction, tested and dropped
 
 The `Scratch` interaction fires on `size` and `lot_time` and not on `lot` or `iid`, and the two where it fires are the two that hold geometry out or test on a narrow geometry slice. Geometry exposure is the obvious candidate, and four protocols differ in too many ways at once to test it.
 
@@ -725,7 +740,7 @@ The `Scratch` interaction fires on `size` and `lot_time` and not on `lot` or `ii
 
 We are not claiming the reverse either. The two halves are not shown to differ (-0.0561, 5/8 seeds, p = 0.17188), and the unseen half is 7,630 of 43,237 test wafers with a visibly wider per-seed spread — so its null is partly a power statement. What the test establishes is that our prediction was wrong, which is enough to drop the explanation and not enough to install its opposite.
 
-## 7.97 How often were we right, before the run?
+## 7.5 How often were we right, before the run?
 
 Every sweep in this project states a prediction in its header before it launches, and the critique log scores it afterwards. That record is the only thing distinguishing an effect we specified in advance from one we noticed — a post-hoc correction cannot tell them apart — so it is worth reporting what it says about us rather than only about the methods.
 
@@ -734,7 +749,7 @@ Every sweep in this project states a prediction in its header before it launches
 | confirmed | 10 |
 | partly | 4 |
 | falsified | 5 |
-| still running | 0 |
+| still running | 1 |
 
 **10 of 19 predictions held as stated** — 53%. 4 were partly right, usually getting a direction correct and a threshold wrong, and 5 failed outright. The worst was a prediction that a fix would work which turned out to make the encoder dramatically worse on both protocols; the most useful was a prediction phrased as a disjunction wide enough to cover both signs, which we satisfied on a literal reading and recorded as a failure anyway.
 

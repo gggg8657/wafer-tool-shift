@@ -103,6 +103,11 @@
       "verdict": "falsified",
       "entry": 105,
       "note": "predicted the Scratch interaction would be larger on the unseen-geometry half of lot_time; it is established on the SEEN half (+0.0433, 8/8, p = 0.00781) and null on the unseen (-0.0128, 3/8, p = 0.70312). The halves are not shown to differ (p = 0.17188), so the reverse is not established either"
+    },
+    "H78": {
+      "verdict": "in_flight",
+      "entry": null,
+      "note": "16 cells: the resize-free spectral encoder at eight seeds on lot and size, to test whether it degrades less under geometry holdout than the meanmax CNN"
     }
   }
 }

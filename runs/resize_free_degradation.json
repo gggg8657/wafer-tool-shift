@@ -1,0 +1,31 @@
+{
+  "what": "per-seed Scratch F1 drop from lot to size, by encoder",
+  "why": "H65 says the resize couples a defect's apparent width to geometry, so a resize-free encoder should lose less when geometry is held out",
+  "limit": "spectral differs from the CNN in operator, capacity and inductive bias, not only in resampling: a confirmation is weak evidence and a falsification is strong",
+  "arms": {
+    "Fourier operator, no resampling": {
+      "n_seeds": 0,
+      "usable": false
+    },
+    "CNN + mean-and-max (resized to 64x64)": {
+      "encoder": "cnn_gn",
+      "tag": "poolmeanmax",
+      "n_seeds": 8,
+      "usable": true,
+      "lot_mean": 0.776426057440458,
+      "size_mean": 0.6660250275822648,
+      "drop_mean": -0.11040102985819324,
+      "n_seeds_worse_on_size": 7
+    },
+    "CNN + mean (resized to 64x64)": {
+      "encoder": "cnn_gn",
+      "tag": "poolmean",
+      "n_seeds": 8,
+      "usable": true,
+      "lot_mean": 0.7291649192781612,
+      "size_mean": 0.7087014998787161,
+      "drop_mean": -0.020463419399445154,
+      "n_seeds_worse_on_size": 6
+    }
+  }
+}

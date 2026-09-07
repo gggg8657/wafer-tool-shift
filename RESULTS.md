@@ -388,6 +388,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | size | CNN + RPCA lot-signature channel | erm/zerochan | ema | 0.8236 | 0.8205 | -0.0031 |
 | size | spectral operator, native resolution | erm | ema | 0.7197 | 0.7112 | -0.0085 |
 | size | spectral operator, native resolution | erm/sess2 | ema | 0.7120 | 0.7015 | -0.0105 |
+| size | spectral operator, native resolution | erm/spec8 | ema | 0.7153 | 0.7107 | -0.0046 |
 
 ## Variants, against the same cell without them
 
@@ -507,6 +508,7 @@ The gap between a random wafer split and a lot-disjoint split is the part of a p
 | size | CNN + RPCA lot-signature channel | sess2 | 0.8278 | +0.0024 | 0.6777 | +0.0138 |
 | size | CNN + RPCA lot-signature channel | 4th channel = zeros (RPCA control) | 0.8236 | -0.0018 | 0.6719 | +0.0081 |
 | size | spectral operator, native resolution | sess2 | 0.7120 | -0.0077 | 0.5356 | -0.0082 |
+| size | spectral operator, native resolution | spec8 | 0.7153 | -0.0044 | 0.5482 | +0.0045 |
 
 ## Seed spread
 
@@ -843,6 +845,7 @@ Both macro-F1 columns are averaged over **only the classes present in both halve
 | size | die-graph GNN (wafer-only subgraph) | erm/sess2 | 0.6833 | - | - | - | - | 0 | 44,908 |
 | size | CNN + RPCA lot-signature channel | erm/sess2 | 0.8278 | - | - | - | - | 0 | 44,908 |
 | size | spectral operator, native resolution | erm/sess2 | 0.7120 | - | - | - | - | 0 | 44,908 |
+| size | spectral operator, native resolution | erm/spec8 | 0.7153 | - | - | - | - | 0 | 44,908 |
 
 ## Does the domain definition explain the ERM-equivalence?
 

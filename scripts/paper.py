@@ -1921,7 +1921,7 @@ def main():
     # defect was fixed, and no guard here noticed: the JSON was present and
     # read, so section_census and coverage_check both passed.
     if npa and npa.get("families"):
-        W("## 7.9 How much each of our nulls could have shown")
+        W("## 7.1 How much each of our nulls could have shown")
         W("")
         _spz = js("size_power_check.json") or {}
         _szsig = sorted((v for k, v in _spz.items()
@@ -2002,7 +2002,7 @@ def main():
         W("")
     tsc = js("three_seed_cost.json")
     if tsc and tsc.get("n_comparisons"):
-        W("## 7.95 What three seeds would have concluded, counted")
+        W("## 7.2 What three seeds would have concluded, counted")
         W("")
         W("This paper's thesis has been argued case by case: results that "
           "shrank at eight seeds, a null that turned into two significant "
@@ -2100,13 +2100,75 @@ def main():
         import collections as _c
         _t = _c.Counter(v["verdict"] for v in _o.values())
         _done = sum(n for k, n in _t.items() if k != "in_flight")
+    rfd = js("resize_free_degradation.json")
+    _rfa = (rfd or {}).get("arms", {})
+    _sp = _rfa.get("Fourier operator, no resampling", {})
+    _cm = _rfa.get("CNN + mean-and-max (resized to 64x64)", {})
+    _cp = _rfa.get("CNN + mean (resized to 64x64)", {})
+    if _cm.get("usable") and _cp.get("usable"):
+        W("## 7.3 The encoder that never resizes")
+        W("")
+        W("Every attempt to act on the resize measurement has failed: dilating "
+          "the first conv block is catastrophic whatever the dilation, and the "
+          "`size` behaviour it was meant to explain did not replicate across "
+          "encoders. One encoder here avoids the problem instead of patching "
+          "it — `spectral` multiplies a fixed number of low-frequency "
+          "coefficients, so the same weights apply to a 25x27 and a 53x58 "
+          "wafer with no resampling at all.")
+        W("")
+        W("The comparison has to be a *drop*, not a level: `spectral` is worse "
+          "on `Scratch` everywhere in absolute terms, which is capacity and "
+          "inductive bias rather than resampling. `Scratch` F1 from `lot` to "
+          "`size`, eight seeds per arm:")
+        W("")
+        W(table([[lab, f"{v['lot_mean']:.4f}", f"{v['size_mean']:.4f}",
+                  f"{v['drop_mean']:+.4f}",
+                  f"{v['n_seeds_worse_on_size']}/{v['n_seeds']}"]
+                 for lab, v in _rfa.items() if v.get("usable")],
+                ["arm", "`lot`", "`size`", "drop", "seeds worse"]))
+        W("")
+        W("**Within the CNN this is already the mechanism's signature**: the "
+          "arm carrying the max statistic loses "
+          f"{abs(_cm['drop_mean']) / max(abs(_cp['drop_mean']), 1e-9):.0f} "
+          "times as much as the arm without it when geometry is held out.")
+        W("")
+        _dd = (rfd or {}).get("spectral_minus_cnn_meanmax")
+        if _sp.get("usable") and _dd:
+            if _dd["spectral_loses_less"] and _dd["p_two_sided"] < 0.05:
+                W("**The resize-free encoder loses less**, by "
+                  f"{_dd['mean']:+.4f} on "
+                  f"{_dd['n_spectral_loses_less']}/{_dd['n_pairs']} seeds at "
+                  f"p = {_dd['p_two_sided']:.5f}. That is the direction the "
+                  "mechanism predicts, and it is weak evidence for it: "
+                  "`spectral` differs from the CNN in the operator, the "
+                  "capacity and the inductive bias, not only in the "
+                  "resampling. One resize-free encoder is not a controlled "
+                  "comparison.")
+            else:
+                W("**It does not lose less** — "
+                  f"{_dd['mean']:+.4f} on "
+                  f"{_dd['n_spectral_loses_less']}/{_dd['n_pairs']} seeds, "
+                  f"p = {_dd['p_two_sided']:.5f}. This is the strong direction "
+                  "of an asymmetric test: a confirmation would have been weak, "
+                  "since `spectral` differs from the CNN in many ways, but a "
+                  "failure lands on the one architecture built to avoid the "
+                  "thing the mechanism blames. With the two failed remedies, "
+                  "the honest position is that the resize measurement is true "
+                  "about apparent width and has **no demonstrated consequence "
+                  "for any trained model here**.")
+            W("")
+        else:
+            W("The `spectral` arm at eight seeds is **[not measured]** as this "
+              "is written; `scripts/spectral_geometry.sh` runs it.")
+            W("")
+
     gi = js("geometry_interaction.json")
     if gi and gi.get("halves"):
         _s = gi["halves"].get("test_seen_geometry") or {}
         _u = gi["halves"].get("test_unseen_geometry") or {}
         _hd = gi.get("halves_differ") or {}
         if _s.get("n_usable_seeds") and _u.get("n_usable_seeds"):
-            W("## 7.96 The obvious explanation for the class-specific "
+            W("## 7.4 The obvious explanation for the class-specific "
               "interaction, tested and dropped")
             W("")
             W("The `Scratch` interaction fires on `size` and `lot_time` and "
@@ -2152,7 +2214,7 @@ def main():
               "install its opposite.")
             W("")
 
-        W("## 7.97 How often were we right, before the run?")
+        W("## 7.5 How often were we right, before the run?")
         W("")
         W("Every sweep in this project states a prediction in its header "
           "before it launches, and the critique log scores it afterwards. That "

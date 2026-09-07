@@ -46,11 +46,17 @@
       "3:4.2 Lot-adversarial self-supervised pretraining is worse than random initialization",
       "2:4.3 And one intervention that does work: what the encoder pools",
       "2:5. Withdrawn: \"active learning loses to random lot selection\"",
+      "2:5.5 The two surviving results are not independent",
+      "2:5.6 So which combination should anyone use?",
       "2:6. Seed spread is a result, not an appendix",
       "2:7. The multi-label question, and what we did not have",
       "3:7.1 The target, answered",
       "3:7.2 One explanation for that tail, checked and discarded",
-      "2:7.9 How much each of our nulls could have shown",
+      "2:7.1 How much each of our nulls could have shown",
+      "2:7.2 What three seeds would have concluded, counted",
+      "2:7.3 The encoder that never resizes",
+      "2:7.4 The obvious explanation for the class-specific interaction, tested and dropped",
+      "2:7.5 How often were we right, before the run?",
       "2:8. Threats to validity",
       "2:9. What is deliberately not claimed"
     ],
@@ -70,6 +76,7 @@
       "2:3. What survives the floor",
       "2:4. Four things that need a human decision",
       "2:5. What is running, and how to check it",
+      "3:Our own track record on our own predictions",
       "3:Which of these checks are evidence, and which are not",
       "3:A property of this codebase worth knowing before you run anything"
     ]

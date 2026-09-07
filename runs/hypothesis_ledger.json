@@ -2,10 +2,10 @@
   "what": "every hypothesis stated before a run, and whether the critique log ever reports its outcome",
   "why": "a prediction that went badly and was never mentioned again leaves a record of predictions that came true",
   "limit": "this checks that a hypothesis was scored, not that it was scored correctly -- that still needs reading",
-  "n_stated": 19,
-  "n_scored": 19,
+  "n_stated": 20,
+  "n_scored": 20,
   "n_stated_never_scored": 0,
-  "n_in_flight": 0,
+  "n_in_flight": 1,
   "hypotheses": [
     {
       "hypothesis": "H33",
@@ -215,6 +215,17 @@
       ],
       "verdict": "falsified",
       "entry": 105,
+      "stated": true,
+      "scored": true,
+      "sweep_finished": false
+    },
+    {
+      "hypothesis": "H78",
+      "stated_in": [
+        "spectral_geometry.sh"
+      ],
+      "verdict": "in_flight",
+      "entry": null,
       "stated": true,
       "scored": true,
       "sweep_finished": false
